@@ -1,11 +1,11 @@
 -- DROP the database if it exists
-DROP DATABASE IF EXISTS spm_db;
+DROP DATABASE IF EXISTS employee_db;
 
 -- Create a new database
-CREATE DATABASE spm_db; 
+CREATE DATABASE employee_db; 
 
 -- Use the database
-USE spm_db;
+USE employee_db;
 
 -- EmployeeTable
 CREATE TABLE Employee (
