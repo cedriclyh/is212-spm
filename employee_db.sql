@@ -7,7 +7,7 @@ CREATE DATABASE employee_db;
 -- Use the database
 USE employee_db;
 
--- EmployeeTable
+-- Employee Table
 CREATE TABLE Employee (
     Staff_ID INT PRIMARY KEY,
     Staff_FName varchar(50) NOT NULL,
@@ -27,9 +27,17 @@ CREATE TABLE User_Role (
     Role_Description VARCHAR(50) NOT NULL
 );
 
+-- Credentials Table
+CREATE TABLE Credentials (
+    Staff_ID INT NOT NULL,
+    Email VARCHAR(50) NOT NULL,
+    Password VARCHAR(50) NOT NULL,
+    FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
+);
+
+
 -- User_Role Values
-INSERT INTO User_Role (Role, Role_Description)
-VALUES 
+INSERT INTO User_Role (Role, Role_Description) VALUES 
     (1, 'HR'),
     (2, 'Staff'),
     (3, 'Manager');
@@ -590,3 +598,11 @@ INSERT INTO Employee (Staff_ID, Staff_FName, Staff_LName, Dept, Position, Countr
     (210042, 'Naron', 'Savoeun', 'IT', 'IT Team', 'Singapore', 'Naron.Savoeun@allinone.com.sg', 210001, 2),
     (210043, 'Phuc', 'Luon', 'IT', 'IT Team', 'Singapore', 'Phuc.Luon@allinone.com.sg', 210001, 2),
     (210044, 'Chandara', 'Tithe', 'IT', 'IT Team', 'Singapore', 'tithe.chandra@allinone.com.sg', 210001, 2);
+
+-- Credentials Value
+INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
+    (130002, 'jack.sim@allinone.com.sg', 'Password130002'),
+    (140001, 'Derek.Tan@allinone.com.sg', 'Password140001'),
+    (150008, 'Eric.Loh@allinone.com.sg', 'Password150008'),
+    (151408, 'Philip.Lee@allinone.com.sg', 'Password151408'),
+    (140894, 'Rahim.Khalid@allinone.com.sg', 'Password140894');
