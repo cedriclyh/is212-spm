@@ -15,7 +15,7 @@ import bcrypt
 import json
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = ( 
+app.config['SQLALCHEMY_DATABASE_URI'] = (
     environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm" 
     # environ.get("dbURL") or "mysql+mysqlconnector://root:yourpassword@localhost:3306/spm" #this is for mac users
 )
@@ -50,11 +50,11 @@ class User(db.Model):
 def login():
     credentials = request.get_json().get('credentials')
 
-    staff_id = credentials['staff_id']
+    # staff_id = credentials['staff_id']
     email = credentials['email']
     password = credentials['password']
 
-    user = db.session.query(User).filter_by(staff_id=staff_id, email=email).first()
+    user = db.session.query(User).filter_by(email=email).first()
 
     if user:
         # check if password matches
