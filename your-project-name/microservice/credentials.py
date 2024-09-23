@@ -16,8 +16,8 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm" 
-    # environ.get("dbURL") or "mysql+mysqlconnector://root:yourpassword@localhost:3306/spm" #this is for mac users
+    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    # environ.get("dbURL") or "mysql+mysqlconnector://root:yourpassword@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -28,7 +28,7 @@ CORS(app)
 class User(db.Model):
     __tablename__ = 'Credentials'
 
-    staff_id = db.Column(db.Integer, nullable=False)
+    staff_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
 
@@ -71,7 +71,7 @@ def update_password():
     credentials = request.get_json().get('credentials')
     staff_id = credentials['staff_id']
     try:
-        user = db.sessions.scalars(db.select(User).filter_by(staff_id=staff_id).limit(1)).first()
+        user = db.session.query(User).filter_by(staff_id=staff_id).first()
         if not user:
             return jsonify({"code":404, "message":"User not found."}), 404
         else:
