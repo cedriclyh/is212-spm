@@ -1,11 +1,11 @@
 -- DROP the database if it exists
-DROP DATABASE IF EXISTS employee_db;
+DROP DATABASE IF EXISTS spm_db;
 
 -- Create a new database
-CREATE DATABASE employee_db; 
+CREATE DATABASE spm_db; 
 
 -- Use the database
-USE employee_db;
+USE spm_db;
 
 -- Employee Table
 CREATE TABLE Employee (
@@ -16,7 +16,7 @@ CREATE TABLE Employee (
     Position VARCHAR(50) NOT NULL,
     Country VARCHAR(50) NOT NULL,
     Email VARCHAR(50) NOT NULL,
-    Reporting_Manager INT NOT NULL,
+    Reporting_Manager INT,
     Role INT NOT NULL,
     FOREIGN KEY (Reporting_Manager) REFERENCES Employee(Staff_ID)
 );
