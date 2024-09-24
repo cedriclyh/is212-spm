@@ -1,93 +1,114 @@
-from flask import Flask, request, jsonify
-
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.mysql import TINYINT
-
-from os import environ
+from flask_bcrypt import Bcrypt
+from functools import wraps
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
+
 import os
-import sys
+from os import environ
+from dotenv import load_dotenv
 
-import bcrypt
-
-import json
+load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
     # environ.get("dbURL") or "mysql+mysqlconnector://root:yourpassword@localhost:3306/spm_db" #this is for mac users
 )
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-db =SQLAlchemy(app)
-
+app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
 CORS(app)
+
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
 
 class User(db.Model):
     __tablename__ = 'Credentials'
 
     staff_id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(50), nullable=False)
 
-    def __init__(self, staff_id: int, email: str, password: str) -> None:
-        super().__init__()
-        self.staff_id = staff_id
-        self.email = email
-        self.password = password
+    def __repr__(self):
+        return f'<Staff ID: {self.staff_id}>'
 
-    def json(self):
-        return {
-            'staff_id': self.staff_id,
-            'email': self.email,
-            'password': self.password
-        }
+
+class Employee(db.Model):
+    __tablename__ = 'Employee'
     
-# Get password - check password
-@app.route('/login')
+    staff_id = db.Column(db.Integer, primary_key=True)
+    role = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        return f'<Staff ID: {self.staff_id}>'
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    new_user = User(username=data['username'], password=hashed_password, role='user')  # default role
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message": "User created successfully"}), 201
+
+@app.route('/login', methods=['POST'])
 def login():
-    credentials = request.get_json().get('credentials')
-
-    # staff_id = credentials['staff_id']
-    email = credentials['email']
-    password = credentials['password']
-
-    user = db.session.query(User).filter_by(email=email).first()
-
-    if user:
-        # check if password matches
-        if user.password == password :
-            return jsonify ({"message": "Login successful", "code": 200}), 200
-        else:
-            return jsonify({"message": "Incorrect password", "code": 401}), 401
-    else:
-        return jsonify({"message": "Email not found"}), 404
-
-# Update password - user changes password
-@app.route('/user/password', methods=['PUT'])
-def update_password():
-    credentials = request.get_json().get('credentials')
-    staff_id = credentials['staff_id']
     try:
-        user = db.session.query(User).filter_by(staff_id=staff_id).first()
+        data = request.get_json()
+
+        # Check if user exists in database
+        user = User.query.filter_by(staff_id=data["staff_id"]).first()
         if not user:
-            return jsonify({"code":404, "message":"User not found."}), 404
-        else:
-            # get new password
-            new_password = credentials['password']
+            print("incorrect user")  # rmb to comment out later
+            return jsonify({'error': 'Invalid email or password'}), 401
 
-            # update user's password
-            user.password = new_password
+        # if not bcrypt.check_password_has(user.password, data['password']):
+        if user.password != data['password']:
+            print("incorrect password") # rmb to comment out later
+            return jsonify({'error': 'Invalid email or password'}), 401
 
-            # commit the changes to the database
-            db.session.commit()
+        # Check role
+        employee = Employee.query.filter_by(staff_id=data["staff_id"]).first()
 
-            return jsonify({"code":201, "message": "Password successfully updated."}), 201
+        #Succesful login: create access token
+        access_token = create_access_token(identity={"username": user.staff_id, "role": employee.role})
+        return jsonify(access_token=access_token), 200
         
     except Exception as e:
-        return jsonify({"code":500, "message":"An error occured while updating user preferences." + str(e)}), 500
+        # Log the exception for debugging purposes
+        print(f"Exception during login: {str(e)}")
+        return jsonify({'error': 'Internal Server Error'}), 500
+
+# Role check decorator
+def role_required(required_role):
+    def decorator(f):
+        @wraps(f)
+        @jwt_required()
+        def decorated_function(*args, **kwargs):
+            current_user = get_jwt_identity()
+            if current_user['role'] != required_role:
+                return jsonify({"message": "Access forbidden: Insufficient role"}), 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+# Example route accessible only by 'HR' users
+# change path in the future
+@app.route('/hr-data', methods=['GET'])
+@role_required(1)
+def hr_data():
+    return jsonify({"message": "Welcome HR! You can view HR-specific data here."}), 200
+
+# Example route accessible only by 'manager' users
+# change path in the future
+@app.route('/manager-data', methods=['GET'])
+@role_required(3)
+def manager_data():
+    return jsonify({"message": "Welcome Manager! You can view manager-specific data here."}), 200
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    # db.create_all()  # Creates the SQLite database
+    app.run(port=5000, debug=True)
