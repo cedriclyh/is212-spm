@@ -40,13 +40,13 @@ export default function GoogleCalendarClone() {
   const events = [
     {
       title: 'Team Meeting',
-      start: new Date(), // Today
-      end: new Date(new Date().setHours(new Date().getHours() + 1)), // 1 hour event
+      start: '2024-10-01T10:00:00', // Starts on 1 October 10:00 AM
+      duration: '6:00' // Duration of 6 hours
     },
     {
       title: 'Client Meeting',
-      start: new Date(new Date().setDate(new Date().getDate() + 1)), // Tomorrow
-      end: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(new Date().getHours() + 2)),
+      start: new Date(new Date().setDate(new Date().getDate())), // Today
+      end: new Date(new Date(new Date().setDate(new Date().getDate())).setHours(new Date().getHours() + 2)), // 2 hours from now
     },
     {
       title: 'Project Deadline',
@@ -59,30 +59,46 @@ export default function GoogleCalendarClone() {
   return (
     <div className="calendar-container">
       <div className="calendar-header">
-        <h1 className="calendar-title">Calendar</h1>
+        <h1 className="calendar-title">Welcome John!</h1>
         <div>
-          <div style={{display: "flex", justifyContent: "flex-end", marginBottom: '10px' }}>
+          <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '10px',
+          }}
+          >
+            <div>
+              <h2>My Calendar</h2>
+              
+              {/* to fetch team/department name from API */}
+              <label>
+                <p> Personal<input type="checkbox" checked="True" /> </p> 
+            </label>
+            </div>
+            
+          <div style={{flex: 1, marginLeft: '10px' }}>
+            <div style={{display: "flex", justifyContent: "flex-end", marginBottom: '10px' }}> 
             <Button variant="contained" onClick={toggleView} startIcon={view === 'dayGridMonth' ? <ViewAgenda /> : <CalendarToday />}>
               {view === 'dayGridMonth' ? 'Day View' : 'Month View'}
-            </Button>
+            </Button> 
           </div>
-          <div style={{marginLeft: '10px' }}>
-            {/* <div className="calendar-body"> */}
-              <FullCalendar
-                ref={calendarRef} // Reference to the FullCalendar component
-                plugins={[dayGridPlugin, timeGridPlugin]}
-                initialView={view} // Start with the current view (month or day)
-                events={events} // List of events
-                headerToolbar={{
-                  left: 'prev,next today',
-                  center: 'title',
-                  right: '' // Hide the default view buttons (since we're using custom toggle buttons)
-                }}
-                validRange={validRange} // Limit navigation range
-                eventColor="blue" // Event styling
-              />
-            {/* </div> */}
+            <FullCalendar
+              ref={calendarRef} // Reference to the FullCalendar component
+              plugins={[dayGridPlugin, timeGridPlugin]}
+              initialView={view} // Start with the current view (month or day)
+              events={events} // List of events
+              headerToolbar={{
+                left: 'prev,next today',
+                center: 'title',
+                right: '' // Hide the default view buttons (since we're using custom toggle buttons)
+              }}
+              validRange={validRange} // Limit navigation range
+              eventColor="blue" // Event styling
+            />
           </div>
+        </div>
         </div>
       </div>
     </div>
