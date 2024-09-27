@@ -7,20 +7,21 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 
 import { Button } from '@mui/material'; // You can use any button component you prefer
 import { CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
-import { addMonths, subMonths, format } from 'date-fns'; // For date manipulation
+import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; // For date manipulation
 
 export default function GoogleCalendarClone() {
   // State to toggle between day and month views
   const [view, setView] = useState('dayGridMonth');
   const calendarRef = useRef(null); // Ref for FullCalendar instance
 
-  // Get the current date
+  // Get the current month
   const today = new Date();
+  const startOfCurrentMonth = startOfMonth(today);
   
   // Define valid range (2 months back, 3 months forward)
   const validRange = {
-    start: format(subMonths(today, 2), 'yyyy-MM-dd'), // 2 months back from today
-    end: format(addMonths(today, 3), 'yyyy-MM-dd')    // 3 months forward from today
+    start: format(subMonths(startOfCurrentMonth, 2), 'yyyy-MM-dd'), // 2 months back from current month
+    end: format(addMonths(endOfMonth(today), 3), 'yyyy-MM-dd')    // 3 months forward from current month
   };
 
   // Toggle between day and month views
