@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -8,6 +8,7 @@ import { CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material ico
 export default function GoogleCalendarClone() {
   // State to toggle between day and month views
   const [view, setView] = useState('dayGridMonth');
+  const calendarRef = useRef(null); // Ref for FullCalendar instance
 
   // Example events
   const events = [
@@ -30,7 +31,14 @@ export default function GoogleCalendarClone() {
 
   // Toggle between day and month views
   const toggleView = () => {
-    setView(view === 'dayGridMonth' ? 'timeGridDay' : 'dayGridMonth');
+    const calendarApi = calendarRef.current.getApi(); // Get FullCalendar API
+    if (view === 'dayGridMonth') {
+      calendarApi.changeView('timeGridDay'); // Switch to day view
+      setView('timeGridDay');
+    } else {
+      calendarApi.changeView('dayGridMonth'); // Switch to month view
+      setView('dayGridMonth');
+    }
   };
 
   return (
@@ -43,8 +51,9 @@ export default function GoogleCalendarClone() {
       </div>
       <div className="calendar-body">
         <FullCalendar
+          ref={calendarRef} // Reference to the FullCalendar component
           plugins={[dayGridPlugin, timeGridPlugin]}
-          initialView={view} // Start with the current view (month or day)
+          view={view} // Start with the current view (month or day)
           events={events} // List of events
           headerToolbar={{
             left: 'prev,next today',
