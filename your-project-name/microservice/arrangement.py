@@ -37,18 +37,18 @@ class Employee(db.Model):
     reporting_manager = db.Column(db.String(50), nullable=False)
     role = db.Column(db.Integer, nullable=False)
 
-class Arrangement(db.Model):
-    __tablename__ = 'Arrangement'
+class Request(db.Model):
+    __tablename__ = 'Request'
 
     request_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     staff_id = db.Column(db.Integer, ForeignKey('Employee.staff_id'), nullable=False)
     requested_day = db.Column(db.Date, nullable=False)
     current_date = db.Column(db.Date, nullable=False, default=date.today)
-    timeslot = db.Column(db.Integer, nullable=False)  # Morning, Afternoon, Full Day
+    timeslot = db.Column(db.Integer, nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
     reason = db.Column(db.String(255), nullable=False) # Reason for WFH request
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
 
-    employee = relationship("Employee", backref="arrangements")
+    employee = relationship("Employee", backref="requests")
 
     def __init__(self, staff_id, requested_day, timeslot, reason, status='Pending'):
         self.staff_id = staff_id
@@ -73,12 +73,13 @@ class Arrangement(db.Model):
 def create_request():
     try:
         data = request.json
-        new_request = Arrangement(
+        new_request = Request(
             staff_id=data["staff_id"],
-            requested_day= ["requested_day"],
+            requested_day=data["requested_day"],
             timeslot = data["timeslot"],
             reason = data["reason"],
         )
+        print(new_request)
         db.session.add(new_request)
         db.session.commit()
         return jsonify({'message': 'Request created', 'data': new_request.json(), 'code':201}), 201
@@ -91,7 +92,7 @@ def create_request():
 @app.route('/get_all_requests', methods = ["GET"])
 def get_all_requests():
     try: 
-        requests = Arrangement.query.all()
+        requests = Request.query.all()
         return jsonify({'message': 'All requests', 'data': [req.json() for req in requests], 'code': 200}), 200
     except Exception as e:
         app.logger.error(f"Failed to retrieve requests: {e}")
@@ -101,7 +102,7 @@ def get_all_requests():
 @app.route('/request/<int:request_id>', methods=['GET'])
 def get_request(request_id):
     try:
-        request = Arrangement.query.filter_by(request_id=request_id).first()
+        request = Request.query.filter_by(request_id=request_id).first()
         if request:
             return jsonify({'message': 'Request found', 'data': request.json(), 'code': 200}), 200
         else:
@@ -114,7 +115,7 @@ def get_request(request_id):
 @app.route('/requests/staff/<int:staff_id>', methods=['GET'])
 def get_requests_by_staff_id(staff_id):
     try:
-        requests = Arrangement.query.filter_by(staff_id=staff_id).all()
+        requests = Request.query.filter_by(staff_id=staff_id).all()
         if requests:
             return jsonify({'message': f'Requests from staff {staff_id} found', 'data': [req.json() for req in request], 'code': 200}), 200
         else:
@@ -128,7 +129,7 @@ def get_requests_by_staff_id(staff_id):
 def update_request(request_id):
     try:
         data = request.json
-        request_to_update = Arrangement.query.filter_by(request_id=request_id).first()
+        request_to_update = Request.query.filter_by(request_id=request_id).first()
         if request_to_update:
             request_to_update.status = data.get('status', request_to_update.status)
             db.session.commit()

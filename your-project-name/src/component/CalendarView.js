@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-// import { Button } from '@mui/material'; // You can use any button component you prefer
-// import { CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
+import { Button } from '@mui/material'; // You can use any button component you prefer
+import { CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
 
 export default function GoogleCalendarClone() {
   // State to toggle between day and month views
@@ -37,9 +37,9 @@ export default function GoogleCalendarClone() {
     <div className="calendar-container">
       <div className="calendar-header">
         <h1 className="calendar-title">Calendar</h1>
-        {/* <Button variant="contained" onClick={toggleView} startIcon={view === 'dayGridMonth' ? <ViewAgenda /> : <CalendarToday />}>
+        <Button variant="contained" onClick={toggleView} startIcon={view === 'dayGridMonth' ? <ViewAgenda /> : <CalendarToday />}>
           {view === 'dayGridMonth' ? 'Day View' : 'Month View'}
-        </Button> */}
+        </Button>
       </div>
       <div className="calendar-body">
         <FullCalendar
