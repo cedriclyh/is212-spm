@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask import render_template
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey
@@ -139,6 +140,10 @@ def update_request(request_id):
     except Exception as e:
         app.logger.error(f"Failed to update request: {e}")
         return jsonify({'message': 'Failed to update request', 'code': 500}), 500
+
+@app.route('/arrangement_form')
+def arrangement_form():
+    return render_template('arrangement_form.html')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003, debug=True)
