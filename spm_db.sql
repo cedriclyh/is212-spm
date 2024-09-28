@@ -18,7 +18,7 @@ CREATE TABLE Employee (
     Email VARCHAR(50) NOT NULL,
     Reporting_Manager INT,
     Role INT NOT NULL,
-    FOREIGN KEY (Reporting_Manager) REFERENCES Employee(Staff_ID)
+    -- FOREIGN KEY (Reporting_Manager) REFERENCES Employee(Staff_ID)
 );
 
 -- User_Role
