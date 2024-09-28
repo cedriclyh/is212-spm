@@ -17,6 +17,7 @@ CREATE TABLE Employee (
     Country VARCHAR(50) NOT NULL,
     Email VARCHAR(50) NOT NULL,
     Reporting_Manager INT,
+    
     Role INT NOT NULL,
     -- FOREIGN KEY (Reporting_Manager) REFERENCES Employee(Staff_ID)
 );
@@ -25,6 +26,14 @@ CREATE TABLE Employee (
 CREATE TABLE User_Role (
     Role INT NOT NULL,
     Role_Description VARCHAR(50) NOT NULL
+    `permissions VARCHAR(255), kiv` 
+);
+
+-- Time Slot Table
+CREATE TABLE IF NOT EXISTS Time_Slot (
+    timeslot INT AUTO_INCREMENT,
+    timeslot_description VARCHAR(255),
+    PRIMARY KEY (timeslot)
 );
 
 -- Credentials Table
@@ -32,11 +41,48 @@ CREATE TABLE Credentials (
     Staff_ID INT NOT NULL,
     Email VARCHAR(50) NOT NULL,
     Password VARCHAR(50) NOT NULL,
-    -- FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
+    `permissions VARCHAR(255), kiv` 
+    FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
+);
+
+-- Request Log Table
+CREATE TABLE IF NOT EXISTS Request_Log (
+    request_id INT AUTO_INCREMENT,
+    requestor_staff_id INT,  -- FK to Employee.staff_id
+    reviewer_id INT,         -- FK to Employee.staff_id (manager)
+    request_time_date DATETIME,
+    arrangement_date DATE,
+    timeslot INT,            -- FK to Time_Slot.timeslot
+    status VARCHAR(50),
+    cancel_reason VARCHAR(255),
+    PRIMARY KEY (request_id),
+    FOREIGN KEY (requestor_staff_id) REFERENCES Employee(staff_id),
+    FOREIGN KEY (reviewer_id) REFERENCES Employee(staff_id),
+    FOREIGN KEY (timeslot) REFERENCES Time_Slot(timeslot)
+);
+
+-- Arrangement Table
+CREATE TABLE IF NOT EXISTS Arrangement (
+    staff_id INT,    -- FK to Employee.staff_id
+    arrangement_date DATE,
+    timeslot INT,    -- FK to Time_Slot.timeslot
+    PRIMARY KEY (staff_id, arrangement_date),
+    FOREIGN KEY (staff_id) REFERENCES Employee(staff_id),
+    FOREIGN KEY (timeslot) REFERENCES Time_Slot(timeslot)
+);
+
+-- Block Out Dates Table
+CREATE TABLE IF NOT EXISTS Block_Out_Dates (
+    blockout_id INT AUTO_INCREMENT,
+    blockout_date DATE NOT NULL,
+    title VARCHAR(255),
+    PRIMARY KEY (blockout_id)
 );
 
 
+
 -- User_Role Values
+-- IMPT NEED TO IRON OUT
 INSERT INTO User_Role (Role, Role_Description) VALUES 
     (1, 'HR'),
     (2, 'Staff'),
@@ -619,3 +665,27 @@ INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
     (150008, 'Eric.Loh@allinone.com.sg', 'Password150008'),
     (151408, 'Philip.Lee@allinone.com.sg', 'Password151408'),
     (140894, 'Rahim.Khalid@allinone.com.sg', 'Password140894');
+
+-- Time_Slot values
+-- INSERT INTO Time_Slot (timeslot_description) VALUES
+-- ('Morning Shift'),
+-- ('Afternoon Shift'),
+-- ('Full Day');
+-- hmmmmmmm just an example of timeslots
+
+-- Request_Log values
+INSERT INTO Request_Log (requestor_staff_id, reviewer_id, request_time_date, arrangement_date, timeslot, status, cancel_reason) VALUES
+(140002, 140894, NOW(), '2024-10-01', 1, 'Approved', NULL),
+(140003, 140894, NOW(), '2024-10-01', 2, 'Approved', NULL),
+(140004, 140894, NOW(), '2024-10-01', 3, 'Pending', NULL);
+
+-- Arrangement values
+INSERT INTO Arrangement (staff_id, arrangement_date, timeslot) VALUES
+(140002, '2024-10-01', 1),
+(140003, '2024-10-01', 2),
+(140004, '2024-10-01', 3);
+
+-- Block_Out_Dates values
+INSERT INTO Block_Out_Dates (blockout_date, title) VALUES
+('2024-12-25', 'Christmas'),
+('2024-11-11', 'Veterans Day');
