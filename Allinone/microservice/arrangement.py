@@ -43,18 +43,20 @@ class Request(db.Model):
 
     request_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     staff_id = db.Column(db.Integer, ForeignKey('Employee.staff_id'), nullable=False)
+    manager_id = db.Column(db.Integer, nullable=False)
+    current_date = db.Column(db.Date, nullable=False)
     requested_day = db.Column(db.Date, nullable=False)
-    current_date = db.Column(db.Date, nullable=False, default=date.today)
     timeslot = db.Column(db.Integer, nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
-    reason = db.Column(db.String(255), nullable=False) # Reason for WFH request
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
+    reason = db.Column(db.String(255), nullable=False, default="") # Reason for WFH request
 
     employee = relationship("Employee", backref="requests")
 
-    def __init__(self, staff_id, requested_day, timeslot, reason, status='Pending'):
+    def __init__(self, staff_id, manager_id, current_date, requested_day, timeslot, reason, status='Pending'):
         self.staff_id = staff_id
+        self.manager_id = manager_id
         self.requested_day = requested_day
-        self.current_date = date.today()
+        self.current_date = current_date
         self.timeslot = timeslot
         self.reason = reason
         self.status = status
@@ -62,6 +64,7 @@ class Request(db.Model):
     def json(self):
         return {
             'staff_id': self.staff_id,
+            'manager_id': self.manager_id,
             'requested_day': str(self.requested_day),
             'current_date': str(self.current_date),
             'timeslot': self.timeslot,
@@ -77,6 +80,7 @@ def create_request():
         new_request = Request(
             staff_id=data["staff_id"],
             requested_day=data["requested_day"],
+            current_date = data["current_date"],
             timeslot = data["timeslot"],
             reason = data["reason"],
         )
