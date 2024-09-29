@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask import render_template
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey
@@ -44,7 +45,7 @@ class Request(db.Model):
     staff_id = db.Column(db.Integer, ForeignKey('Employee.staff_id'), nullable=False)
     requested_day = db.Column(db.Date, nullable=False)
     current_date = db.Column(db.Date, nullable=False, default=date.today)
-    timeslot = db.Column(db.Integer, nullable=False)  # Morning, Afternoon, Full Day
+    timeslot = db.Column(db.Integer, nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
     reason = db.Column(db.String(255), nullable=False) # Reason for WFH request
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
 
@@ -139,6 +140,10 @@ def update_request(request_id):
     except Exception as e:
         app.logger.error(f"Failed to update request: {e}")
         return jsonify({'message': 'Failed to update request', 'code': 500}), 500
+
+@app.route('/arrangement_form')
+def arrangement_form():
+    return render_template('arrangement_form.html')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003, debug=True)
