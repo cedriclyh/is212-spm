@@ -14,8 +14,8 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm" 
-    # environ.get("dbURL") or "mysql+mysqlconnector://root:yourpassword@localhost:3306/spm" #this is for mac users
+    # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm" 
+    environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -26,23 +26,36 @@ CORS(app)
 class Employee(db.Model):
     __tablename__ = 'Employee'
 
-    staff_id = db.Column(db.Integer, nullable=False)
+    staff_id = db.Column(db.Integer, primary_key = True, nullable=False)
     staff_fname = db.Column(db.String(50), nullable=False)
     staff_lname = db.Column(db.String(50), nullable=False)
-    department = db.Column(db.String(50), nullable=False)
     position = db.Column(db.String(50), nullable=False)
     country = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50), nullable=False)
     reporting_manager = db.Column(db.String(50), nullable=False)
     role = db.Column(db.Integer, nullable=False)
 
+    # Method to convert the Employee object to a dictionary
+    def to_dict(self):
+        return {
+            'staff_id': self.staff_id,
+            'staff_fname': self.staff_fname,
+            'staff_lname': self.staff_lname,
+            'dept': self.dept,
+            'position': self.position,
+            'country': self.country,
+            'email': self.email,
+            'reporting_manager': self.reporting_manager,
+            'role': self.role
+        }
 
-    def __init__(self, staff_id: int, staff_fname: str, staff_lname: str, department: str, position: str, country: str, email: str, reporting_manager: int, role: int) -> None:
+
+    def __init__(self, staff_id: int, staff_fname: str, staff_lname: str, dept: str, position: str, country: str, email: str, reporting_manager: int, role: int) -> None:
         super().__init__()
         self.staff_id = staff_id
         self.staff_fname = staff_fname
         self.staff_lname = staff_lname
-        self.department = department
+        self.dept = dept
         self.position = position
         self.country = country
         self.email = email
@@ -54,7 +67,7 @@ class Employee(db.Model):
             'staff_id': self.staff_id,
             'staff_fname': self.staff_fname,
             'staff_lname': self.staff_lname,
-            'staff_department': self.department,
+            'staff_dept': self.dept,
             'position': self.position,
             'country': self.country,
             'email': self.email,
