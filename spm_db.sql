@@ -18,15 +18,16 @@ CREATE TABLE Employee (
     Email VARCHAR(50) NOT NULL,
     Reporting_Manager INT,
     
-    Role INT NOT NULL,
+    Role INT NOT NULL
     -- FOREIGN KEY (Reporting_Manager) REFERENCES Employee(Staff_ID)
 );
 
 -- User_Role
 CREATE TABLE User_Role (
     Role INT NOT NULL,
-    Role_Description VARCHAR(50) NOT NULL
-    `permissions VARCHAR(255), kiv` 
+    Role_Description VARCHAR(50) NOT NULL,
+    PRIMARY KEY (Role)
+    
 );
 
 -- Time Slot Table
@@ -41,7 +42,7 @@ CREATE TABLE Credentials (
     Staff_ID INT NOT NULL,
     Email VARCHAR(50) NOT NULL,
     Password VARCHAR(50) NOT NULL,
-    `permissions VARCHAR(255), kiv` 
+    
     FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
 );
 
@@ -107,7 +108,7 @@ INSERT INTO Employee (Staff_ID, Staff_FName, Staff_LName, Dept, Position, Countr
     (140001, 'Derek', 'Tan', 'Sales', 'Director', 'Singapore', 'Derek.Tan@allinone.com.sg', 130002, 1),
 	(150008, 'Eric', 'Loh', 'Solutioning', 'Director', 'Singapore', 'Eric.Loh@allinone.com.sg', 130002, 1),
 	(151408, 'Philip', 'Lee', 'Engineering', 'Director', 'Singapore', 'Philip.Lee@allinone.com.sg', 130002, 1),
-    (140894, 'Rahim', 'Khalid', 'Sales', 'Sales Manager', 'Singapore', 'Rahim.Khalid@allinone.com.sg', 140001, 3);
+    (140894, 'Rahim', 'Khalid', 'Sales', 'Sales Manager', 'Singapore', 'Rahim.Khalid@allinone.com.sg', 140001, 3),
     (140002, 'Susan', 'Goh', 'Sales', 'Account Manager', 'Singapore', 'Susan.Goh@allinone.com.sg', 140894, 2),
     (140003, 'Janice', 'Chan', 'Sales', 'Account Manager', 'Singapore', 'Janice.Chan@allinone.com.sg', 140894, 2),
     (140004, 'Mary', 'Teo', 'Sales', 'Account Manager', 'Singapore', 'Mary.Teo@allinone.com.sg', 140894, 2),
@@ -667,11 +668,12 @@ INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
     (140894, 'Rahim.Khalid@allinone.com.sg', 'Password140894');
 
 -- Time_Slot values
--- INSERT INTO Time_Slot (timeslot_description) VALUES
--- ('Morning Shift'),
--- ('Afternoon Shift'),
--- ('Full Day');
 -- hmmmmmmm just an example of timeslots
+INSERT INTO Time_Slot (timeslot_description) VALUES
+('Morning Shift'),
+('Afternoon Shift'),
+('Full Day');
+
 
 -- Request_Log values
 INSERT INTO Request_Log (requestor_staff_id, reviewer_id, request_time_date, arrangement_date, timeslot, status, cancel_reason) VALUES
