@@ -53,7 +53,7 @@ def make_request():
                     "employee_data": employee_data,
                     "request_data": created_request,
                     "code": 201,
-                    "notification_response": notification_response
+                    # "notification_response": notification_response
                 }), 201
             
             else:
