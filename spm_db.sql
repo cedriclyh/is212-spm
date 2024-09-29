@@ -18,21 +18,22 @@ CREATE TABLE Employee (
     Email VARCHAR(50) NOT NULL,
     Reporting_Manager INT,
     
-    Role INT NOT NULL,
+    Role INT NOT NULL
     -- FOREIGN KEY (Reporting_Manager) REFERENCES Employee(Staff_ID)
 );
 
 -- User_Role
 CREATE TABLE User_Role (
     Role INT NOT NULL,
-    Role_Description VARCHAR(50) NOT NULL
-    `permissions VARCHAR(255), kiv` 
+    Role_Description VARCHAR(50) NOT NULL,
+    PRIMARY KEY (Role)
+    
 );
 
 -- Time Slot Table
 CREATE TABLE IF NOT EXISTS Time_Slot (
-    timeslot INT AUTO_INCREMENT,
-    timeslot_description VARCHAR(255),
+    timeslot INT NOT NULL,
+    timeslot_description VARCHAR(255) NOT NULL,
     PRIMARY KEY (timeslot)
 );
 
@@ -41,25 +42,24 @@ CREATE TABLE Credentials (
     Staff_ID INT NOT NULL,
     Email VARCHAR(50) NOT NULL,
     Password VARCHAR(50) NOT NULL,
-    `permissions VARCHAR(255), kiv` 
+    
     FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
 );
 
 -- Request Log Table
 CREATE TABLE IF NOT EXISTS Request_Log (
-    request_id INT AUTO_INCREMENT,
-    requestor_staff_id INT,  -- FK to Employee.staff_id
-    reviewer_id INT,         -- FK to Employee.staff_id (manager)
-    request_time_date DATETIME,
-    arrangement_date DATE,
-    timeslot INT,            -- FK to Time_Slot.timeslot
-    status VARCHAR(50),
-    cancel_reason VARCHAR(255),
-    PRIMARY KEY (request_id),
-    FOREIGN KEY (requestor_staff_id) REFERENCES Employee(staff_id),
-    FOREIGN KEY (reviewer_id) REFERENCES Employee(staff_id),
-    FOREIGN KEY (timeslot) REFERENCES Time_Slot(timeslot)
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL,
+    manager_id INT NOT NULL,        
+    request_date DATE NOT NULL, 
+    arrangement_date DATE NOT NULL, -- which day you are requesting for
+    timeslot INT NOT NULL,          
+    status VARCHAR(50) NOT NULL DEFAULT 'Pending',
+    reason VARCHAR(255) NOT NULL,
+    FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
+    -- FOREIGN KEY (reviewer_id) REFERENCES Employee(staff_id),
+    -- FOREIGN KEY (timeslot) REFERENCES Time_Slot(timeslot)
 
 -- Arrangement Table
 CREATE TABLE IF NOT EXISTS Arrangement (
@@ -88,17 +88,17 @@ INSERT INTO User_Role (Role, Role_Description) VALUES
     (2, 'Staff'),
     (3, 'Manager');
 
--- Requests Table
-CREATE TABLE Request (
-    Request_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Staff_ID INT NOT NULL,
-    Requested_day DATE NOT NULL, -- which day you are requesting for
-    `current_date` DATE NOT NULL,
-    Timeslot INT NOT NULL,
-    Reason VARCHAR(255) NOT NULL,
-    Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
-    FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
-);
+-- Requests Table (old table - no longer in use)
+-- CREATE TABLE Request (
+--     Request_ID INT AUTO_INCREMENT PRIMARY KEY,
+--     Staff_ID INT NOT NULL,
+--     Requested_day DATE NOT NULL, -- which day you are requesting for
+--     `current_date` DATE NOT NULL,
+--     Timeslot INT NOT NULL,
+--     Reason VARCHAR(255) NOT NULL,
+--     Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+--     FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
+-- );
 
 
 -- Employee Values
@@ -107,7 +107,7 @@ INSERT INTO Employee (Staff_ID, Staff_FName, Staff_LName, Dept, Position, Countr
     (140001, 'Derek', 'Tan', 'Sales', 'Director', 'Singapore', 'Derek.Tan@allinone.com.sg', 130002, 1),
 	(150008, 'Eric', 'Loh', 'Solutioning', 'Director', 'Singapore', 'Eric.Loh@allinone.com.sg', 130002, 1),
 	(151408, 'Philip', 'Lee', 'Engineering', 'Director', 'Singapore', 'Philip.Lee@allinone.com.sg', 130002, 1),
-    (140894, 'Rahim', 'Khalid', 'Sales', 'Sales Manager', 'Singapore', 'Rahim.Khalid@allinone.com.sg', 140001, 3);
+    (140894, 'Rahim', 'Khalid', 'Sales', 'Sales Manager', 'Singapore', 'Rahim.Khalid@allinone.com.sg', 140001, 3),
     (140002, 'Susan', 'Goh', 'Sales', 'Account Manager', 'Singapore', 'Susan.Goh@allinone.com.sg', 140894, 2),
     (140003, 'Janice', 'Chan', 'Sales', 'Account Manager', 'Singapore', 'Janice.Chan@allinone.com.sg', 140894, 2),
     (140004, 'Mary', 'Teo', 'Sales', 'Account Manager', 'Singapore', 'Mary.Teo@allinone.com.sg', 140894, 2),
@@ -667,19 +667,21 @@ INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
     (140894, 'Rahim.Khalid@allinone.com.sg', 'Password140894');
 
 -- Time_Slot values
--- INSERT INTO Time_Slot (timeslot_description) VALUES
--- ('Morning Shift'),
--- ('Afternoon Shift'),
--- ('Full Day');
 -- hmmmmmmm just an example of timeslots
+INSERT INTO Time_Slot (timeslot, timeslot_description) VALUES
+(1, 'Morning Shift'),
+(2, 'Afternoon Shift'),
+(3, 'Full Day');
+
 
 -- Request_Log values
-INSERT INTO Request_Log (requestor_staff_id, reviewer_id, request_time_date, arrangement_date, timeslot, status, cancel_reason) VALUES
-(140002, 140894, NOW(), '2024-10-01', 1, 'Approved', NULL),
-(140003, 140894, NOW(), '2024-10-01', 2, 'Approved', NULL),
-(140004, 140894, NOW(), '2024-10-01', 3, 'Pending', NULL);
+INSERT INTO Request_Log (staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason) VALUES
+(140002, 140894, '2024-09-29', '2024-10-01', 1, 'Approved', "Medical Appointment"),
+(140003, 140894, '2024-09-30', '2024-10-01', 2, 'Approved', "Lazy"),
+(140004, 140894, '2024-09-09', '2024-10-01', 3, 'Pending', "");
 
 -- Arrangement values
+-- meaning approved requests
 INSERT INTO Arrangement (staff_id, arrangement_date, timeslot) VALUES
 (140002, '2024-10-01', 1),
 (140003, '2024-10-01', 2),
