@@ -36,23 +36,41 @@ export default function GoogleCalendarClone() {
     }
   };
 
-  // Example events
-  const events = [
-    {
-      title: 'Team Meeting',
-      start: '2024-10-01T10:00:00', // Starts on 1 October 10:00 AM
-      duration: '6:00' // Duration of 6 hours
-    },
-    {
-      title: 'Client Meeting',
-      start: new Date(new Date().setDate(new Date().getDate())), // Today
-      end: new Date(new Date(new Date().setDate(new Date().getDate())).setHours(new Date().getHours() + 2)), // 2 hours from now
-    },
-    {
-      title: 'Project Deadline',
-      start: new Date(new Date().setDate(new Date().getDate() + 3)), // 3 days from now
-      allDay: true,
-    },
+  const getEvents = () => {
+    // Dummy events
+    const personalEvents = [
+      { id: 1, title: 'Personal Meeting', start: '2024-10-01T10:00:00', end: '2024-10-01T11:00:00' },
+      { id: 2, title: 'Doctor Appointment', date: '2024-09-30', allDay: true }
+    ];
+    
+    const teamEvents = [
+      { id: 3, title: 'Team Standup', start: '2024-09-29', end: '2024-10-03' },
+      { id: 4, title: 'Project Demo', start: '2024-09-30', end: '2024-09-30' }
+    ];
+
+    return { personalEvents, teamEvents };
+  }; 
+
+  // Destructure the events from the function
+  const { personalEvents, teamEvents } = getEvents();
+
+  // State to manage which checkboxes are selected
+  const [showPersonal, setShowPersonal] = useState(true); //Set to be checked by default
+  const [showTeam, setShowTeam] = useState(false);
+
+  // Handler for checkbox change
+  const handleCheckboxChange = (event) => {
+    const { name, checked } = event.target;
+    if (name === 'personal') {
+      setShowPersonal(checked);
+    } else if (name === 'team') {
+      setShowTeam(checked);
+    }
+  };
+  // Combine personal and team events based on checkbox states
+  const filteredEvents = [
+    ...(showPersonal ? personalEvents : []),
+    ...(showTeam ? teamEvents : []),
   ];
 
   // Render the calendar
@@ -70,12 +88,15 @@ export default function GoogleCalendarClone() {
           }}
           >
             <div>
-              <h2>My Calendar</h2>
+              <h2>My Department <br/> Calendar</h2>
               
               {/* to fetch team/department name from API */}
-              <label>
-                <p> Personal<input type="checkbox" checked="True" /> </p> 
-            </label>
+              <input type="checkbox" name='personal' id='personal' style={{ transform: 'scale(1.5)' }} onChange={handleCheckboxChange} checked={showPersonal}/>
+              <label htmlFor="personal" style={{fontSize: '20px'}}> Personal</label>
+              <br/>
+
+              <input type="checkbox" name='team' id='team' style={{ transform: 'scale(1.5)' }} onChange={handleCheckboxChange} checked={showTeam}/>
+              <label htmlFor="team" style={{fontSize: '20px'}}> Team</label>
             </div>
             
           <div style={{flex: 1, marginLeft: '10px' }}>
@@ -88,7 +109,7 @@ export default function GoogleCalendarClone() {
               ref={calendarRef} // Reference to the FullCalendar component
               plugins={[dayGridPlugin, timeGridPlugin]}
               initialView={view} // Start with the current view (month or day)
-              events={events} // List of events
+              events={filteredEvents} // Filtered events
               headerToolbar={{
                 left: 'prev,next today',
                 center: 'title',
