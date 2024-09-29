@@ -29,6 +29,7 @@ class Employee(db.Model):
     staff_id = db.Column(db.Integer, primary_key = True, nullable=False)
     staff_fname = db.Column(db.String(50), nullable=False)
     staff_lname = db.Column(db.String(50), nullable=False)
+    dept = db.Column(db.String(50), nullable=False)
     position = db.Column(db.String(50), nullable=False)
     country = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50), nullable=False)
