@@ -6,9 +6,12 @@ import RequestTable from "./RequestTable"; // Assuming RequestTable is another c
 export default function RequestPage() {
   return (
     <div>
-        <Navbar />
-      <h1>Requests</h1>
-      <RequestTable />
+      <Navbar />
+      <br></br>
+      <div className="container mx-auto">
+        <RequestTable />
+      </div>
+      
     </div>
   );
 }
