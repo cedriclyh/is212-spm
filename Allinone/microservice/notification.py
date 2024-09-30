@@ -7,6 +7,9 @@ from flask_cors import CORS
 # import requests
 # from your_notification_service_module.notification_service import NotificationService
 
+# import os to access env. btw must pip install python-dotenv
+import os
+
 
 # import
 import sib_api_v3_sdk
@@ -25,9 +28,7 @@ engine = create_engine(DATABASE_URI)
 
 # initializing the Sendinblue configuration
 configuration = sib_api_v3_sdk.Configuration()
-configuration.api_key["api-key"] = (
-    ".env filepath"
-)
+configuration.api_key["api-key"] = (os.getenv("BREVOKEY"))
 
 # creating one instance of the TransactionalEmailsApi
 api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
