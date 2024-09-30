@@ -19,18 +19,22 @@ def make_request():
         employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
 
         if employee_response.status_code == 200:
-            employee_data = employee_response.json().get("data")
+            employee_data = employee_response.json()
             
             # Log employee data in terminal
             app.logger.info(f"Employee found: {employee_data}")
 
             # 2. Create WFH Request using Arrangement Microservice
+            print("hi")
             arrangement_data = {
                 "staff_id": staff_id,
-                "requested_day": data.get("requested_day"),
+                "manager_id": data.get("manager_id"),
+                "request_date": data.get("request_date"),
+                "arrangement_date" : data.get("arrangement_date"),
                 "timeslot": data.get("timeslot"),
                 "reason": data.get("reason")
             }
+            print(arrangement_data)
 
             # Send POST request to create a WFH request
             arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_request", json=arrangement_data)
@@ -53,7 +57,7 @@ def make_request():
                     "employee_data": employee_data,
                     "request_data": created_request,
                     "code": 201,
-                    "notification_response": notification_response
+                    # "notification_response": notification_response
                 }), 201
             
             else:
