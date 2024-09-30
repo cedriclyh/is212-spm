@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route  } from 'react-router-dom';
 import CalenderView from './component/CalendarView';
 import Login from './component/login';
 import RequestPage from './component/Table/RequestPage';
+import ArrangementForm from './component/arrangement_form';
 
 // function App() {
 //   return (
