@@ -1,0 +1,12 @@
+.calendar-container {
+    padding: 20px;
+  }
+  
+  .calendar-header {
+    margin-bottom: 20px;
+  }
+  
+  .calendar-title {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
