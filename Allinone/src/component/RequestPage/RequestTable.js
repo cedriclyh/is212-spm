@@ -70,7 +70,7 @@ const headCells = [
     id: 'name',
     numeric: false,
     disablePadding: true,
-    label: 'Dessert (100g serving)',
+    label: 'Dessert (100g serving)',
   },
   {
     id: 'calories',
@@ -185,7 +185,7 @@ function EnhancedTableToolbar(props) {
           id="tableTitle"
           component="div"
         >
-          Nutrition
+          My Requests
         </Typography>
       )}
       {numSelected > 0 ? (

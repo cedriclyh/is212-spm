@@ -5,24 +5,6 @@ import CalenderView from './component/CalendarView'
 import Login from './component/login'
 import RequestPage  from './component/RequestPage/RequestPage';
 
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-
-        
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//         <br></br>
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
 
 const App = () => {
   return(
