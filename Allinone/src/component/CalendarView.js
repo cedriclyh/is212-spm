@@ -28,8 +28,8 @@ export default function GoogleCalendarClone() {
   const toggleView = () => {
     const calendarApi = calendarRef.current.getApi(); // Get FullCalendar API
     if (view === 'dayGridMonth') {
-      calendarApi.changeView('timeGridDay'); // Switch to day view
-      setView('timeGridDay');
+      calendarApi.changeView('timeGridWeek'); // Switch to week view
+      setView('timeGridWeek');
     } else {
       calendarApi.changeView('dayGridMonth'); // Switch to month view
       setView('dayGridMonth');
@@ -102,7 +102,7 @@ export default function GoogleCalendarClone() {
           <div style={{flex: 1, marginLeft: '10px' }}>
             <div style={{display: "flex", justifyContent: "flex-end", marginBottom: '10px' }}> 
             <Button variant="contained" onClick={toggleView} startIcon={view === 'dayGridMonth' ? <ViewAgenda /> : <CalendarToday />}>
-              {view === 'dayGridMonth' ? 'Day View' : 'Month View'}
+              {view === 'dayGridMonth' ? 'Week View' : 'Month View'}
             </Button> 
           </div>
             <FullCalendar
