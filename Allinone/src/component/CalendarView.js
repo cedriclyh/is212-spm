@@ -40,7 +40,7 @@ export default function GoogleCalendarClone() {
     // Dummy events
     const personalEvents = [
       { id: 1, title: 'Personal Meeting', start: '2024-10-01T10:00:00', end: '2024-10-01T11:00:00' },
-      { id: 2, title: 'Doctor Appointment', date: '2024-09-30', allDay: true }
+      { id: 2, title: 'Doctor Appointment', date: '2024-09-30', allDay: true, backgroundColor: '#4caf50', }
     ];
     
     const teamEvents = [
@@ -116,7 +116,6 @@ export default function GoogleCalendarClone() {
                 right: '' // Hide the default view buttons (since we're using custom toggle buttons)
               }}
               validRange={validRange} // Limit navigation range
-              eventColor="blue" // Event styling
             />
           </div>
         </div>

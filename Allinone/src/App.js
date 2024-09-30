@@ -3,29 +3,12 @@ import React from "react";
 import { BrowserRouter, Routes, Route  } from 'react-router-dom';
 import CalenderView from './component/CalendarView'
 import Login from './component/login'
-
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-
-        
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//         <br></br>
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
+import NavBar from './component/NavBar'
 
 const App = () => {
   return(
     <BrowserRouter>
+      <NavBar />
       <Routes>
           <Route path="/" element={ <CalenderView /> } /> {/* Default path */}
           <Route path="/login" element={ <Login /> } />

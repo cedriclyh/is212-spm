@@ -1,0 +1,31 @@
+.navbar {
+    width: 200px; /* Adjust the width as needed */
+    height: 100vh; /* Full height */
+    background-color: #333; /* Background color */
+    position: fixed; /* Fixed position on the left */
+    left: 0; /* Align to the left */
+    top: 0; /* Align to the top */
+    padding: 1rem; /* Padding for some spacing */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Optional shadow */
+}
+
+.navbar ul {
+    list-style-type: none; /* Remove bullets */
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+}
+
+.navbar li {
+    margin-bottom: 20px; /* Spacing between links */
+}
+
+.navbar a {
+    color: white; /* Link color */
+    text-decoration: none; /* No underline */
+    display: block; /* Makes the entire area clickable */
+    padding: 10px; /* Padding around the link */
+}
+
+.navbar a:hover {
+    background-color: #444; /* Change background on hover */
+}
