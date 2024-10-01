@@ -3,7 +3,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route  } from 'react-router-dom';
 import CalenderView from './component/CalendarView'
 import Login from './component/login'
-import NavBar from './component/NavBar'
+import RequestPage  from './component/RequestPage/RequestPage';
+
 
 const App = () => {
   return(
@@ -13,6 +14,7 @@ const App = () => {
           <Route path="/" element={ <CalenderView /> } /> {/* Default path */}
           <Route path="/login" element={ <Login /> } />
           {/* <Route path="/manager-data" component={ Manager-Data } /> */}
+          <Route path="/requests" element={ <RequestPage /> } />
       </Routes>
     </BrowserRouter>
   )
