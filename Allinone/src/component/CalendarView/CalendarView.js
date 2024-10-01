@@ -1,32 +1,23 @@
 import React, { useState, useRef } from 'react';
 import './CalendarView.css'; // Import the CSS file
-
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-
 import { Button } from '@mui/material'; // You can use any button component you prefer
 import { CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
-import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; // For date manipulation
+import { getValidRange, getEvents } from './CalendarUtils'; // Import utility functions
 
 export default function GoogleCalendarClone() {
-  // State to toggle between day and month views
   const [view, setView] = useState('dayGridMonth');
-  const calendarRef = useRef(null); // Ref for FullCalendar instance
+  const calendarRef = useRef(null); 
 
   // Get the current month
   const today = new Date();
-  const startOfCurrentMonth = startOfMonth(today);
-  
-  // Define valid range (2 months back, 3 months forward)
-  const validRange = {
-    start: format(subMonths(startOfCurrentMonth, 2), 'yyyy-MM-dd'), // 2 months back from current month
-    end: format(addMonths(endOfMonth(today), 3), 'yyyy-MM-dd')    // 3 months forward from current month
-  };
+  const validRange = getValidRange(today);
 
   // Toggle between day and month views
   const toggleView = () => {
-    const calendarApi = calendarRef.current.getApi(); // Get FullCalendar API
+    const calendarApi = calendarRef.current.getApi(); 
     if (view === 'dayGridMonth') {
       calendarApi.changeView('timeGridWeek'); // Switch to week view
       setView('timeGridWeek');
@@ -36,23 +27,8 @@ export default function GoogleCalendarClone() {
     }
   };
 
-  const getEvents = () => {
-    // Dummy events
-    const personalEvents = [
-      { id: 1, title: 'Personal Meeting', start: '2024-10-01T10:00:00', end: '2024-10-01T11:00:00' },
-      { id: 2, title: 'Doctor Appointment', date: '2024-09-30', allDay: true, backgroundColor: '#4caf50', }
-    ];
-    
-    const teamEvents = [
-      { id: 3, title: 'Team Standup', start: '2024-09-29', end: '2024-10-03' },
-      { id: 4, title: 'Project Demo', start: '2024-09-30', end: '2024-09-30' }
-    ];
-
-    return { personalEvents, teamEvents };
-  }; 
-
   // Destructure the events from the function
-  const { personalEvents, teamEvents } = getEvents();
+  const { personalEvents, teamEvents, blockoutEvents } = getEvents();
 
   // State to manage which checkboxes are selected
   const [showPersonal, setShowPersonal] = useState(true); //Set to be checked by default
@@ -71,6 +47,7 @@ export default function GoogleCalendarClone() {
   const filteredEvents = [
     ...(showPersonal ? personalEvents : []),
     ...(showTeam ? teamEvents : []),
+    ...blockoutEvents
   ];
 
   // Render the calendar
