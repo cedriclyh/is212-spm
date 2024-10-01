@@ -9,7 +9,6 @@ import RequestPage  from './component/RequestPage/RequestPage';
 const App = () => {
   return(
     <BrowserRouter>
-      <NavBar />
       <Routes>
           <Route path="/" element={ <CalenderView /> } /> {/* Default path */}
           <Route path="/login" element={ <Login /> } />
