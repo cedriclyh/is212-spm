@@ -140,7 +140,7 @@ def owner_notif():
         <div style="padding: 20px;">
             <p>Hello,</p>
             <p>This is a notification to inform you that your request for your WFH arrangement has been successfully created.</p>
-            <p>Details are as followd:</p>
+            <p>Details are as follows:</p>
             <p><strong>Staff ID:</strong> {staff_id}</p>
             <p><strong>Requested Day:</strong> {requested_day}</p>
             <p><strong>Timeslot:</strong> {timeslot}</p>
