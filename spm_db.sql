@@ -32,8 +32,8 @@ CREATE TABLE User_Role (
 
 -- Time Slot Table
 CREATE TABLE IF NOT EXISTS Time_Slot (
-    timeslot INT AUTO_INCREMENT,
-    timeslot_description VARCHAR(255),
+    timeslot INT NOT NULL,
+    timeslot_description VARCHAR(255) NOT NULL,
     PRIMARY KEY (timeslot)
 );
 
@@ -48,18 +48,15 @@ CREATE TABLE Credentials (
 
 -- Request Log Table
 CREATE TABLE IF NOT EXISTS Request_Log (
-    request_id INT AUTO_INCREMENT,
-    requestor_staff_id INT,  -- FK to Employee.staff_id
-    reviewer_id INT,         -- FK to Employee.staff_id (manager)
-    request_time_date DATETIME,
-    arrangement_date DATE,
-    timeslot INT,            -- FK to Time_Slot.timeslot
-    status VARCHAR(50),
-    cancel_reason VARCHAR(255),
-    PRIMARY KEY (request_id),
-    FOREIGN KEY (requestor_staff_id) REFERENCES Employee(staff_id),
-    FOREIGN KEY (reviewer_id) REFERENCES Employee(staff_id),
-    FOREIGN KEY (timeslot) REFERENCES Time_Slot(timeslot)
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL, 
+    manager_id INT NOT NULL,        
+    request_date DATE NOT NULL,
+    arrangement_date DATE NOT NULL, -- which day you are requesting for
+    timeslot INT NOT NULL, 
+    status VARCHAR(50) NOT NULL DEFAULT 'Pending',           
+    reason VARCHAR(255) NOT NULL,
+    FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
 -- Arrangement Table
@@ -89,17 +86,17 @@ INSERT INTO User_Role (Role, Role_Description) VALUES
     (2, 'Staff'),
     (3, 'Manager');
 
--- Requests Table
-CREATE TABLE Request (
-    Request_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Staff_ID INT NOT NULL,
-    Requested_day DATE NOT NULL, -- which day you are requesting for
-    `current_date` DATE NOT NULL,
-    Timeslot INT NOT NULL,
-    Reason VARCHAR(255) NOT NULL,
-    Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
-    FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
-);
+-- Requests Table -- old table
+-- CREATE TABLE Request (
+--     Request_ID INT AUTO_INCREMENT PRIMARY KEY,
+--     Staff_ID INT NOT NULL,
+--     Requested_day DATE NOT NULL, -- which day you are requesting for
+--     `current_date` DATE NOT NULL,
+--     Timeslot INT NOT NULL,
+--     Reason VARCHAR(255) NOT NULL,
+--     Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+--     FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
+-- );
 
 
 -- Employee Values
@@ -669,19 +666,20 @@ INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
 
 -- Time_Slot values
 -- hmmmmmmm just an example of timeslots
-INSERT INTO Time_Slot (timeslot_description) VALUES
-('Morning Shift'),
-('Afternoon Shift'),
-('Full Day');
+INSERT INTO Time_Slot (timeslot, timeslot_description) VALUES
+(1, 'Morning Shift'),
+(2, 'Afternoon Shift'),
+(3, 'Full Day');
 
 
 -- Request_Log values
-INSERT INTO Request_Log (requestor_staff_id, reviewer_id, request_time_date, arrangement_date, timeslot, status, cancel_reason) VALUES
-(140002, 140894, NOW(), '2024-10-01', 1, 'Approved', NULL),
-(140003, 140894, NOW(), '2024-10-01', 2, 'Approved', NULL),
-(140004, 140894, NOW(), '2024-10-01', 3, 'Pending', NULL);
+INSERT INTO Request_Log (staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason) VALUES
+(140002, 140894, '2024-09-29', '2024-10-01', 1, 'Approved', "Medical Appointment"),
+(140003, 140894, '2024-09-29', '2024-10-01', 2, 'Approved', "Lazy"),
+(140004, 140894, '2024-09-09', '2024-10-01', 3, 'Pending', "");
 
 -- Arrangement values
+-- meaning approved requests
 INSERT INTO Arrangement (staff_id, arrangement_date, timeslot) VALUES
 (140002, '2024-10-01', 1),
 (140003, '2024-10-01', 2),
