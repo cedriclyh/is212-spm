@@ -16,7 +16,7 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm" 
+    # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
     environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -123,7 +123,7 @@ def get_requests_by_staff_id(staff_id):
     try:
         requests = Request.query.filter_by(staff_id=staff_id).all()
         if requests:
-            return jsonify({'message': f'Requests from staff {staff_id} found', 'data': [req.json() for req in request], 'code': 200}), 200
+            return jsonify({'message': f'Requests from staff {staff_id} found', 'data': [req.json() for req in requests], 'code': 200}), 200
         else:
             return jsonify({'message': f'No requests from staff {staff_id}', 'code': 404}), 404
     except Exception as e:
