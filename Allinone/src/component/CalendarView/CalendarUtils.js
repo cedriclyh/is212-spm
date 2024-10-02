@@ -10,23 +10,118 @@ export const getValidRange = (today) => {
     };
 }
 
-// Retrieve events for CalendarView
-export const getEvents = () => {
-    // Dummy events
-    const personalEvents = [
-      { id: 1, title: 'Personal Meeting', start: '2024-10-01T10:00:00', end: '2024-10-01T11:00:00' },
-      { id: 2, title: 'Doctor Appointment', date: '2024-09-30', allDay: true, backgroundColor: '#4caf50', }
-    ];
+// Retrieve TeamEvents for CalendarView
+export const getTeamEvents = async () => {
+  try{
+    const response = await fetch('http://localhost:5003/get_all_requests',{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+
+    const data = await response.json();
+    console.log("API Response:", data);
+
+    // Helper function to calculate start and end times based on timeslot
+    const getTimeRange = (timeslot, date) => {
+      switch (timeslot) {
+        case 1:
+          return { start: `${date}T09:00:00`, end: `${date}T13:00:00` };
+        case 2:
+          return { start: `${date}T14:00:00`, end: `${date}T18:00:00` };
+        case 3:
+          return { start: `${date}T09:00:00`, end: `${date}T18:00:00` };
+        default:
+          return { start: date, end: date }; // Fallback to all-day event if timeslot is unknown
+      }
+    };
+
+    const requests = data.data;
+
+   // Map the requests into event categories 
+   const teamEvents = requests.map(req => {
+    if (!req.timeslot || !req.arrangement_date) {
+      console.warn("Missing timeslot or arrangement_date in request:", req);
+      return null; // Skip this request if data is missing
+    }
+
+    const { start, end } = getTimeRange(req.timeslot, req.arrangement_date);
     
-    const teamEvents = [
-      { id: 3, title: 'Team Standup', start: '2024-09-29', end: '2024-10-03' },
-      { id: 4, title: 'Project Demo', start: '2024-09-30', end: '2024-09-30' }
-    ];
+    return {
+      id: req.staff_id,
+      title: req.reason || 'Team Event',
+      start,
+      end,
+      allDay: false,
+      backgroundColor: '#4caf50',
+    };
+  }).filter(event=>event !=null)
 
-    const blockoutEvents = [
-        { id: 'grey1', start: '2024-10-04', allDay: true, display: 'background', title:'Blocked', color: '#818589', classNames: ['blocked-event'], },
-        { id: 'grey2', start: '2024-10-10', allDay: true, display: 'background', title:'Blocked', color: '#818589', classNames: ['blocked-event'], }
-      ];
+  console.log("Team Events:", teamEvents); // Log team events for debugging
+  return {teamEvents};
+  } catch (error) {
+    console.error('Failed to fetch team events:', error);
+  }
+};    
 
-    return { personalEvents, teamEvents, blockoutEvents};
-  }; 
+// Retrieve personalEvents for CalendarView
+export const getPersonalEvents = async () => {
+  try{
+    const response = await fetch('http://localhost:5003/requests/staff/140002',{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+
+    const data = await response.json();
+    console.log("API Response:", data);
+
+    // Helper function to calculate start and end times based on timeslot
+    const getTimeRange = (timeslot, date) => {
+      switch (timeslot) {
+        case 1:
+          return { start: `${date}T09:00:00`, end: `${date}T13:00:00` };
+        case 2:
+          return { start: `${date}T14:00:00`, end: `${date}T18:00:00` };
+        case 3:
+          return { start: `${date}T09:00:00`, end: `${date}T18:00:00` };
+        default:
+          return { start: date, end: date }; // Fallback to all-day event if timeslot is unknown
+      }
+    };
+
+    const requests = data.data;
+
+   // Map the requests into event categories 
+   const personalEvents = requests.map(req => {
+    if (!req.timeslot || !req.arrangement_date) {
+      console.warn("Missing timeslot or arrangement_date in request:", req);
+      return null; // Skip this request if data is missing
+    }
+
+    const { start, end } = getTimeRange(req.timeslot, req.arrangement_date);
+    
+    return {
+      id: req.staff_id,
+      title: req.reason || 'Team Event',
+      start,
+      end,
+      allDay: false,
+      backgroundColor: '#4caf50',
+    };
+  }).filter(event=>event !=null)
+
+  console.log("Personal Events:", personalEvents); // Log team events for debugging
+  return {personalEvents};
+  } catch (error) {
+    console.error('Failed to fetch personal events:', error);
+  }
+};    
