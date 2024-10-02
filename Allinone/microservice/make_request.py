@@ -16,16 +16,15 @@ def make_request():
 
         # 1. Verify Employee exists using Employee Microservice
         staff_id = data.get("staff_id")
-        employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
+        employee_verification = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
 
-        if employee_response.status_code == 200:
-            employee_data = employee_response.json()
+        if employee_verification.status_code == 200:
+            employee_data = employee_verification.json()
             
             # Log employee data in terminal
             app.logger.info(f"Employee found: {employee_data}")
 
             # 2. Create WFH Request using Arrangement Microservice
-            print("hi")
             arrangement_data = {
                 "staff_id": staff_id,
                 "manager_id": data.get("manager_id"),
@@ -41,33 +40,44 @@ def make_request():
 
             if arrangement_response.status_code == 201:
                 created_request = arrangement_response.json().get("data")
+                manager_id = created_request.get("manager_id")
 
-                # # 3. Send Notification to Employee using Notification Microservice [MISSING OWNER EMAIL!!!]
-                # print("Sending notification to employee")
-                # notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/sucessful_arrangement", json={
-                #     "staff_id": staff_id,
-                #     "requested_day": data.get("requested_day"),
-                #     "timeslot": data.get("timeslot"),
-                #     "reason": data.get("reason"),
-                #     "message": f"Your WFH request for {data.get('requested_day')} has been successfully created"
-                # })
+                # 3. Retrieve the manager's email using Employee Microservice
+                employee_response =  requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/manager_email/{manager_id}")
 
-                return jsonify({
-                    "message": "Request successfully created",
-                    "employee_data": employee_data,
-                    "request_data": created_request,
-                    "code": 201,
-                    # "notification_response": notification_response
-                }), 201
-            
+                if employee_response.status_code == 200:
+                    manager_email = employee_response.json().get("manager_email")
+
+                    # 4. Send a notification to the manager using Notification Microservice
+                    notification_data = {
+                        "manager_email": manager_email,
+                        "staff_id": staff_id,
+                        "request_date": created_request.get("request_date"),
+                        "timeslot": created_request.get("timeslot"),
+                        "reason": created_request.get("reason"),
+                        "request_id": created_request.get("request_id")
+                    }
+
+                    notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/request_sent", json=notification_data)
+
+                    if notification_response.status_code == 200:
+                        return jsonify({
+                            "message": "Request created and manager notified successfully",
+                            "request_data": created_request,
+                            "code": 201
+                    }), 201
+                    else:
+                        return jsonify({
+                            "message": "Request created, but failed to notify manager",
+                            "request_data": created_request,
+                            "code": 500
+                    }), 500
+                
+                else:
+                    return jsonify({"message": "Failed to retrieve manager email", "code": 500}), 500
+                
             else:
-                app.logger.error(f"Failed to create WFH request: {arrangement_response.json()}")
-                return jsonify({
-                    "message": "Failed to create WFH request",
-                    "code": arrangement_response.status_code
-                }), arrangement_response.status_code
-            
-            
+                return jsonify({"message": "Failed to create WFH request", "code": 500}), 500
 
         else:
             return jsonify({
