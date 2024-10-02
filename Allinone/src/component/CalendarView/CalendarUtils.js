@@ -71,7 +71,7 @@ export const getTeamEvents = async () => {
 // Retrieve personalEvents for CalendarView
 export const getPersonalEvents = async () => {
   try{
-    const response = await fetch('http://localhost:5003/requests/staff/140002',{
+    const response = await fetch('http://localhost:5003/requests/staff/140003',{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

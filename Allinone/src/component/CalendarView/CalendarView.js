@@ -44,29 +44,26 @@ export default function GoogleCalendarClone() {
     }
   };
 
-  // const teamEvents = getTeamEvents();
-  // const personalEvents = getPersonalEvents();
 
   // State to manage which checkboxes are selected
-  // const [showPersonal, setShowPersonal] = useState(true); //Set to be checked by default
-  // const [showTeam, setShowTeam] = useState(true);
+  const [showPersonal, setShowPersonal] = useState(true); //Set to be checked by default
+  const [showTeam, setShowTeam] = useState(true);
 
   // Handler for checkbox change
-  // const handleCheckboxChange = (event) => {
-  //   const { name, checked } = event.target;
-  //   // if (name === 'personal') {
-  //   //   setShowPersonal(checked);
-  //    if (name === 'team') {
-  //     setShowTeam(checked);
-  //   }
-  // };
+  const handleCheckboxChange = (event) => {
+    const { name, checked } = event.target;
+    if (name === 'personal') {
+      setShowPersonal(checked);
+    } else if (name === 'team') {
+      setShowTeam(checked);
+    }
+  };
 
   // Combine personal and team events based on checkbox states
-  // const filteredEvents = [
-  //   // ...(showPersonal ? personalEvents : []),
-  //   ...teamEvents
-  //   // ...blockoutEvents
-  // ];
+  const filteredEvents = [
+    ...(showPersonal ? personalEvents : []),
+    ...(showTeam ? teamEvents : []),
+  ];
 
   // Render the calendar
   return (
@@ -85,12 +82,12 @@ export default function GoogleCalendarClone() {
             <div>
               <h2>My Department <br/> Calendar</h2>
               
-              {/* <input type="checkbox" name='personal' id='personal' style={{ transform: 'scale(1.5)' }} onChange={handleCheckboxChange} checked={showPersonal}/>
-              <label htmlFor="personal" style={{fontSize: '20px'}}> Personal</label> */}
+              <input type="checkbox" name='personal' id='personal' style={{ transform: 'scale(1.5)' }} onChange={handleCheckboxChange} checked={showPersonal}/>
+              <label htmlFor="personal" style={{fontSize: '20px'}}> Personal</label>
               <br/>
 
-              {/* <input type="checkbox" name='team' id='team' style={{ transform: 'scale(1.5)' }} onChange={handleCheckboxChange} checked={showTeam}/>
-              <label htmlFor="team" style={{fontSize: '20px'}}> Team</label> */}
+              <input type="checkbox" name='team' id='team' style={{ transform: 'scale(1.5)' }} onChange={handleCheckboxChange} checked={showTeam}/>
+              <label htmlFor="team" style={{fontSize: '20px'}}> Team</label>
             </div>
             
           <div style={{flex: 1, marginLeft: '10px' }}>
@@ -103,7 +100,7 @@ export default function GoogleCalendarClone() {
               ref={calendarRef} // Reference to the FullCalendar component
               plugins={[dayGridPlugin, timeGridPlugin]}
               initialView={view} // Start with the current view (month or day)
-              events={personalEvents} // Filtered events
+              events={filteredEvents} // Filtered events
               headerToolbar={{
                 left: 'prev,next today',
                 center: 'title',
