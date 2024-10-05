@@ -38,35 +38,35 @@ function getBackgroundColor(status) {
 }
 
 // tofix arrangement name
-// async function getArrangementName(userId) {
-//   const apiUrl = `http://127.0.0.1:5002/user/${userId}`;
+async function getArrangementName(userId) {
+  const apiUrl = `http://127.0.0.1:5002/user/${userId}`;
 
-//   try {
-//     // Fetch user data from the API
-//     const response = await fetch(apiUrl);
+  try {
+    // Fetch user data from the API
+    const response = await fetch(apiUrl);
 
-//     // Check if the response is successful
-//     if (!response.ok) {
-//       throw new Error(`Error fetching user data: ${response.status}`);
-//     }
+    // Check if the response is successful
+    if (!response.ok) {
+      throw new Error(`Error fetching user data: ${response.status}`);
+    }
 
-//     // Parse the JSON response
-//     const userData = await response.json();
-//     console.log("User Data:", userData);
+    // Parse the JSON response
+    const userData = await response.json();
+    console.log("User Data:", userData);
 
-//     // Extract first name and last name
-//     const staff_fname= userData['staff_fname'];
-//     console.log(staff_fname)
+    // Extract first name and last name
+    const staff_fname= userData.data.staff_fname;
+    const staff_lname= userData.data.staff_lname;
 
-//     // Combine first and last name
-//     const arrangementName = `${staff_fname} ${staff_lname} WFH`;
-
-//     return arrangementName;
-//   } catch (error) {
-//     console.error("Failed to fetch arrangement name:", error);
-//     return null; // Return null or handle error appropriately
-//   }
-// }
+    // Combine first and last name
+    const arrangementName = `${staff_fname} ${staff_lname} WFH`;
+    console.log("Arrangement Name:", arrangementName);
+    return arrangementName;
+  } catch (error) {
+    console.error("Failed to fetch arrangement name:", error);
+    return null; // Return null or handle error appropriately
+  }
+}
 
 // Retrieve TeamEvents for CalendarView
 export const getTeamEvents = async () => {
@@ -87,30 +87,35 @@ export const getTeamEvents = async () => {
     const requests = data.data;
 
    // Map the requests into event categories 
-   const teamEvents = requests.map(req => {
-    if (!req.timeslot || !req.arrangement_date) {
-      console.warn("Missing timeslot or arrangement_date in request:", req);
-      return null; // Skip this request if data is missing
-    }
+   const teamEvents = await Promise.all(
+    requests.map(async (req) => {
+      if (!req.timeslot || !req.arrangement_date) {
+        console.warn("Missing timeslot or arrangement_date in request:", req);
+        return null; // Skip this request if data is missing
+      }
 
-    const { start, end } = getTimeRange(req.timeslot, req.arrangement_date);
-    
-    return {
-      id: req.staff_id,
-      title: getArrangementName(req.staff_id) || 'Team Event',
-      start,
-      end,
-      allDay: false,
-      backgroundColor: getBackgroundColor(req.status),
-    };
-  }).filter(event=>event !=null)
+      const { start, end } = getTimeRange(req.timeslot, req.arrangement_date);
+
+      // Wait for the arrangement name to be fetched
+      const title = await getArrangementName(req.staff_id) || 'Team Event';
+
+      return {
+        id: req.staff_id,
+        title,  
+        start,
+        end,
+        allDay: false,
+        backgroundColor: getBackgroundColor(req.status),
+      };
+    })
+  );
 
   console.log("Team Events:", teamEvents); // Log team events for debugging
-  return {teamEvents};
+  return teamEvents.filter(event=>event !=null);
   } catch (error) {
     console.error('Failed to fetch team events:', error);
   }
-};    
+}; 
 
 // Retrieve personalEvents for CalendarView
 export const getPersonalEvents = async () => {
@@ -131,26 +136,32 @@ export const getPersonalEvents = async () => {
     const requests = data.data;
 
    // Map the requests into event categories 
-   const personalEvents = requests.map(req => {
-    if (!req.timeslot || !req.arrangement_date) {
-      console.warn("Missing timeslot or arrangement_date in request:", req);
-      return null; // Skip this request if data is missing
-    }
+   const personalEvents = await Promise.all(
+    requests.map(async (req) => {
+      if (!req.timeslot || !req.arrangement_date) {
+        console.warn("Missing timeslot or arrangement_date in request:", req);
+        return null; // Skip this request if data is missing
+      }
 
-    const { start, end } = getTimeRange(req.timeslot, req.arrangement_date);
-    
-    return {
-      id: req.staff_id,
-      title: getArrangementName(req.staff_id) || 'Personal Event',
-      start,
-      end,
-      allDay: false,
-      backgroundColor: getBackgroundColor(req.status),
-    };
-  }).filter(event=>event !=null)
+      const { start, end } = getTimeRange(req.timeslot, req.arrangement_date);
+
+      // Wait for the arrangement name to be fetched
+      const title = await getArrangementName(req.staff_id) || 'Team Event';
+
+      return {
+        id: req.staff_id,
+        title,  
+        start,
+        end,
+        allDay: false,
+        backgroundColor: getBackgroundColor(req.status),
+      };
+    })
+  );
 
   console.log("Personal Events:", personalEvents); // Log team events for debugging
-  return {personalEvents};
+  return personalEvents.filter(event=>event !=null);
+
   } catch (error) {
     console.error('Failed to fetch personal events:', error);
   }

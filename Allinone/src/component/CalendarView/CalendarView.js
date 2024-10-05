@@ -17,11 +17,11 @@ export default function GoogleCalendarClone() {
     const fetchEvents = async () => {
       const teamEvents = await getTeamEvents(); // Fetch the team events
       // console.log("Fetched Events:", teamEvents.teamEvents); 
-      setTeamEvents(teamEvents.teamEvents); // Update state with fetched events
+      setTeamEvents(teamEvents); // Update state with fetched events
 
       const personalEvents = await getPersonalEvents(); // Fetch the personal events
       // console.log("Fetched Personal Events:", personalEvents.personalEvents); 
-      setPersonalEvents(personalEvents.personalEvents); // Update state with fetched events
+      setPersonalEvents(personalEvents); // Update state with fetched events
     };
     fetchEvents(); // Call the fetch function
   }, []); // Run once on mount
