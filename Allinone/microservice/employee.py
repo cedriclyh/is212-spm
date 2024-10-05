@@ -109,7 +109,22 @@ def specific_user(staff_id):
     else:
         return jsonify({"message": "Employee not found", "code":404}), 404
     
+# Get specific employee's manager's email address to send notification of request made
+@app.route('/user/manager_email/<int:manager_id>', methods=['GET'])
+def get_manager_email(manager_id):
+    try:
+        # Fetch the manager's email based on their manager_id
+        manager = db.session.query(Employee).filter_by(staff_id=manager_id).first()
 
+        if manager:
+            manager_email = manager.email
+            return jsonify({"manager_email": manager_email}), 200
+        else:
+            return jsonify({"message": "Manager not found"}), 404
+
+    except Exception as e:
+        app.logger.error(f"Failed to retrieve manager email: {e}")
+        return jsonify({"message": "Failed to retrieve manager email", "error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)

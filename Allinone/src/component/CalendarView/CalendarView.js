@@ -23,8 +23,6 @@ export default function GoogleCalendarClone() {
       console.log("Fetched Personal Events:", personalEvents.personalEvents); 
       setPersonalEvents(personalEvents.personalEvents); // Update state with fetched events
     };
-    
-
     fetchEvents(); // Call the fetch function
   }, []); // Run once on mount
 
@@ -59,10 +57,16 @@ export default function GoogleCalendarClone() {
     }
   };
 
+  const blockedEvents = [
+    { id: 'grey1', start: '2024-10-04', end: '2024-10-05', allDay: true, display: 'background', title:'Blocked', classNames:['blocked-event'], color: '#808080' }, // Darker grey
+    { id: 'grey2', start: '2024-10-10', end: '2024-10-12', allDay: true, display: 'background', title:'Blocked',classNames:['blocked-event'], color: '#808080' }  // Darker grey
+  ];
+
   // Combine personal and team events based on checkbox states
   const filteredEvents = [
     ...(showPersonal ? personalEvents : []),
     ...(showTeam ? teamEvents : []),
+    ...blockedEvents // Add blocked events
   ];
 
   // Render the calendar
