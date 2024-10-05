@@ -26,7 +26,7 @@ export default function GoogleCalendarClone() {
     
 
     fetchEvents(); // Call the fetch function
-  }, []); // Run once on moun
+  }, []); // Run once on mount
 
   // Get the current month
   const today = new Date();

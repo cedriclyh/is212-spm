@@ -10,6 +10,33 @@ export const getValidRange = (today) => {
     };
 }
 
+// Helper function to calculate start and end times based on timeslot
+const getTimeRange = (timeslot, date) => {
+  switch (timeslot) {
+    case 1:
+      return { start: `${date}T09:00:00`, end: `${date}T13:00:00` };
+    case 2:
+      return { start: `${date}T14:00:00`, end: `${date}T18:00:00` };
+    case 3:
+      return { start: `${date}T09:00:00`, end: `${date}T18:00:00` };
+    default:
+      return { start: date, end: date }; // Fallback to all-day event if timeslot is unknown
+  }
+};
+
+function getBackgroundColor(status) {
+  switch (status) {
+    case 'Approved':
+      return '#4caf50'; // Green for approved
+    case 'Pending':
+      return '#ff9800'; // Orange for pending
+    case 'Rejected':
+      return '#f44336'; // Red for rejected
+    default:
+      return '#9e9e9e'; // Grey for unknown status
+  }
+}
+
 // Retrieve TeamEvents for CalendarView
 export const getTeamEvents = async () => {
   try{
@@ -25,20 +52,6 @@ export const getTeamEvents = async () => {
 
     const data = await response.json();
     console.log("API Response:", data);
-
-    // Helper function to calculate start and end times based on timeslot
-    const getTimeRange = (timeslot, date) => {
-      switch (timeslot) {
-        case 1:
-          return { start: `${date}T09:00:00`, end: `${date}T13:00:00` };
-        case 2:
-          return { start: `${date}T14:00:00`, end: `${date}T18:00:00` };
-        case 3:
-          return { start: `${date}T09:00:00`, end: `${date}T18:00:00` };
-        default:
-          return { start: date, end: date }; // Fallback to all-day event if timeslot is unknown
-      }
-    };
 
     const requests = data.data;
 
@@ -57,7 +70,7 @@ export const getTeamEvents = async () => {
       start,
       end,
       allDay: false,
-      backgroundColor: '#4caf50',
+      backgroundColor: getBackgroundColor(req.status),
     };
   }).filter(event=>event !=null)
 
@@ -84,20 +97,6 @@ export const getPersonalEvents = async () => {
     const data = await response.json();
     console.log("API Response:", data);
 
-    // Helper function to calculate start and end times based on timeslot
-    const getTimeRange = (timeslot, date) => {
-      switch (timeslot) {
-        case 1:
-          return { start: `${date}T09:00:00`, end: `${date}T13:00:00` };
-        case 2:
-          return { start: `${date}T14:00:00`, end: `${date}T18:00:00` };
-        case 3:
-          return { start: `${date}T09:00:00`, end: `${date}T18:00:00` };
-        default:
-          return { start: date, end: date }; // Fallback to all-day event if timeslot is unknown
-      }
-    };
-
     const requests = data.data;
 
    // Map the requests into event categories 
@@ -115,7 +114,7 @@ export const getPersonalEvents = async () => {
       start,
       end,
       allDay: false,
-      backgroundColor: '#4caf50',
+      backgroundColor: getBackgroundColor(req.status),
     };
   }).filter(event=>event !=null)
 
