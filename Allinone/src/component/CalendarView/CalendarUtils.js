@@ -11,7 +11,7 @@ export const getValidRange = (today) => {
 }
 
 // Helper function to calculate start and end times based on timeslot
-const getTimeRange = (timeslot, date) => {
+function getTimeRange(timeslot, date) {
   switch (timeslot) {
     case 1:
       return { start: `${date}T09:00:00`, end: `${date}T13:00:00` };
@@ -36,6 +36,37 @@ function getBackgroundColor(status) {
       return '#9e9e9e'; // Grey for unknown status
   }
 }
+
+// tofix arrangement name
+// async function getArrangementName(userId) {
+//   const apiUrl = `http://127.0.0.1:5002/user/${userId}`;
+
+//   try {
+//     // Fetch user data from the API
+//     const response = await fetch(apiUrl);
+
+//     // Check if the response is successful
+//     if (!response.ok) {
+//       throw new Error(`Error fetching user data: ${response.status}`);
+//     }
+
+//     // Parse the JSON response
+//     const userData = await response.json();
+//     console.log("User Data:", userData);
+
+//     // Extract first name and last name
+//     const staff_fname= userData['staff_fname'];
+//     console.log(staff_fname)
+
+//     // Combine first and last name
+//     const arrangementName = `${staff_fname} ${staff_lname} WFH`;
+
+//     return arrangementName;
+//   } catch (error) {
+//     console.error("Failed to fetch arrangement name:", error);
+//     return null; // Return null or handle error appropriately
+//   }
+// }
 
 // Retrieve TeamEvents for CalendarView
 export const getTeamEvents = async () => {
@@ -66,7 +97,7 @@ export const getTeamEvents = async () => {
     
     return {
       id: req.staff_id,
-      title: req.reason || 'Team Event',
+      title: getArrangementName(req.staff_id) || 'Team Event',
       start,
       end,
       allDay: false,
@@ -110,7 +141,7 @@ export const getPersonalEvents = async () => {
     
     return {
       id: req.staff_id,
-      title: req.reason || 'Team Event',
+      title: getArrangementName(req.staff_id) || 'Personal Event',
       start,
       end,
       allDay: false,
