@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route  } from 'react-router-dom';
 import CalenderView from './component/CalendarView'
 import Login from './component/login'
 import RequestPage  from './component/RequestPage/RequestPage';
+import Sidebar from './component/Sidebar/Sidebar';
 
 
 const App = () => {
@@ -14,6 +15,7 @@ const App = () => {
           <Route path="/login" element={ <Login /> } />
           {/* <Route path="/manager-data" component={ Manager-Data } /> */}
           <Route path="/requests" element={ <RequestPage /> } />
+          <Route path="/test" element={ <Sidebar/> } />
       </Routes>
     </BrowserRouter>
   )

@@ -16,11 +16,19 @@ import Paper from '@mui/material/Paper';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
+
+const statusColorMap = {
+  approved: "success",
+  rejected: "danger",
+  pending: "warning",
+  cancelled: "",
+  withdraw: ""
+}
+
+const initial_visible_columns = ["Index", "Arrangment Date", "Timeslot", "Status", "Request Date", "Actions"]
 
 function createData(id, name, calories, fat, carbs, protein) {
   return {
@@ -70,7 +78,7 @@ const headCells = [
     id: 'name',
     numeric: false,
     disablePadding: true,
-    label: 'Dessert (100g serving)',
+    label: 'Index',
   },
   {
     id: 'calories',
@@ -96,6 +104,12 @@ const headCells = [
     disablePadding: false,
     label: 'Protein (g)',
   },
+  {
+    id: 'request_status',
+    numeric: true,
+    disablePadding: false,
+    label: 'Status'
+  }
 ];
 
 function EnhancedTableHead(props) {
@@ -214,7 +228,6 @@ export default function RequestTable() {
   const [orderBy, setOrderBy] = React.useState('calories');
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
-  const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
   const handleRequestSort = (event, property) => {
@@ -260,10 +273,6 @@ export default function RequestTable() {
     setPage(0);
   };
 
-  const handleChangeDense = (event) => {
-    setDense(event.target.checked);
-  };
-
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
@@ -284,7 +293,6 @@ export default function RequestTable() {
           <Table
             sx={{ minWidth: 750 }}
             aria-labelledby="tableTitle"
-            size={dense ? 'small' : 'medium'}
           >
             <EnhancedTableHead
               numSelected={selected.length}
@@ -337,7 +345,7 @@ export default function RequestTable() {
               {emptyRows > 0 && (
                 <TableRow
                   style={{
-                    height: (dense ? 33 : 53) * emptyRows,
+                    height: 53 * emptyRows,
                   }}
                 >
                   <TableCell colSpan={6} />
@@ -356,10 +364,6 @@ export default function RequestTable() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
-      <FormControlLabel
-        control={<Switch checked={dense} onChange={handleChangeDense} />}
-        label="Dense padding"
-      />
     </Box>
   );
 }
