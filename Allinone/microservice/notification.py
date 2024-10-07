@@ -43,22 +43,31 @@ def request_sent():
         data = request.json
         manager_email = data.get("manager_email")
         staff_id = data.get("staff_id")
+        employee_name = data.get("employee_name")
         request_date = data.get("request_date")
         timeslot = data.get("timeslot")
         reason = data.get("reason")
 
         if not manager_email:
             return jsonify({"error": "Manager email is missing"}), 400
+        
+        # extract timeslot 
+        if timeslot == 1: 
+            timeslot_desc = "Morning Shift"
+        elif timeslot == 2:
+            timeslot_desc = "Afternoon Shift"
+        else: 
+            timeslot_desc = "Full Day"
 
         # Email content to notify the manager
-        sender = {"name": "Your Company", "email": "no-reply@yourcompany.com"}
+        sender = {"name": "Allinone", "email": "no-reply@allinone.com"}
         to = [{"email": manager_email}]
         subject = "New Work From Home Request Notification"
         html_content = f"""
         <html>
         <body>
             <h3>New WFH Request Submitted</h3>
-            <p>Employee with ID {staff_id} has submitted a WFH request for {request_date} during {timeslot}.</p>
+            <p>Employee {employee_name} with ID {staff_id} has submitted a {timeslot_desc} WFH request for {request_date}.</p>
             <p>Reason: {reason}</p>
         </body>
         </html>
@@ -106,7 +115,7 @@ def notify_status_update():
             return jsonify({"error": "Staff email or status is missing"}), 400
         
         # Email content to notify the staff of the request status
-        sender = {"name": "Your Company", "email": "no-reply@yourcompany.com"}
+        sender = {"name": "Allinone", "email": "no-reply@yourcompany.com"}
         to = [{"email": staff_email}]
         subject = f"Your Work From Home Request Has Been {request_status}"
         html_content = f"""
