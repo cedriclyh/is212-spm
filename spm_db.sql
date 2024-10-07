@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS Request_Log (
     timeslot INT NOT NULL, 
     status VARCHAR(50) NOT NULL DEFAULT 'Pending',           
     reason VARCHAR(255) NOT NULL,
+    remarks VARCHAR(255) NULL,
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
@@ -673,10 +674,10 @@ INSERT INTO Time_Slot (timeslot, timeslot_description) VALUES
 
 
 -- Request_Log values
-INSERT INTO Request_Log (staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason) VALUES
-(140002, 140894, '2024-09-29', '2024-10-01', 1, 'Approved', "Medical Appointment"),
-(140003, 140894, '2024-09-29', '2024-10-01', 2, 'Approved', "Lazy"),
-(140004, 140894, '2024-09-09', '2024-10-01', 3, 'Pending', "");
+INSERT INTO Request_Log (staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason, remarks) VALUES
+(140002, 140894, '2024-09-29', '2024-10-01', 1, 'Approved', "Medical Appointment", ""),
+(140003, 140894, '2024-09-29', '2024-10-01', 2, 'Approved', "Lazy", ""),
+(140004, 140894, '2024-09-09', '2024-10-01', 3, 'Pending', "", NULL);
 
 -- Arrangement values
 -- meaning approved requests
