@@ -14,7 +14,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`flex flex-col h-screen px-5 py-8 bg-white border-r dark:bg-gray-900 dark:border-gray-700 transition-width duration-300 ${isExpanded ? "w-48" : "w-16"}`}>
+    <aside className={`flex flex-col h-screen px-5 py-8 bg-white border-r border-gray-300 dark:bg-gray-900 dark:border-gray-700 transition-width duration-300 ${isExpanded ? "w-48" : "w-16"}`}>
       
       {/* Toggle Button */}
       <div className="flex justify pb-2">

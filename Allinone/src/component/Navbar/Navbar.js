@@ -2,7 +2,7 @@ import {Navbar, NavbarBrand, NavbarContent, NavbarItem, Link, DropdownItem, Drop
 
 export default function App() {
   return (
-    <Navbar maxWidth="full">
+    <Navbar maxWidth="full" isBordered>
       <NavbarBrand>
         <p className="font-bold text-inherit">ACME</p>
       </NavbarBrand>

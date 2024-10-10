@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const columns = [
     {name: "ID", uid: "id", sortable: true},
     {name: "NAME", uid: "name", sortable: true},
@@ -219,3 +221,22 @@ const columns = [
   ];
   
   export {columns, users, statusOptions};
+
+  const requestData = async () => {
+    try {
+      const response = await axios.get('http://localhost:5003/requests/staff/140004');
+      
+      if (response.status === 200) {
+        return response.data.data;
+      } else {
+        return [];
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return [];
+      } else {
+        console.error("An error occurred:", error);
+        return [];
+      }
+    }
+  };

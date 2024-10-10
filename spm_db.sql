@@ -86,18 +86,6 @@ INSERT INTO User_Role (Role, Role_Description) VALUES
     (2, 'Staff'),
     (3, 'Manager');
 
--- Requests Table -- old table
--- CREATE TABLE Request (
---     Request_ID INT AUTO_INCREMENT PRIMARY KEY,
---     Staff_ID INT NOT NULL,
---     Requested_day DATE NOT NULL, -- which day you are requesting for
---     `current_date` DATE NOT NULL,
---     Timeslot INT NOT NULL,
---     Reason VARCHAR(255) NOT NULL,
---     Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
---     FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
--- );
-
 
 -- Employee Values
 INSERT INTO Employee (Staff_ID, Staff_FName, Staff_LName, Dept, Position, Country, Email, Reporting_Manager, Role) VALUES 
@@ -676,7 +664,15 @@ INSERT INTO Time_Slot (timeslot, timeslot_description) VALUES
 INSERT INTO Request_Log (staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason) VALUES
 (140002, 140894, '2024-09-29', '2024-10-01', 1, 'Approved', "Medical Appointment"),
 (140003, 140894, '2024-09-29', '2024-10-01', 2, 'Approved', "Lazy"),
-(140004, 140894, '2024-09-09', '2024-10-01', 3, 'Pending', "");
+(140004, 140894, '2024-09-19', '2024-10-01', 3, 'Pending', ''),
+(140004, 140894, '2024-08-09', '2024-10-02', 3, 'Pending', ''),
+(140004, 140894, '2024-09-29', '2024-10-03', 2, 'Rejected', ''),
+(140004, 140894, '2024-07-09', '2024-12-01', 1, 'Pending', ''),
+(140004, 140894, '2024-09-10', '2025-01-01', 3, 'Approved', ''),
+(140004, 140894, '2024-09-09', '2024-10-11', 2, 'Approved', ''),
+(140004, 140894, '2024-08-31', '2024-10-12', 2, 'Rejected', ''),
+(140004, 140894, '2024-08-30', '2024-10-15', 3, 'Pending', '');
+
 
 -- Arrangement values
 -- meaning approved requests

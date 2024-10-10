@@ -20,7 +20,7 @@ import {PlusIcon} from "./PlusIcon";
 import {VerticalDotsIcon} from "./VerticalDotsIcon";
 import {SearchIcon} from "./SearchIcon";
 import {ChevronDownIcon} from "./ChevronDownIcon";
-import {columns, users, statusOptions} from "./data";
+import {columns, users, statusOptions} from "./RequestData";
 import {capitalize} from "./utils";
 
 const statusColorMap = {
@@ -182,7 +182,7 @@ export default function RequestTable() {
           />
           <div className="flex gap-3">
             <Dropdown>
-              <DropdownTrigger className="hidden sm:flex">
+              <DropdownTrigger className="sm:flex">
                 <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
                   Status
                 </Button>
@@ -203,7 +203,7 @@ export default function RequestTable() {
               </DropdownMenu>
             </Dropdown>
             <Dropdown>
-              <DropdownTrigger className="hidden sm:flex">
+              <DropdownTrigger className="sm:flex">
                 <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
                   Columns
                 </Button>
