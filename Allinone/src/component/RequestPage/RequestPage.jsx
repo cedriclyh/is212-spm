@@ -8,15 +8,20 @@ import RequestTable from './RequestTable';
 export default function RequestPage() {
   return (
     <div className="layout">
-      <Sidebar />
+      <div className="sidebar">
+        <Sidebar />
+      </div>
 
       <div className="main-content">
-        <Navbar />
+        <div className="navbar">
+          <Navbar />
+        </div>
 
         <div className="page-content">
           <RequestTable />
         </div>
       </div>
-    </div>
+</div>
+
   );
 }

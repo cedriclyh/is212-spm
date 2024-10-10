@@ -1,53 +1,41 @@
 import React from "react";
 import {
   Table,
+  TableHeader,
+  TableColumn,
   TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
   TableRow,
-  TextField,
+  TableCell,
+  Input,
   Button,
-  Checkbox,
-  MenuItem,
-  IconButton,
-  Typography,
+  DropdownTrigger,
+  Dropdown,
+  DropdownMenu,
+  DropdownItem,
+  Chip,
+  User,
   Pagination,
-  Select,
-  InputLabel,
-  OutlinedInput,
-  FormControl,
-  ListItemText
-} from "@mui/material";
-import { MoreVert as MoreVertIcon, Search as SearchIcon, Close as CloseIcon } from "@mui/icons-material";
-import { columns, users, statusOptions } from "./data";
-import { capitalize } from "./utils";
-import Paper from '@mui/material/Paper';
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
-  },
-};
+} from "@nextui-org/react";
+import {PlusIcon} from "./PlusIcon";
+import {VerticalDotsIcon} from "./VerticalDotsIcon";
+import {SearchIcon} from "./SearchIcon";
+import {ChevronDownIcon} from "./ChevronDownIcon";
+import {columns, users, statusOptions} from "./data";
+import {capitalize} from "./utils";
 
 const statusColorMap = {
   approved: "success",
-  rejected: "error",
+  rejected: "danger",
   pending: "warning",
 };
 
 const INITIAL_VISIBLE_COLUMNS = ["name", "role", "status", "actions"];
 
-export default function App() {
+export default function RequestTable() {
   const [filterValue, setFilterValue] = React.useState("");
-  const [selectedKeys, setSelectedKeys] = React.useState([]); // Array to store selected keys
+  const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(new Set(INITIAL_VISIBLE_COLUMNS));
-  const [statusFilter, setStatusFilter] = React.useState([]); 
+  const [statusFilter, setStatusFilter] = React.useState("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [sortDescriptor, setSortDescriptor] = React.useState({
     column: "age",
@@ -59,6 +47,7 @@ export default function App() {
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
+
     return columns.filter((column) => Array.from(visibleColumns).includes(column.uid));
   }, [visibleColumns]);
 
@@ -67,23 +56,24 @@ export default function App() {
 
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
-    if (statusFilter.length && statusFilter.length !== statusOptions.length) {
+    if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
       filteredUsers = filteredUsers.filter((user) =>
-        statusFilter.includes(user.status)
+        Array.from(statusFilter).includes(user.status),
       );
     }
 
     return filteredUsers;
-  }, [users, filterValue, statusFilter, hasSearchFilter]);
+  }, [users, filterValue, statusFilter]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
   const items = React.useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
+
     return filteredItems.slice(start, end);
   }, [page, filteredItems, rowsPerPage]);
 
@@ -92,6 +82,7 @@ export default function App() {
       const first = a[sortDescriptor.column];
       const second = b[sortDescriptor.column];
       const cmp = first < second ? -1 : first > second ? 1 : 0;
+
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
@@ -102,208 +93,231 @@ export default function App() {
     switch (columnKey) {
       case "name":
         return (
-          <div>
-            <Typography variant="body1">{cellValue}</Typography>
-            <Typography variant="body2" color="textSecondary">
-              {user.email}
-            </Typography>
-          </div>
+          <User
+            avatarProps={{radius: "lg", src: user.avatar}}
+            description={user.email}
+            name={cellValue}
+          >
+            {user.email}
+          </User>
         );
       case "role":
         return (
-          <div>
-            <Typography variant="body2">{cellValue}</Typography>
-            <Typography variant="caption" color="textSecondary">
-              {user.team}
-            </Typography>
+          <div className="flex flex-col">
+            <p className="text-bold text-small capitalize">{cellValue}</p>
+            <p className="text-bold text-tiny capitalize text-default-400">{user.team}</p>
           </div>
         );
       case "status":
         return (
-          <Typography variant="body2" color={statusColorMap[user.status]}>
-            {capitalize(cellValue)}
-          </Typography>
+          <Chip className="capitalize" color={statusColorMap[user.status]} size="sm" variant="flat">
+            {cellValue}
+          </Chip>
         );
       case "actions":
         return (
-          <IconButton>
-            <MoreVertIcon />
-          </IconButton>
+          <div className="relative flex justify-end items-center gap-2">
+            <Dropdown>
+              <DropdownTrigger>
+                <Button isIconOnly size="sm" variant="light">
+                  <VerticalDotsIcon className="text-default-300" />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu>
+                <DropdownItem>View</DropdownItem>
+                <DropdownItem>Edit</DropdownItem>
+                <DropdownItem>Delete</DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         );
       default:
         return cellValue;
     }
   }, []);
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelected = users.map((user) => user.id);
-      setSelectedKeys(newSelected);
-      return;
+  const onNextPage = React.useCallback(() => {
+    if (page < pages) {
+      setPage(page + 1);
     }
-    setSelectedKeys([]);
-  };
+  }, [page, pages]);
 
-  const handleClick = (event, id) => {
-    const selectedIndex = selectedKeys.indexOf(id);
-    let newSelected = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selectedKeys, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selectedKeys.slice(1));
-    } else if (selectedIndex === selectedKeys.length - 1) {
-      newSelected = newSelected.concat(selectedKeys.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selectedKeys.slice(0, selectedIndex),
-        selectedKeys.slice(selectedIndex + 1),
-      );
+  const onPreviousPage = React.useCallback(() => {
+    if (page > 1) {
+      setPage(page - 1);
     }
+  }, [page]);
 
-    setSelectedKeys(newSelected);
-  };
-
-  const isSelected = (id) => selectedKeys.indexOf(id) !== -1;
-
-  const onRowsPerPageChange = (e) => {
+  const onRowsPerPageChange = React.useCallback((e) => {
     setRowsPerPage(Number(e.target.value));
     setPage(1);
-  };
+  }, []);
 
-  const onSearchChange = (e) => {
-    setFilterValue(e.target.value);
-    setPage(1);
-  };
+  const onSearchChange = React.useCallback((value) => {
+    if (value) {
+      setFilterValue(value);
+      setPage(1);
+    } else {
+      setFilterValue("");
+    }
+  }, []);
 
-  const onClear = () => {
-    setFilterValue("");
-    setPage(1);
-  };
+  const onClear = React.useCallback(()=>{
+    setFilterValue("")
+    setPage(1)
+  },[])
 
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex justify-between gap-3 items-end">
-          <TextField
-            value={filterValue}
-            onChange={onSearchChange}
+          <Input
+            isClearable
+            className="w-full sm:max-w-[44%]"
             placeholder="Search by name..."
-            variant="outlined"
-            slotProps={{
-              input: {
-                startAdornment: <SearchIcon />,
-                endAdornment: (
-                  <IconButton onClick={onClear}>
-                    <CloseIcon />
-                  </IconButton>
-                )}
-            }}
+            startContent={<SearchIcon />}
+            value={filterValue}
+            onClear={() => onClear()}
+            onValueChange={onSearchChange}
           />
-
-        <div style={{ display: "flex", gap: "1rem", minWidth: "200px" }}>
-          <FormControl fullWidth variant="outlined" style={{ minWidth: 120 }}>
-            <InputLabel id="multiple-checkbox-label" >Status</InputLabel>
-            <Select
-              labelId="multiple-checkbox-label"
-              id="multiple-checkbox" 
-              multiple
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              input={<OutlinedInput label="Tag" />}
-              renderValue={(selected) => selected.join(', ')}
-              MenuProps={MenuProps}
+          <div className="flex gap-3">
+            <Dropdown>
+              <DropdownTrigger className="hidden sm:flex">
+                <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
+                  Status
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                disallowEmptySelection
+                aria-label="Table Columns"
+                closeOnSelect={false}
+                selectedKeys={statusFilter}
+                selectionMode="multiple"
+                onSelectionChange={setStatusFilter}
+              >
+                {statusOptions.map((status) => (
+                  <DropdownItem key={status.uid} className="capitalize">
+                    {capitalize(status.name)}
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+            <Dropdown>
+              <DropdownTrigger className="hidden sm:flex">
+                <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
+                  Columns
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                disallowEmptySelection
+                aria-label="Table Columns"
+                closeOnSelect={false}
+                selectedKeys={visibleColumns}
+                selectionMode="multiple"
+                onSelectionChange={setVisibleColumns}
+              >
+                {columns.map((column) => (
+                  <DropdownItem key={column.uid} className="capitalize">
+                    {capitalize(column.name)}
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+            <Button color="primary" endContent={<PlusIcon />}>
+              Add New
+            </Button>
+          </div>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-default-400 text-small">Total {users.length} users</span>
+          <label className="flex items-center text-default-400 text-small">
+            Rows per page:
+            <select
+              className="bg-transparent outline-none text-default-400 text-small"
+              onChange={onRowsPerPageChange}
             >
-              {statusOptions.map((status) => (
-                <MenuItem key={status.uid} value={status.name}>
-                  <Checkbox checked={status.name} />
-                  <ListItemText primary={status.name} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+            </select>
+          </label>
         </div>
       </div>
-
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
-    <Typography variant="body2">Total {users.length} users</Typography>
-    <FormControl variant="outlined" style={{ minWidth: 120 }}>
-      <InputLabel>Rows per page</InputLabel>
-      <Select value={rowsPerPage} onChange={onRowsPerPageChange}>
-        <MenuItem value={5}>5</MenuItem>
-        <MenuItem value={10}>10</MenuItem>
-        <MenuItem value={15}>15</MenuItem>
-      </Select>
-    </FormControl>
-  </div>
-</div>
-
     );
-  }, [filterValue, statusFilter, users.length, rowsPerPage]);
+  }, [
+    filterValue,
+    statusFilter,
+    visibleColumns,
+    onRowsPerPageChange,
+    users.length,
+    onSearchChange,
+    hasSearchFilter,
+  ]);
 
   const bottomContent = React.useMemo(() => {
     return (
-      <div>
-        <Typography variant="body2">
-          {selectedKeys.length === users.length
+      <div className="py-2 px-2 flex justify-between items-center">
+        <span className="w-[30%] text-small text-default-400">
+          {selectedKeys === "all"
             ? "All items selected"
-            : `${selectedKeys.length} of ${filteredItems.length} selected`}
-        </Typography>
+            : `${selectedKeys.size} of ${filteredItems.length} selected`}
+        </span>
         <Pagination
-          count={pages}
-          page={page}
-          onChange={(_, value) => setPage(value)}
+          isCompact
+          showControls
+          showShadow
           color="primary"
+          page={page}
+          total={pages}
+          onChange={setPage}
         />
+        <div className="hidden sm:flex w-[30%] justify-end gap-2">
+          <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onPreviousPage}>
+            Previous
+          </Button>
+          <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onNextPage}>
+            Next
+          </Button>
+        </div>
       </div>
     );
-  }, [selectedKeys, items.length, page, pages]);
+  }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
   return (
-    <div>
-      {topContent}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  indeterminate={selectedKeys.length > 0 && selectedKeys.length < users.length}
-                  checked={users.length > 0 && selectedKeys.length === users.length}
-                  onChange={handleSelectAllClick}
-                />
-              </TableCell>
-              {headerColumns.map((column) => (
-                <TableCell key={column.uid}>{column.name}</TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sortedItems.map((item) => {
-              const isItemSelected = isSelected(item.id);
-              return (
-                <TableRow
-                  key={item.id}
-                  hover
-                  onClick={(event) => handleClick(event, item.id)}
-                  role="checkbox"
-                  aria-checked={isItemSelected}
-                  selected={isItemSelected}
-                >
-                  <TableCell padding="checkbox">
-                    <Checkbox checked={isItemSelected} />
-                  </TableCell>
-                  {headerColumns.map((column) => (
-                    <TableCell key={column.uid}>{renderCell(item, column.uid)}</TableCell>
-                  ))}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      {bottomContent}
-    </div>
+    <Table
+      aria-label="Example table with custom cells, pagination and sorting"
+      isHeaderSticky
+      bottomContent={bottomContent}
+      bottomContentPlacement="outside"
+      classNames={{
+        wrapper: "max-h-[382px]",
+      }}
+      selectedKeys={selectedKeys}
+      selectionMode="multiple"
+      sortDescriptor={sortDescriptor}
+      topContent={topContent}
+      topContentPlacement="outside"
+      onSelectionChange={setSelectedKeys}
+      onSortChange={setSortDescriptor}
+    >
+      <TableHeader columns={headerColumns}>
+        {(column) => (
+          <TableColumn
+            key={column.uid}
+            align={column.uid === "actions" ? "center" : "start"}
+            allowsSorting={column.sortable}
+          >
+            {column.name}
+          </TableColumn>
+        )}
+      </TableHeader>
+      <TableBody emptyContent={"No users found"} items={sortedItems}>
+        {(item) => (
+          <TableRow key={item.id}>
+            {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
   );
 }

@@ -7,6 +7,7 @@ import RequestPage  from './component/RequestPage/RequestPage';
 import Sidebar from './component/Sidebar/Sidebar';
 
 
+
 const App = () => {
   return(
     <BrowserRouter>
@@ -15,7 +16,7 @@ const App = () => {
           <Route path="/login" element={ <Login /> } />
           {/* <Route path="/manager-data" component={ Manager-Data } /> */}
           <Route path="/requests" element={ <RequestPage /> } />
-          <Route path="/test" element={ <Sidebar/> } />
+          <Route path="/test" element={ <Sidebar /> } />
       </Routes>
     </BrowserRouter>
   )
