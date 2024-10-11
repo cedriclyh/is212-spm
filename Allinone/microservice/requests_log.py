@@ -63,6 +63,7 @@ class Request(db.Model):
 
     def json(self):
         return {
+            'request_id': self.request_id,
             'staff_id': self.staff_id,
             'manager_id': self.manager_id,
             'arrangement_date': str(self.arrangement_date),
@@ -72,27 +73,50 @@ class Request(db.Model):
             'status': self.status
         }
     
+# class TimeSlot(db.Model):
+#     __tablename__ = 'Time_Slot'
+
+#     timeslot = db.Column(db.Integer, primary_key=True)
+#     timeslot_description = db.Column(db.Integer, nullable=False)
+
+#     def __init__(self, timeslot, timeslot_description):
+#         self.timeslot = timeslot
+#         self.timeslot_description = timeslot_description
+
+#     def json(self):
+#         return {
+#             'timeslot': self.timeslot
+#         }
+
 # Create a new WFH request
 @app.route('/create_request', methods=['POST'])
 def create_request():
     try:
         data = request.json
         new_request = Request(
-            staff_id=data["staff_id"],
-            manager_id=data["manager_id"],
-            arrangement_date=data["arrangement_date"],
-            request_date= data["request_date"],
+            staff_id = data["staff_id"],
+            manager_id = data["manager_id"],
+            arrangement_date = data["arrangement_date"],
+            request_date = data["request_date"],
             timeslot = data["timeslot"],
             reason = data["reason"],
         )
         # print(new_request)
         db.session.add(new_request)
         db.session.commit()
-        return jsonify({'message': 'Request created', 'data': new_request.json(), 'code':201}), 201
+
+        return jsonify({
+            'message': 'Request created', 
+            'data': new_request.json(), 
+            'code':201
+        }), 201
     
     except Exception as e:
         app.logger.error(f"Failed to create request: {e}")
-        return jsonify({'message': 'Failed to create request', 'code': 500}), 500
+        return jsonify({
+            'message': 'Failed to create request', 
+            'code': 500
+        }), 500
     
 # Retrieve all WFH requests
 @app.route('/get_all_requests', methods = ["GET"])
@@ -110,7 +134,11 @@ def get_request(request_id):
     try:
         request = Request.query.filter_by(request_id=request_id).first()
         if request:
-            return jsonify({'message': 'Request found', 'data': request.json(), 'code': 200}), 200
+            return jsonify({
+                'message': 'Request found', 
+                'data': request.json(), 
+                'code': 200
+            }), 200
         else:
             return jsonify({'message': 'Request not found', 'code': 404}), 404
     except Exception as e:
@@ -123,7 +151,11 @@ def get_requests_by_staff_id(staff_id):
     try:
         requests = Request.query.filter_by(staff_id=staff_id).all()
         if requests:
-            return jsonify({'message': f'Requests from staff {staff_id} found', 'data': [req.json() for req in requests], 'code': 200}), 200
+            return jsonify({
+                'message': f'Requests from staff {staff_id} found', 
+                'data': [req.json() for req in requests], 
+                'code': 200
+            }), 200
         else:
             return jsonify({'message': f'No requests from staff {staff_id}', 'code': 404}), 404
     except Exception as e:

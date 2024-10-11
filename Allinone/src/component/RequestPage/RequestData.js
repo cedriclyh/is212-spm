@@ -8,6 +8,7 @@ const columns = [
     {name: "TEAM", uid: "team"},
     {name: "EMAIL", uid: "email"},
     {name: "STATUS", uid: "status", sortable: true},
+    {name: "MANAGER", uid: "manager"},
     {name: "ACTIONS", uid: "actions"},
   ];
   
@@ -239,4 +240,101 @@ const columns = [
         return [];
       }
     }
+  };
+
+  const request_columns = [
+    {name: "Request ID", uid: "request_id"},
+    {name: "Arrangment Date", uid: "arrangement_date"},
+    {name: "Request Date", uid: "request_id"},
+    {name: "Timeslot", uid: "timeslot"},
+    {name: "Status", uid: "status"},
+    {name: "Manager", uid: "manager"},
+    {name: "Actions", uid: "actions"}
+  ];
+
+  const pulled_data = {
+    "code": 200,
+    "data": [
+      {
+        "arrangement_date": "2024-10-01",
+        "manager_id": 140894,
+        "reason": "",
+        "request_date": "2024-09-19",
+        "request_id": 3,
+        "staff_id": 140004,
+        "status": "Pending",
+        "timeslot": 3
+      },
+      {
+        "arrangement_date": "2024-10-02",
+        "manager_id": 140894,
+        "reason": "",
+        "request_date": "2024-08-09",
+        "request_id": 4,
+        "staff_id": 140004,
+        "status": "Pending",
+        "timeslot": 3
+      },
+      {
+        "arrangement_date": "2024-10-03",
+        "manager_id": 140894,
+        "reason": "",
+        "request_date": "2024-09-29",
+        "request_id": 5,
+        "staff_id": 140004,
+        "status": "Rejected",
+        "timeslot": 2
+      },
+      {
+        "arrangement_date": "2024-12-01",
+        "manager_id": 140894,
+        "reason": "",
+        "request_date": "2024-07-09",
+        "request_id": 6,
+        "staff_id": 140004,
+        "status": "Pending",
+        "timeslot": 1
+      },
+      {
+        "arrangement_date": "2025-01-01",
+        "manager_id": 140894,
+        "reason": "",
+        "request_date": "2024-09-10",
+        "request_id": 7,
+        "staff_id": 140004,
+        "status": "Approved",
+        "timeslot": 3
+      },
+      {
+        "arrangement_date": "2024-10-11",
+        "manager_id": 140894,
+        "reason": "",
+        "request_date": "2024-09-09",
+        "request_id": 8,
+        "staff_id": 140004,
+        "status": "Approved",
+        "timeslot": 2
+      },
+      {
+        "arrangement_date": "2024-10-12",
+        "manager_id": 140894,
+        "reason": "",
+        "request_date": "2024-08-31",
+        "request_id": 9,
+        "staff_id": 140004,
+        "status": "Rejected",
+        "timeslot": 2
+      },
+      {
+        "arrangement_date": "2024-10-15",
+        "manager_id": 140894,
+        "reason": "",
+        "request_date": "2024-08-30",
+        "request_id": 10,
+        "staff_id": 140004,
+        "status": "Pending",
+        "timeslot": 3
+      }
+    ],
+    "message": "Requests from staff 140004 found"
   };

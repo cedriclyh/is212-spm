@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 # URL endpoints for the existing microservices
 EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5003"
+REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
 
 # Route to handle the make request scenario
@@ -36,7 +36,7 @@ def make_request():
             print(arrangement_data)
 
             # Send POST request to create a WFH request
-            arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_request", json=arrangement_data)
+            arrangement_response = requests.post(f"{REQUEST_LOG_MICROSERVICE_URL}/create_request", json=arrangement_data)
 
             if arrangement_response.status_code == 201:
                 created_request = arrangement_response.json().get("data")

@@ -29,7 +29,7 @@ const statusColorMap = {
   pending: "warning",
 };
 
-const INITIAL_VISIBLE_COLUMNS = ["name", "role", "status", "actions"];
+const INITIAL_VISIBLE_COLUMNS = ["name", "role", "status", "manager", "actions"];
 
 export default function RequestTable() {
   const [filterValue, setFilterValue] = React.useState("");
@@ -108,10 +108,17 @@ export default function RequestTable() {
             <p className="text-bold text-tiny capitalize text-default-400">{user.team}</p>
           </div>
         );
+        case "manager":
+        return (
+          <div className="flex flex-col">
+            <p className="text-bold text-small capitalize">{user.name}</p>
+            <p className="text-bold text-tiny capitalize text-default-400">{user.email}</p>
+          </div>
+        );
       case "status":
         return (
-          <Chip className="capitalize" color={statusColorMap[user.status]} size="sm" variant="flat">
-            {cellValue}
+          <Chip color={statusColorMap[user.status]} size="sm" variant="flat">
+            {capitalize(cellValue)}
           </Chip>
         );
       case "actions":
