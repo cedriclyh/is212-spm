@@ -13,23 +13,23 @@ import {
   DropdownMenu,
   DropdownItem,
   Chip,
-  User,
+  // User,
   Pagination,
 } from "@nextui-org/react";
 import {PlusIcon} from "./PlusIcon";
 import {VerticalDotsIcon} from "./VerticalDotsIcon";
 import {SearchIcon} from "./SearchIcon";
 import {ChevronDownIcon} from "./ChevronDownIcon";
-import {columns, users, statusOptions} from "./RequestData";
-import {capitalize} from "./utils";
+import {columns, statusOptions, pulled_data} from "./RequestData";
+import {capitalize, formatDate, formatTimeslot} from "./utils";
 
 const statusColorMap = {
-  approved: "success",
-  rejected: "danger",
-  pending: "warning",
+  Approved: "success",
+  Rejected: "danger",
+  Pending: "warning",
 };
 
-const INITIAL_VISIBLE_COLUMNS = ["name", "role", "status", "manager", "actions"];
+const INITIAL_VISIBLE_COLUMNS = ["arrangement_date", "timeslot", "manager", "status", "actions"];
 
 export default function RequestTable() {
   const [filterValue, setFilterValue] = React.useState("");
@@ -52,72 +52,82 @@ export default function RequestTable() {
   }, [visibleColumns]);
 
   const filteredItems = React.useMemo(() => {
-    let filteredUsers = [...users];
+    let filteredRequests = [...pulled_data];
 
     if (hasSearchFilter) {
-      filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase()),
+      filteredRequests = filteredRequests.filter((request) =>
+        request.name.toLowerCase().includes(filterValue.toLowerCase()),
       );
     }
     if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
-      filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status),
+      filteredRequests = filteredRequests.filter((request) =>
+        Array.from(statusFilter).includes(request.status),
       );
     }
 
-    return filteredUsers;
-  }, [users, filterValue, statusFilter]);
+    return filteredRequests;
+  }, [ filterValue, statusFilter, hasSearchFilter ]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
+  const pageNumber = Number(page); 
+  const rowsPerPageNumber = Number(rowsPerPage);
 
+  const items = React.useMemo(() => {
+    const start = (pageNumber - 1) * rowsPerPageNumber;
+    const end = start + rowsPerPageNumber;
     return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
+
+  }, [pageNumber, filteredItems, rowsPerPageNumber]);
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column];
-      const second = b[sortDescriptor.column];
+      const first = a[sortDescriptor.column] || '';
+      const second = b[sortDescriptor.column] || '';
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = React.useCallback((user, columnKey) => {
-    const cellValue = user[columnKey];
+  const renderCell = React.useCallback((request, columnKey) => {
+    const cellValue = request[columnKey];
 
     switch (columnKey) {
-      case "name":
-        return (
-          <User
-            avatarProps={{radius: "lg", src: user.avatar}}
-            description={user.email}
-            name={cellValue}
-          >
-            {user.email}
-          </User>
-        );
-      case "role":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{cellValue}</p>
-            <p className="text-bold text-tiny capitalize text-default-400">{user.team}</p>
-          </div>
-        );
+      // case "name":
+      //   return (
+      //     <request
+      //       avatarProps={{radius: "lg", src: request.avatar}}
+      //       description={request.email}
+      //       name={cellValue}
+      //     >
+      //       {request.email}
+      //     </request>
+      //   );
+
+        case "arrangement_date":
+          return (
+            <div>
+              <p className="text-bold text-small" >{formatDate(request.arrangement_date)[0]}</p>
+              <p className="text-bold text-tiny text-default-400">{formatDate(request.arrangement_date)[1]}</p>
+              </div>
+          );
+        case "timeslot":
+          return (
+            <div>
+              <p>{formatTimeslot(request.timeslot)[1]}</p>
+            </div>
+          )
         case "manager":
         return (
           <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{user.name}</p>
-            <p className="text-bold text-tiny capitalize text-default-400">{user.email}</p>
+            <p className="text-bold text-small capitalize">{request.manager_details.staff_fname + " " + request.manager_details.staff_lname}</p>
+            <p className="text-bold text-tiny capitalize text-default-400">{request.manager_details.email}</p>
           </div>
         );
       case "status":
         return (
-          <Chip color={statusColorMap[user.status]} size="sm" variant="flat">
+          <Chip color={statusColorMap[request.status]} size="sm" variant="flat">
             {capitalize(cellValue)}
           </Chip>
         );
@@ -132,8 +142,7 @@ export default function RequestTable() {
               </DropdownTrigger>
               <DropdownMenu>
                 <DropdownItem>View</DropdownItem>
-                <DropdownItem>Edit</DropdownItem>
-                <DropdownItem>Delete</DropdownItem>
+                {request.status === "Pending" && <DropdownItem>Edit</DropdownItem>}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -236,7 +245,7 @@ export default function RequestTable() {
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-default-400 text-small">Total {users.length} users</span>
+          <span className="text-default-400 text-small">Total {pulled_data.length} Requests</span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
             <select
@@ -256,9 +265,8 @@ export default function RequestTable() {
     statusFilter,
     visibleColumns,
     onRowsPerPageChange,
-    users.length,
     onSearchChange,
-    hasSearchFilter,
+    onClear
   ]);
 
   const bottomContent = React.useMemo(() => {
@@ -288,7 +296,7 @@ export default function RequestTable() {
         </div>
       </div>
     );
-  }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
+  }, [selectedKeys, page, pages, filteredItems.length, onNextPage, onPreviousPage]);
 
   return (
     <Table
@@ -318,10 +326,10 @@ export default function RequestTable() {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody emptyContent={"No users found"} items={sortedItems}>
-        {(item) => (
-          <TableRow key={item.id}>
-            {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+      <TableBody emptyContent={"No Requests found"} items={sortedItems}>
+        {(item, rowIndex) => (
+          <TableRow key={item.request_id}>
+            {(columnKey) => <TableCell>{renderCell(item, columnKey, rowIndex)}</TableCell>}
           </TableRow>
         )}
       </TableBody>
