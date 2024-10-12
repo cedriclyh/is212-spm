@@ -4,7 +4,7 @@ export default function App() {
   return (
     <Navbar maxWidth="full" isBordered>
       <NavbarBrand>
-        <p className="font-bold text-inherit">ACME</p>
+        <p className="font-bold text-inherit">All-In-One</p>
       </NavbarBrand>
 
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
