@@ -79,18 +79,6 @@ INSERT INTO User_Role (Role, Role_Description) VALUES
     (2, 'Staff'),
     (3, 'Manager');
 
--- Requests Table -- old table
--- CREATE TABLE Request (
---     Request_ID INT AUTO_INCREMENT PRIMARY KEY,
---     Staff_ID INT NOT NULL,
---     Requested_day DATE NOT NULL, -- which day you are requesting for
---     `current_date` DATE NOT NULL,
---     Timeslot INT NOT NULL,
---     Reason VARCHAR(255) NOT NULL,
---     Status VARCHAR(20) NOT NULL DEFAULT 'Pending',
---     FOREIGN KEY (Staff_ID) REFERENCES Employee(Staff_ID)
--- );
-
 
 -- Employee Values
 INSERT INTO Employee (Staff_ID, Staff_FName, Staff_LName, Dept, Position, Country, Email, Reporting_Manager, Role) VALUES 
@@ -658,10 +646,20 @@ INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
     (140894, 'Rahim.Khalid@allinone.com.sg', 'Password140894');
 
 -- Request_Log values
-INSERT INTO Request_Log (staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason, remarks) VALUES
-(140002, 140894, '2024-09-29', '2024-10-01', "AM", 'Approved', "Medical Appointment", ""),
-(140003, 140894, '2024-09-29', '2024-10-01', "PM", 'Approved', "Lazy", ""),
-(140004, 140894, '2024-09-09', '2024-10-01', "FULL", 'Pending', "", NULL);
+INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason) VALUES
+(1, 140002, 140894, '2024-09-29', '2024-10-01', "AM", 'Approved', "Medical Appointment"),
+(2, 140003, 140894, '2024-09-29', '2024-10-01', "PM", 'Approved', "Lazy"),
+(3, 140004, 140894, '2024-09-19', '2024-10-01', "FULL", 'Pending', ''),
+(4, 140004, 140894, '2024-08-09', '2024-10-02', "FULL", 'Pending', ''),
+(5, 140004, 140894, '2024-09-29', '2024-10-03', "PM", 'Rejected', ''),
+(6, 140004, 140894, '2024-07-09', '2024-12-01', "AM", 'Pending', ''),
+(7, 140004, 140894, '2024-09-10', '2025-01-01', "FULL", 'Approved', ''),
+(8, 140004, 140894, '2024-09-09', '2024-10-11', "PM", 'Approved', ''),
+(9, 140004, 140894, '2024-08-31', '2024-10-12', "PM", 'Rejected', ''),
+(10, 140004, 140894, '2024-08-30', '2024-10-15', "FULL", 'Pending', ''),
+(11, 140004, 140894, '2024-08-30', '2024-10-15', "PM", 'Pending', ''),
+(12, 130002, 130002, '2024-10-31', '2024-10-15', "FULL", 'Pending', ''),
+(13, 130002, 130002, '2024-11-01', '2024-10-15', "FULL", 'Pending', '');
 
 -- Arrangement values
 -- meaning approved requests

@@ -1,58 +1,60 @@
-import React, { useState } from "react";
-import { Link, useMatch, useResolvedPath } from "react-router-dom";
-import "./Navbar.css";
+import {Navbar, NavbarBrand, NavbarContent, NavbarItem, Link, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar} from "@nextui-org/react";
 
-// icons
-// import HomeIcon from '@mui/icons-material/Home';
-import SearchIcon from '@mui/icons-material/Search';
-import NotificationsIcon from '@mui/icons-material/Notifications';  
-import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
-import { IconButton } from "@mui/material"; // MUI button for the icons
+export default function App() {
+  return (
+    <Navbar maxWidth="full" isBordered>
+      <NavbarBrand>
+        <p className="font-bold text-inherit">All-In-One</p>
+      </NavbarBrand>
 
-export default function Navbar() {
-    const [isSidebarOpen, setisSidebarOpen] = useState(false);
+      <NavbarContent className="hidden sm:flex gap-4" justify="center">
+        <NavbarItem>
+          <Link color="foreground" href="#">
+            Features
+          </Link>
+        </NavbarItem>
+        <NavbarItem isActive>
+          <Link href="#" aria-current="page" color="secondary">
+            Customers
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <Link color="foreground" href="#">
+            Integrations
+          </Link>
+        </NavbarItem>
+      </NavbarContent>
 
-    const toggleSidebar = () => {
-        setisSidebarOpen(!isSidebarOpen);
-    }
-
-    return (
-    <nav className="nav"> 
-        
-        
-        <div className="navbar-container">
-            <IconButton onClick={toggleSidebar} className="hamburger">
-                {isSidebarOpen ? <CloseIcon /> : <MenuIcon />}
-            </IconButton>
-            <Link to="/" className="site-title">Allinone</Link>
-        </div>
-        
-        <ul>
-           <CustomLink to="/search">
-                <SearchIcon />
-            </CustomLink>
-
-            <li>
-                <NotificationsIcon />
-            </li>
-        
-            <li>
-                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt=""/>
-            </li>
-        </ul>
-    </nav>
-    )
-}
-
-function CustomLink({ to, children, ...props}) {
-    const resolvedPath = useResolvedPath(to)
-    const isActive = useMatch({ path: resolvedPath.pathname, end: true })
-    return (
-        <li className={isActive ? "active" : ""}>
-            <Link to={to} {...props}>
-                {children}
-            </Link>
-        </li>
-    )
+      <NavbarContent as="div" justify="end">
+        <Dropdown placement="bottom-end">
+          <DropdownTrigger>
+            <Avatar
+              isBordered
+              as="button"
+              className="transition-transform"
+              color="secondary"
+              name="Jason Hughes"
+              size="sm"
+              src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
+            />
+          </DropdownTrigger>
+          <DropdownMenu aria-label="Profile Actions" variant="flat">
+            <DropdownItem key="profile" className="h-14 gap-2">
+              <p className="font-semibold">Signed in as</p>
+              <p className="font-semibold">zoey@example.com</p>
+            </DropdownItem>
+            <DropdownItem key="settings">My Settings</DropdownItem>
+            <DropdownItem key="team_settings">Team Settings</DropdownItem>
+            <DropdownItem key="analytics">Analytics</DropdownItem>
+            <DropdownItem key="system">System</DropdownItem>
+            <DropdownItem key="configurations">Configurations</DropdownItem>
+            <DropdownItem key="help_and_feedback">Help & Feedback</DropdownItem>
+            <DropdownItem key="logout" color="danger">
+              Log Out
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+      </NavbarContent>
+    </Navbar>
+  );
 }
