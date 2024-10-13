@@ -34,13 +34,13 @@ function formatDate(dateStr) {
 
 function formatTimeslot(timeslot_num) {
   if (timeslot_num===1){
-    return ["Morning Shift", "8AM - 12PM"];
+    return ["Morning Shift", "9AM - 1PM"];
   }
   if (timeslot_num===2){
-    return ["Afternoon Shift", "12PM - 6PM"];
+    return ["Afternoon Shift", "2PM - 6PM"];
   }
   if (timeslot_num===3){
-    return ["Full Day", "8AM - 6PM"];
+    return ["Full Day", "9AM - 6PM"];
   }
 }
 
