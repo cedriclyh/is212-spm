@@ -79,10 +79,12 @@ def make_request():
                     }), 500
                 
                 else:
-                    return jsonify({"message": "Failed to retrieve manager email", "code": 500}), 500
+                    return jsonify({"message": "Failed to retrieve manager email", 
+                                    "code": 500}), 500
                 
             else:
-                return jsonify({"message": "Failed to create WFH request", "code": 500}), 500
+                return jsonify({"message": "Failed to create WFH request", 
+                                "code": 500}), 500
 
         else:
             return jsonify({

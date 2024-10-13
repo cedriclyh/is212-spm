@@ -140,7 +140,9 @@ def notify_status_update():
                     INSERT INTO notifications_log (request_id, recipient_email, status)
                     VALUES (:request_id, :recipient_email, :status)
                     """),
-                    {"request_id": request_id, "recipient_email": staff_email, "status": request_status}
+                    {"request_id": request_id, 
+                     "recipient_email": staff_email, 
+                     "status": request_status}
                 )
         except SQLAlchemyError as e:
             print(f"Failed to log notification in database: {e}")
