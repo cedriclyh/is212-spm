@@ -30,13 +30,6 @@ CREATE TABLE User_Role (
     
 );
 
--- Time Slot Table
-CREATE TABLE IF NOT EXISTS Time_Slot (
-    timeslot INT NOT NULL,
-    timeslot_description VARCHAR(255) NOT NULL,
-    PRIMARY KEY (timeslot)
-);
-
 -- Credentials Table
 CREATE TABLE Credentials (
     Staff_ID INT NOT NULL,
@@ -53,20 +46,20 @@ CREATE TABLE IF NOT EXISTS Request_Log (
     manager_id INT NOT NULL,        
     request_date DATE NOT NULL,
     arrangement_date DATE NOT NULL, -- which day you are requesting for
-    timeslot INT NOT NULL, 
+    timeslot VARCHAR(50) NOT NULL, 
     status VARCHAR(50) NOT NULL DEFAULT 'Pending',           
     reason VARCHAR(255) NOT NULL,
+    remarks VARCHAR(255) NULL,
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
 -- Arrangement Table
 CREATE TABLE IF NOT EXISTS Arrangement (
-    staff_id INT,    -- FK to Employee.staff_id
-    arrangement_date DATE,
-    timeslot INT,    -- FK to Time_Slot.timeslot
+    staff_id INT NOT NULL,    
+    arrangement_date DATE NOT NULL,
+    timeslot VARCHAR(50) NOT NULL,  
     PRIMARY KEY (staff_id, arrangement_date),
-    FOREIGN KEY (staff_id) REFERENCES Employee(staff_id),
-    FOREIGN KEY (timeslot) REFERENCES Time_Slot(timeslot)
+    FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
 -- Block Out Dates Table
@@ -652,36 +645,28 @@ INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
     (151408, 'Philip.Lee@allinone.com.sg', 'Password151408'),
     (140894, 'Rahim.Khalid@allinone.com.sg', 'Password140894');
 
--- Time_Slot values
--- hmmmmmmm just an example of timeslots
-INSERT INTO Time_Slot (timeslot, timeslot_description) VALUES
-(1, 'Morning Shift'),
-(2, 'Afternoon Shift'),
-(3, 'Full Day');
-
-
 -- Request_Log values
 INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason) VALUES
-(1, 140002, 140894, '2024-09-29', '2024-10-01', 1, 'Approved', "Medical Appointment"),
-(2, 140003, 140894, '2024-09-29', '2024-10-01', 2, 'Approved', "Lazy"),
-(3, 140004, 140894, '2024-09-19', '2024-10-01', 3, 'Pending', ''),
-(4, 140004, 140894, '2024-08-09', '2024-10-02', 3, 'Pending', ''),
-(5, 140004, 140894, '2024-09-29', '2024-10-03', 2, 'Rejected', ''),
-(6, 140004, 140894, '2024-07-09', '2024-12-01', 1, 'Pending', ''),
-(7, 140004, 140894, '2024-09-10', '2025-01-01', 3, 'Approved', ''),
-(8, 140004, 140894, '2024-09-09', '2024-10-11', 2, 'Approved', ''),
-(9, 140004, 140894, '2024-08-31', '2024-10-12', 2, 'Rejected', ''),
-(10, 140004, 140894, '2024-08-30', '2024-10-15', 3, 'Pending', ''),
-(11, 140004, 140894, '2024-08-30', '2024-10-15', 2, 'Pending', ''),
-(12, 130002, 130002, '2024-10-31', '2024-10-15', 3, 'Pending', ''),
-(13, 130002, 130002, '2024-11-01', '2024-10-15', 3, 'Pending', '');
+(1, 140002, 140894, '2024-09-29', '2024-10-01', "AM", 'Approved', "Medical Appointment"),
+(2, 140003, 140894, '2024-09-29', '2024-10-01', "PM", 'Approved', "Lazy"),
+(3, 140004, 140894, '2024-09-19', '2024-10-01', "FULL", 'Pending', ''),
+(4, 140004, 140894, '2024-08-09', '2024-10-02', "FULL", 'Pending', ''),
+(5, 140004, 140894, '2024-09-29', '2024-10-03', "PM", 'Rejected', ''),
+(6, 140004, 140894, '2024-07-09', '2024-12-01', "AM", 'Pending', ''),
+(7, 140004, 140894, '2024-09-10', '2025-01-01', "FULL", 'Approved', ''),
+(8, 140004, 140894, '2024-09-09', '2024-10-11', "PM", 'Approved', ''),
+(9, 140004, 140894, '2024-08-31', '2024-10-12', "PM", 'Rejected', ''),
+(10, 140004, 140894, '2024-08-30', '2024-10-15', "FULL", 'Pending', ''),
+(11, 140004, 140894, '2024-08-30', '2024-10-15', "PM", 'Pending', ''),
+(12, 130002, 130002, '2024-10-31', '2024-10-15', "FULL", 'Pending', ''),
+(13, 130002, 130002, '2024-11-01', '2024-10-15', "FULL", 'Pending', '');
 
 -- Arrangement values
 -- meaning approved requests
 INSERT INTO Arrangement (staff_id, arrangement_date, timeslot) VALUES
-(140002, '2024-10-01', 1),
-(140003, '2024-10-01', 2),
-(140004, '2024-10-01', 3);
+(140002, '2024-10-01', "AM"),
+(140003, '2024-10-01', "PM"),
+(140004, '2024-10-01', "FULL");
 
 -- Block_Out_Dates values
 INSERT INTO Block_Out_Dates (blockout_date, title) VALUES

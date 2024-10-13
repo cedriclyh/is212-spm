@@ -145,7 +145,8 @@ def get_manager_email(manager_id):
 
     except Exception as e:
         app.logger.error(f"Failed to retrieve manager email: {e}")
-        return jsonify({"message": "Failed to retrieve manager email", "error": str(e)}), 500
+        return jsonify({"message": "Failed to retrieve manager email", 
+                        "error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)
