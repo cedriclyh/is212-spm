@@ -46,7 +46,7 @@ class Request(db.Model):
     manager_id = db.Column(db.Integer, nullable=False)
     request_date = db.Column(db.Date, nullable=False)
     arrangement_date = db.Column(db.Date, nullable=False)
-    timeslot = db.Column(db.Integer, nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
+    timeslot = db.Column(db.String(50), nullable=False)  # AM, PM, FULL
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
     reason = db.Column(db.String(255), nullable=False, default="") # Reason for WFH request
     remarks = db.Column(db.String(255), nullable=True)

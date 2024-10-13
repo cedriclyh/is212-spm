@@ -57,7 +57,7 @@ def manage_request():
             return jsonify({"message": "Failed to update request status", 
                             "code": 500}), 500
 
-        # 3: call notification.py to notify the staff of the updated status
+        # 4: call notification.py to notify the staff of the updated status
         notification_data = {
             "staff_email": staff_email,  
             "status": status,
