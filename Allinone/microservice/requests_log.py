@@ -16,8 +16,8 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
-    # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -46,7 +46,7 @@ class Request(db.Model):
     manager_id = db.Column(db.Integer, nullable=False)
     request_date = db.Column(db.Date, nullable=False)
     arrangement_date = db.Column(db.Date, nullable=False)
-    timeslot = db.Column(db.Integer, nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
+    timeslot = db.Column(db.String(50), nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
     reason = db.Column(db.String(255), nullable=False, default="") # Reason for WFH request
 
