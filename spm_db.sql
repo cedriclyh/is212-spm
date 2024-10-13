@@ -674,7 +674,7 @@ INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrange
 (10, 140004, 140894, '2024-08-30', '2024-10-15', 3, 'Pending', ''),
 (11, 140004, 140894, '2024-08-30', '2024-10-15', 2, 'Pending', ''),
 (12, 130002, 130002, '2024-10-31', '2024-10-15', 3, 'Pending', ''),
-(12, 130002, 130002, '2024-11-01', '2024-10-15', 3, 'Pending', '');
+(13, 130002, 130002, '2024-11-01', '2024-10-15', 3, 'Pending', '');
 
 -- Arrangement values
 -- meaning approved requests
