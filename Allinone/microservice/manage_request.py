@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5003"
+REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
 
 @app.route('/manage_request', methods=['PUT'])
@@ -21,7 +21,7 @@ def manage_request():
                             "code": 400}), 400
 
         # 1: fetch request from database via arrangement.py
-        fetch_response = requests.get(f"{ARRANGEMENT_MICROSERVICE_URL}/get_request/{request_id}")
+        fetch_response = requests.get(f"{REQUEST_LOG_MICROSERVICE_URL}/get_request/{request_id}")
         
         if fetch_response.status_code != 200:
             return jsonify({"message": "Failed to fetch request from database", 
@@ -51,7 +51,7 @@ def manage_request():
             "remarks": remarks
         }
 
-        update_response = requests.put(f"{ARRANGEMENT_MICROSERVICE_URL}/update_request/{request_id}", json=arrangement_update_data)
+        update_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json=arrangement_update_data)
         
         if update_response.status_code != 200:
             return jsonify({"message": "Failed to update request status", 

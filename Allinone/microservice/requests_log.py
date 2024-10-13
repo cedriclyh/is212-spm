@@ -129,7 +129,7 @@ def get_all_requests():
         return jsonify({'message': 'Failed to retrieve requests', 'code': 500}), 500
     
 # Retrieve a specific WFH request
-@app.route('/request/<int:request_id>', methods=['GET'])
+@app.route('/get_request/<int:request_id>', methods=['GET'])
 def get_request(request_id):
     try:
         request = Request.query.filter_by(request_id=request_id).first()
@@ -146,7 +146,7 @@ def get_request(request_id):
         return jsonify({'message': 'Failed to retrieve request', 'code': 500}), 500
 
 #Retrieve a WFH request by staff
-@app.route('/requests/staff/<int:staff_id>', methods=['GET'])
+@app.route('/get_requests/staff/<int:staff_id>', methods=['GET'])
 def get_requests_by_staff_id(staff_id):
     try:
         requests = Request.query.filter_by(staff_id=staff_id).all()
@@ -163,7 +163,7 @@ def get_requests_by_staff_id(staff_id):
         return jsonify({'message': 'Failed to retrieve requests by staff ID', 'code': 500}), 500
     
 # Update request status
-@app.route('/request/<int:request_id>', methods=['PUT'])
+@app.route('/update_request/<int:request_id>', methods=['PUT'])
 def update_request(request_id):
     try:
         data = request.json
