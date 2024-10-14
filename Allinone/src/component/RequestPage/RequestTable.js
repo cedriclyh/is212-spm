@@ -240,7 +240,7 @@ export default function RequestTable() {
               </DropdownMenu>
             </Dropdown>
             <Button color="primary" endContent={<PlusIcon />}>
-              Add New
+              <a href="/new_request">Add New</a>
             </Button>
           </div>
         </div>
