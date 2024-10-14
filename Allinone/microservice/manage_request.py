@@ -4,7 +4,8 @@ import requests
 app = Flask(__name__)
 
 EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5003"
+REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
+ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5005"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
 
 @app.route('/manage_request', methods=['PUT'])
@@ -21,14 +22,18 @@ def manage_request():
                             "code": 400}), 400
 
         # 1: fetch request from database via arrangement.py
-        fetch_response = requests.get(f"{ARRANGEMENT_MICROSERVICE_URL}/get_request/{request_id}")
+        fetch_response = requests.get(f"{REQUEST_LOG_MICROSERVICE_URL}/get_request/{request_id}")
         
         if fetch_response.status_code != 200:
             return jsonify({"message": "Failed to fetch request from database", 
                             "code": 404}), 404
         
         request_entry = fetch_response.json().get("data")
+        request_id - request_entry.get("request_id")
         staff_id = request_entry.get("staff_id")
+        arrangement_date = request_entry.get("arrangement_date")
+        timeslot = request_entry.get("timeslot")
+        reason = request_entry.get("reason")
 
         # 2: fetch staff email from employee.py using staff_id
         employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
@@ -51,13 +56,29 @@ def manage_request():
             "remarks": remarks
         }
 
-        update_response = requests.put(f"{ARRANGEMENT_MICROSERVICE_URL}/update_request/{request_id}", json=arrangement_update_data)
+        update_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json=arrangement_update_data)
         
         if update_response.status_code != 200:
             return jsonify({"message": "Failed to update request status", 
                             "code": 500}), 500
 
-        # 4: call notification.py to notify the staff of the updated status
+        # 4: if status is Approved, insert the request into the arrangement table
+        if status == "Approved":
+            arrangement_data = {
+                "request_id": request_id,
+                "staff_id": staff_id,
+                "arrangement_date": arrangement_date,
+                "timeslot": timeslot,
+                "reason": reason
+            }
+            print(arrangement_data)
+            arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_arrangement", json=arrangement_data)
+            
+            if arrangement_response.status_code != 201:
+                return jsonify({"message": "Failed to create arrangement entry", 
+                                "code": 500}), 500
+            
+        # 5: call notification.py to notify the staff of the updated status
         notification_data = {
             "staff_email": staff_email,  
             "status": status,

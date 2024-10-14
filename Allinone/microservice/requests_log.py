@@ -16,8 +16,8 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
-    # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -46,7 +46,7 @@ class Request(db.Model):
     manager_id = db.Column(db.Integer, nullable=False)
     request_date = db.Column(db.Date, nullable=False)
     arrangement_date = db.Column(db.Date, nullable=False)
-    timeslot = db.Column(db.Integer, nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
+    timeslot = db.Column(db.String(50), nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
     reason = db.Column(db.String(255), nullable=False, default="") # Reason for WFH request
 
@@ -129,7 +129,7 @@ def get_all_requests():
         return jsonify({'message': 'Failed to retrieve requests', 'code': 500}), 500
     
 # Retrieve a specific WFH request
-@app.route('/request/<int:request_id>', methods=['GET'])
+@app.route('/get_request/<int:request_id>', methods=['GET'])
 def get_request(request_id):
     try:
         request = Request.query.filter_by(request_id=request_id).first()
@@ -146,7 +146,7 @@ def get_request(request_id):
         return jsonify({'message': 'Failed to retrieve request', 'code': 500}), 500
 
 #Retrieve a WFH request by staff
-@app.route('/requests/staff/<int:staff_id>', methods=['GET'])
+@app.route('/get_requests/staff/<int:staff_id>', methods=['GET'])
 def get_requests_by_staff_id(staff_id):
     try:
         requests = Request.query.filter_by(staff_id=staff_id).all()
@@ -163,7 +163,7 @@ def get_requests_by_staff_id(staff_id):
         return jsonify({'message': 'Failed to retrieve requests by staff ID', 'code': 500}), 500
     
 # Update request status
-@app.route('/request/<int:request_id>', methods=['PUT'])
+@app.route('/update_request/<int:request_id>', methods=['PUT'])
 def update_request(request_id):
     try:
         data = request.json

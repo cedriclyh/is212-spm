@@ -51,14 +51,6 @@ def request_sent():
         if not manager_email:
             return jsonify({"error": "Manager email is missing"}), 400
         
-        # extract timeslot 
-        if timeslot == 1: 
-            timeslot_desc = "Morning Shift"
-        elif timeslot == 2:
-            timeslot_desc = "Afternoon Shift"
-        else: 
-            timeslot_desc = "Full Day"
-
         # Email content to notify the manager
         sender = {"name": "Allinone", "email": "no-reply@allinone.com"}
         to = [{"email": manager_email}]
@@ -67,7 +59,7 @@ def request_sent():
         <html>
         <body>
             <h3>New WFH Request Submitted</h3>
-            <p>Employee {employee_name} with ID {staff_id} has submitted a {timeslot_desc} WFH request for {request_date}.</p>
+            <p>Employee {employee_name} with ID {staff_id} has submitted a {timeslot} WFH request for {request_date}.</p>
             <p>Reason: {reason}</p>
         </body>
         </html>
