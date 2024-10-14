@@ -55,10 +55,11 @@ CREATE TABLE IF NOT EXISTS Request_Log (
 
 -- Arrangement Table
 CREATE TABLE IF NOT EXISTS Arrangement (
+    request_id INT PRIMARY KEY,
     staff_id INT NOT NULL,    
     arrangement_date DATE NOT NULL,
     timeslot VARCHAR(50) NOT NULL,  
-    PRIMARY KEY (staff_id, arrangement_date),
+    reason VARCHAR(255) NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
@@ -663,10 +664,10 @@ INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrange
 
 -- Arrangement values
 -- meaning approved requests
-INSERT INTO Arrangement (staff_id, arrangement_date, timeslot) VALUES
-(140002, '2024-10-01', "AM"),
-(140003, '2024-10-01', "PM"),
-(140004, '2024-10-01', "FULL");
+INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reason) VALUES
+(1, 140002, '2024-10-01', "AM", "Medical Appointment"),
+(2, 140003, '2024-10-01', "PM", "Lazy"),
+(3, 140004, '2024-10-01', "FULL", '');
 
 -- Block_Out_Dates values
 INSERT INTO Block_Out_Dates (blockout_date, title) VALUES
