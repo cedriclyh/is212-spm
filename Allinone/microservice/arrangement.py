@@ -107,4 +107,4 @@ def get_arrangement(arrangement_id):
         return jsonify({"message": "Failed to retrieve arrangement", "code": 500}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5004, debug=True)  # Adjust port as needed
+    app.run(host="0.0.0.0", port=5005, debug=True)  
