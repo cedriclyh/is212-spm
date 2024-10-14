@@ -50,7 +50,7 @@ def create_arrangement():
         timeslot = data.get("timeslot")
         reason = data.get("reason")
 
-        if not request_id or not staff_id or not arrangement_date or not timeslot or not reason:
+        if not request_id or not staff_id or not arrangement_date or not timeslot:
             return jsonify({"message": "Missing required fields", 
                             "code": 400}), 400
 
