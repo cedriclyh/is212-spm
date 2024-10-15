@@ -74,10 +74,11 @@ export const getTeamEvents = async () => {
     const response = await fetch('http://localhost:5003/get_all_requests',{
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       }
     });
     if (!response.ok) {
+      console.log(response);
       throw new Error('Failed to fetch data');
     }
 
@@ -159,7 +160,15 @@ export const getPersonalEvents = async () => {
     })
   );
 
+  // export const getBlockoutDates = () => {
+  //   try {
+      
+  //   }
+  // }
+
   console.log("Personal Events:", personalEvents); // Log team events for debugging
+  
+  console.log(personalEvents.filter(event=>event !=null));
   return personalEvents.filter(event=>event !=null);
 
   } catch (error) {

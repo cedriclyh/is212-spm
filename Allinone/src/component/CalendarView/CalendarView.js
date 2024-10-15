@@ -4,8 +4,9 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { Button } from '@mui/material'; // You can use any button component you prefer
-import { CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
+import { Block, CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
 import { getValidRange, getTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import BlockoutPopup from './BlockoutPopup';
 
 export default function GoogleCalendarClone() {
   const [view, setView] = useState('dayGridMonth');
@@ -15,12 +16,14 @@ export default function GoogleCalendarClone() {
 
   useEffect(() => {
     const fetchEvents = async () => {
+      console.log("Fetching team events..."); // Debugging log
       const teamEvents = await getTeamEvents(); // Fetch the team events
-      // console.log("Fetched Events:", teamEvents.teamEvents); 
+      console.log("Fetched Team Events:", teamEvents); 
       setTeamEvents(teamEvents); // Update state with fetched events
-
+    
+      console.log("Fetching personal events..."); // Debugging log
       const personalEvents = await getPersonalEvents(); // Fetch the personal events
-      // console.log("Fetched Personal Events:", personalEvents.personalEvents); 
+      console.log("Fetched Personal Events:", personalEvents); 
       setPersonalEvents(personalEvents); // Update state with fetched events
     };
     fetchEvents(); // Call the fetch function
@@ -41,7 +44,6 @@ export default function GoogleCalendarClone() {
       setView('dayGridMonth');
     }
   };
-
 
   // State to manage which checkboxes are selected
   const [showPersonal, setShowPersonal] = useState(true); //Set to be checked by default
@@ -99,6 +101,7 @@ export default function GoogleCalendarClone() {
             <Button variant="contained" onClick={toggleView} startIcon={view === 'dayGridMonth' ? <ViewAgenda /> : <CalendarToday />}>
               {view === 'dayGridMonth' ? 'Week View' : 'Month View'}
             </Button> 
+            <BlockoutPopup/>
           </div>
             <FullCalendar
               ref={calendarRef} // Reference to the FullCalendar component

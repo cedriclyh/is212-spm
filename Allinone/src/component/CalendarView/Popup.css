@@ -1,0 +1,81 @@
+.popup {
+  position: fixed;
+  /* width: 50%; */
+  /* height: 50%; */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgb(255, 255, 255);
+  padding: 20px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000; /* Ensures the popup is above other elements */
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  z-index: 999; /* Slightly lower than the popup to appear behind it */
+}
+
+.popup-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.popup label {
+  margin-bottom: 10px;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+button {
+  padding: 8px 12px;
+  margin: 5px;
+}
+
+input, textarea {
+  background-color: rgb(241, 241, 241);
+  margin: 0px 10px;
+}
+
+h2 {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.error-message-box {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+}
+
+.error-message-box ol {
+  margin: 0; /* Remove default margin */
+  padding-left: 20px; /* Add some padding to make the list more visible */
+  list-style-type: decimal; /* Force the use of decimal numbers in the list */
+}
+
+.error-message-box li {
+  margin-bottom: 5px; /* Add space between list items */
+}
+
+.error-input {
+  color: red;
+}
+
+.error-input > input {
+  border: 1px solid red; 
+  background-color: rgb(255, 229, 229);
+}
