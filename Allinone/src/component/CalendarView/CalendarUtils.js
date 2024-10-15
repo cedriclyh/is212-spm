@@ -160,12 +160,6 @@ export const getPersonalEvents = async () => {
     })
   );
 
-  // export const getBlockoutDates = () => {
-  //   try {
-      
-  //   }
-  // }
-
   console.log("Personal Events:", personalEvents); // Log team events for debugging
   
   console.log(personalEvents.filter(event=>event !=null));
@@ -175,3 +169,42 @@ export const getPersonalEvents = async () => {
     console.error('Failed to fetch personal events:', error);
   }
 };    
+
+// Retrieve all blockout dates
+export const getBlockoutDates = async () => {
+  try {
+    const response = await fetch('http://localhost:5003/get_blockouts', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if(!response.ok){
+      throw new Error('Failed to fetch blockout dates');
+    }
+
+    const data = await response.json();
+    console.log("API Response (blockout date):", data);
+
+    const request = data.data;
+
+    const blockouts = await Promise.all(
+      request.map(async (req) => {
+        return {
+          id: req.blockout_id,
+          title: req.title,
+          start: req.start_date,
+          end: req.end_date,
+          classNames: ['blocked-event'],
+          display: 'background'
+        }
+      })
+    );  
+    
+    console.log("Blockouts:", blockouts);
+    return blockouts;
+  } catch(error) {    
+      console.error("Failed to fetch arrangement name:", error);
+      return null; // Return null or handle error appropriately
+  }
+}

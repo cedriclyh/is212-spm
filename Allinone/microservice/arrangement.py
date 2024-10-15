@@ -77,14 +77,16 @@ class BlockoutDates(db.Model):
     __tablename__ = 'Block_Out_Dates'
 
     blockout_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    blockout_date = db.Column(db.Date, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
     title = db.Column(db.String(255), nullable=False)
     blockout_description = db.Column(db.String(255), nullable=False)
 
     def json(self):
         return {
             'blockout_id': self.blockout_id,
-            'blockout_date': str(self.blockout_date),
+            'start_date': str(self.start_date),
+            'end_date': str(self.end_date),
             'title': self.title,
             'blockout_description': self.blockout_description
     }
@@ -167,7 +169,7 @@ def update_request(request_id):
 def arrangement_form():
     return render_template('arrangement_form.html')
 
-
+# Create new blockout dates
 @app.route('/blockout', methods=['POST'])
 def blockout():
     try:
@@ -178,45 +180,57 @@ def blockout():
         end_date = datetime.strptime(data["end_date"], '%Y-%m-%d').date()
 
         # difference between current and previous date
-        delta = timedelta(days=1)
+        # delta = timedelta(days=1)
 
         # store the dates between two dates in a list
-        dates = []
+        # dates = []
 
-        while start_date <= end_date:
-            # add current date to list by converting  it to iso format
-            dates.append(start_date)
+        # while start_date <= end_date:
+        #     # add current date to list by converting  it to iso format
+        #     dates.append(start_date)
 
-            # increment start date by timedelta
-            start_date += delta
+        #     # increment start date by timedelta
+        #     start_date += delta
 
         # print('Dates between', start_date, 'and', end_date)
-        print(dates)
+        # print(dates)
 
         # print(f"Creating blockout for dates between", start_date, "and", end_date, "...")
 
-        # Create blockout dates for each date in date range
-        date_count = 0 
-        for date in dates:
-            print("The date is", date)
-            blockout = BlockoutDates(
-                blockout_date = date,
-                title = data["title"],
-                blockout_description = data["blockout_description"]
-            )
-            db.session.add(blockout)
-            date_count += 1
-            print(f"Blockout created for {date}")
+        # # Create blockout dates for each date in date range
+        # date_count = 0 
+        # for date in dates:
+        #     print("The date is", date)
+        #     blockout = BlockoutDates(
+        #         blockout_date = date,
+        #         title = data["title"],
+        #         blockout_description = data["blockout_description"]
+        #     )
+        #     db.session.add(blockout)
+        #     date_count += 1
+        #     print(f"Blockout created for {date}")
 
+        blockout = BlockoutDates(
+            start_date = start_date,
+            end_date = end_date,
+            title = data["title"],
+            blockout_description = data["blockout_description"],
+        )
+
+        print("check")
         # Commit changes for all dates 
+        db.session.add(blockout)
         db.session.commit()
-        print(f'Blockout created for {date_count} dates')
-        return jsonify({'message': f'Blockout created for {date_count} dates', 'data': blockout.json(), 'code':200}), 200
+        # print(f'Blockout created for {date_count} dates')
+        print(f'Blockout created for {data["title"]} from {start_date} and {end_date}')
+
+        return jsonify({'message': f'Blockout created for {data["title"]} from {start_date} and {end_date}', 'data': blockout.json(), 'code':200}), 200
         
     except Exception as e:
         app.logger.error(f"Failed to create blockout: {e}")
         return jsonify({'message': 'Failed to create blockout', 'code': 500}), 500
     
+# Retrieve all block out dates
 @app.route('/get_blockouts', methods=['GET'])
 def get_blockouts():
     try:

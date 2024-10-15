@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { Button } from '@mui/material'; // You can use any button component you prefer
 import { Block, CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
-import { getValidRange, getTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { getValidRange, getTeamEvents, getPersonalEvents, getBlockoutDates } from './CalendarUtils'; // Import utility functions
 import BlockoutPopup from './BlockoutPopup';
 
 export default function GoogleCalendarClone() {
@@ -13,6 +13,7 @@ export default function GoogleCalendarClone() {
   const calendarRef = useRef(null); 
   const [teamEvents, setTeamEvents] = useState([]);
   const [personalEvents, setPersonalEvents] = useState([]);
+  const [blockouts, setBlockouts] = useState([]);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -26,6 +27,14 @@ export default function GoogleCalendarClone() {
       console.log("Fetched Personal Events:", personalEvents); 
       setPersonalEvents(personalEvents); // Update state with fetched events
     };
+
+    const fetchBlockoutDates = async () => {
+      const blockouts = await getBlockoutDates(); // Fetch blockout dates
+      console.log("Fetched Blockouts:", blockouts);
+      setBlockouts(blockouts || []); // Update state with fetched blockout events
+    };
+
+    fetchBlockoutDates();
     fetchEvents(); // Call the fetch function
   }, []); // Run once on mount
 
@@ -58,17 +67,17 @@ export default function GoogleCalendarClone() {
       setShowTeam(checked);
     }
   };
-
-  const blockedEvents = [
-    { id: 'grey1', start: '2024-10-04', end: '2024-10-05', allDay: true, display: 'background', title:'Blocked', classNames:['blocked-event'], color: '#808080' }, // Darker grey
-    { id: 'grey2', start: '2024-10-10', end: '2024-10-12', allDay: true, display: 'background', title:'Blocked',classNames:['blocked-event'], color: '#808080' }  // Darker grey
-  ];
+  
+  // const blockedEvents = [
+    // { id: 'grey1', start: '2024-10-04', end: '2024-10-05', allDay: true, display: 'background', title:'Blocked', classNames:['blocked-event'], color: '#808080' }, // Darker grey
+    // { id: 'grey2', start: '2024-10-10', end: '2024-10-12', allDay: true, display: 'background', title:'Blocked',classNames:['blocked-event'], color: '#808080' }  // Darker grey
+  // ];
 
   // Combine personal and team events based on checkbox states
   const filteredEvents = [
     ...(showPersonal ? personalEvents : []),
     ...(showTeam ? teamEvents : []),
-    ...blockedEvents // Add blocked events
+    ...blockouts // Add blocked events
   ];
 
   // Render the calendar
