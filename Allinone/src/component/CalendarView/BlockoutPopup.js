@@ -39,7 +39,7 @@ const BlockoutPopup = () => {
     if (!validateInputs()) return; // Validate and exit if errors exist
 
     try {
-      const response = await axios.post('http://localhost:5003/blockout', {
+      const response = await axios.post('http://localhost:5005/blockout', {
         title,
         start_date: startDate,
         end_date: endDate,
@@ -49,9 +49,18 @@ const BlockoutPopup = () => {
         alert('Blockout created successfully');
         resetForm();
       }
+      if (response.status === 409) {
+        alert('Failed to create blockout.', response.message);
+      }
     } catch (error) {
-      console.error('Error creating blockout:', error);
-      alert('Failed to create blockout');
+      if (error.response && error.response.status === 409) {
+        // Handle the 409 conflict error (blockout already exists)
+        alert("Failed to create blockout. At least one blockout already exists within the selected date range.")
+      }
+      else {
+        console.error('Error creating blockout:', error);
+        alert('Failed to create blockout');
+      }
     }
   };
 

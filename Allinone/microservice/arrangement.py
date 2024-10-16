@@ -4,14 +4,14 @@ from os import environ
 from flask_cors import CORS
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
-    environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -127,50 +127,32 @@ def get_arrangement(arrangement_id):
         else:
             return jsonify({"message": "Arrangement not found", "code": 404}), 404
     except Exception as e:
+        app.logger.error(f"Failed to retrieve arrangement with id {arrangement_id}: {e}")
+        return jsonify({'message': f'Failed to retrieve arrangement with id {arrangement_id}', 'code': 500}), 500
+    
+#Retrieve a WFH request by staff
+@app.route('/get_arrangement/staff/<int:staff_id>', methods=['GET'])
+def get_arrangements_by_staff_id(staff_id):
+    try:
+        arrangements = Arrangement.query.filter_by(staff_id=staff_id).all()
+        if arrangements:
+            return jsonify({'message': f'Requests from staff {staff_id} found', 'data': [arrangement.json() for arrangement in arrangements], 'code': 200}), 200
+        else:
+            return jsonify({'message': f'No requests from staff {staff_id}', 'code': 404}), 404
+    except Exception as e:
         app.logger.error(f"Failed to retrieve requests by staff ID: {e}")
         return jsonify({'message': 'Failed to retrieve requests by staff ID', 'code': 500}), 500
-    
+
 
 # Create new blockout dates
 @app.route('/blockout', methods=['POST'])
-def blockout():
+def blockDate():
     try:
         data = request.json
         print(data)
         
         start_date = datetime.strptime(data["start_date"], '%Y-%m-%d').date()
         end_date = datetime.strptime(data["end_date"], '%Y-%m-%d').date()
-
-        # difference between current and previous date
-        # delta = timedelta(days=1)
-
-        # store the dates between two dates in a list
-        # dates = []
-
-        # while start_date <= end_date:
-        #     # add current date to list by converting  it to iso format
-        #     dates.append(start_date)
-
-        #     # increment start date by timedelta
-        #     start_date += delta
-
-        # print('Dates between', start_date, 'and', end_date)
-        # print(dates)
-
-        # print(f"Creating blockout for dates between", start_date, "and", end_date, "...")
-
-        # # Create blockout dates for each date in date range
-        # date_count = 0 
-        # for date in dates:
-        #     print("The date is", date)
-        #     blockout = BlockoutDates(
-        #         blockout_date = date,
-        #         title = data["title"],
-        #         blockout_description = data["blockout_description"]
-        #     )
-        #     db.session.add(blockout)
-        #     date_count += 1
-        #     print(f"Blockout created for {date}")
 
         blockout = BlockoutDates(
             start_date = start_date,
@@ -179,15 +161,16 @@ def blockout():
             blockout_description = data["blockout_description"],
         )
 
-        print("check")
-        # Commit changes for all dates 
-        db.session.add(blockout)
-        db.session.commit()
-        # print(f'Blockout created for {date_count} dates')
-        print(f'Blockout created for {data["title"]} from {start_date} and {end_date}')
+        if get_blockout_by_date(start_date, end_date).data:
+            # Commit changes for all dates 
+            db.session.add(blockout)
+            db.session.commit()
+            print(f"Failed to create blockout. At least one blockout already exists within the selected date range.")
+            return jsonify({'message': 'Failed to create blockout. At least one blockout already exists within the selected date range.', 'data': blockout.json(), 'code':409}), 409        
+        else:
+            print(f'Blockout created for {data["title"]} from {start_date} and {end_date}')
+            return jsonify({'message': f'Blockout created for {data["title"]} from {start_date} and {end_date}', 'data': blockout.json(), 'code':200}), 200
 
-        return jsonify({'message': f'Blockout created for {data["title"]} from {start_date} and {end_date}', 'data': blockout.json(), 'code':200}), 200
-        
     except Exception as e:
         app.logger.error(f"Failed to create blockout: {e}")
         return jsonify({'message': 'Failed to create blockout', 'code': 500}), 500
@@ -202,6 +185,27 @@ def get_blockouts():
     except Exception as e:
         app.logger.error(f"Failed to retrieve blockout dates: {e}")
         return jsonify({'message': 'Failed to retrieve blockout dates', 'code': 500}), 500
+
+@app.route('/get_blockout/date/<string:query_start_date><string:query_end_date>', methods=['GET'])
+def get_blockout_by_date(query_start_date, query_end_date):
+    # Convert query_date to datetime.date object
+    # query_start_date = date.fromisoformat(query_start_date)
+    # query_end_date = date.fromisoformat(query_end_date)
+
+    try:
+        blockout = BlockoutDates.query.filter(
+            BlockoutDates.start_date <= query_end_date,
+            BlockoutDates.end_date >= query_start_date
+        ).first()
+
+        if blockout:
+            return jsonify({'message': f'Blockout found', 'data': blockout.json()})
+        else:
+            return jsonify({'message': 'No blockout date found for given date', 'data': False})
+
+    except Exception as e:
+        app.logger.error(f"Failed to retrieve blockouts for the date {date}: {e}")
+        return jsonify({'message':f'Failed to retrieve blockouts for the date {date}', 'code': 500}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005, debug=True)  

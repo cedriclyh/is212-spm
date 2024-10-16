@@ -13,11 +13,11 @@ export const getValidRange = (today) => {
 // Helper function to calculate start and end times based on timeslot
 function getTimeRange(timeslot, date) {
   switch (timeslot) {
-    case 1:
+    case "AM":
       return { start: `${date}T09:00:00`, end: `${date}T13:00:00` };
-    case 2:
+    case "PM":
       return { start: `${date}T14:00:00`, end: `${date}T18:00:00` };
-    case 3:
+    case "FULL":
       return { start: `${date}T09:00:00`, end: `${date}T18:00:00` };
     default:
       return { start: date, end: date }; // Fallback to all-day event if timeslot is unknown
@@ -71,7 +71,7 @@ async function getArrangementName(userId) {
 // Retrieve TeamEvents for CalendarView
 export const getTeamEvents = async () => {
   try{
-    const response = await fetch('http://localhost:5003/get_all_requests',{
+    const response = await fetch('http://localhost:5005/get_all_arrangements',{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ export const getTeamEvents = async () => {
 // Retrieve personalEvents for CalendarView
 export const getPersonalEvents = async () => {
   try{
-    const response = await fetch('http://localhost:5003/requests/staff/140003',{
+    const response = await fetch('http://localhost:5005/get_arrangement/staff/140003',{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -173,7 +173,7 @@ export const getPersonalEvents = async () => {
 // Retrieve all blockout dates
 export const getBlockoutDates = async () => {
   try {
-    const response = await fetch('http://localhost:5003/get_blockouts', {
+    const response = await fetch('http://localhost:5005/get_blockouts', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

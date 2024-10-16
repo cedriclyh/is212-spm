@@ -16,6 +16,7 @@
   height: 100px; /* Adjust the height as needed */
   max-height: 100px;
   position: relative;
+  cursor: pointer;
 }
 
 /* Ensure that the event list inside the cell respects the height */

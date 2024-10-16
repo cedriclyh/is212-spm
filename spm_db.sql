@@ -668,7 +668,7 @@ INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrange
 -- meaning approved requests
 INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reason) VALUES
 (1, 140002, '2024-10-01', "AM", "Medical Appointment"),
-(2, 140003, '2024-10-01', "PM", "Lazy"),
+(2, 140003, '2024-10-01', "FULL", "Lazy"),
 (3, 140004, '2024-10-01', "FULL", '');
 
 -- Block_Out_Dates values (with description)
