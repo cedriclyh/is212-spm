@@ -94,9 +94,16 @@ def all_users():
     if employee_list:
         # Convert each employee object into a dictionary
         employees_data = [employee.to_dict() for employee in employee_list]
-        return jsonify({"message": "Employees found", "data": employees_data, "code": 200}), 200
+        return jsonify({
+            "message": "Employees found", 
+            "data": employees_data, 
+            "code": 200
+            }), 200
     else:
-        return jsonify({"message": "Employees not found", "code": 404}), 404
+        return jsonify({
+            "message": "Employees not found", 
+            "code": 404
+            }), 404
     
 # Get specific employee
 @app.route('/user/<staff_id>')
@@ -105,9 +112,16 @@ def specific_user(staff_id):
 
     if employee:
         employee_data = employee.to_dict()
-        return jsonify({"message": "Employee found", "data": employee_data, "code":200}), 200
+        return jsonify({
+            "message": "Employee found", 
+            "data": employee_data, 
+            "code":200
+            }), 200
     else:
-        return jsonify({"message": "Employee not found", "code":404}), 404
+        return jsonify({
+            "message": "Employee not found", 
+            "code":404
+            }), 404
     
 # Get specific employee's manager's email address to send notification of request made
 @app.route('/user/manager_email/<int:manager_id>', methods=['GET'])
@@ -118,13 +132,21 @@ def get_manager_email(manager_id):
 
         if manager:
             manager_email = manager.email
-            return jsonify({"manager_email": manager_email}), 200
+            return jsonify({
+                "message": "Manager email found",
+                "manager_email": manager_email,
+                "code": 200
+                }), 200
         else:
-            return jsonify({"message": "Manager not found"}), 404
+            return jsonify({
+                "message": "Manager not found",
+                "code": 404
+                }), 404
 
     except Exception as e:
         app.logger.error(f"Failed to retrieve manager email: {e}")
-        return jsonify({"message": "Failed to retrieve manager email", "error": str(e)}), 500
+        return jsonify({"message": "Failed to retrieve manager email", 
+                        "error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)
