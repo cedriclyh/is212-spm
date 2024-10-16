@@ -1,12 +1,39 @@
 from flask import Flask, request, jsonify
 import requests
+from flask_sqlalchemy import SQLAlchemy
+from os import environ
+from flask_cors import CORS
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = ( 
+    # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
+CORS(app)
 
 EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
 REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5005"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
+
+from arrangement import Arrangement
+from employee import Employee
+
+def count_wfh(dept, arrangement_date):
+    try:
+        # count the number of WFH arrangements for a specific department on a specific date
+        count = db.session.query(Arrangement) \
+            .join(Employee, Employee.staff_id == Arrangement.staff_id) \
+            .filter(Employee.dept == dept, Arrangement.arrangement_date == arrangement_date) \
+            .count()
+        return count
+    except Exception as e:
+        app.logger.error(
+            f"Failed to count WFH for department {dept} on {arrangement_date}: {e}")
+        return 0
 
 @app.route('/manage_request', methods=['PUT'])
 def manage_request():
@@ -35,7 +62,7 @@ def manage_request():
         timeslot = request_entry.get("timeslot")
         reason = request_entry.get("reason")
 
-        # 2: fetch staff email from employee.py using staff_id
+        # 2: fetch staff email and department from employee.py using staff_id
         employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
         
         if employee_response.status_code != 200:
@@ -44,12 +71,23 @@ def manage_request():
 
         employee_data = employee_response.json().get("data")
         staff_email = employee_data.get("email")
+        dept = employee_data.get("dept")
 
         if not staff_email:
             return jsonify({"message": "Staff email not found", 
                             "code": 404}), 404
         
-        # 3: update the request status
+        #3: check WFH threshold before approving
+        if dept != "CEO":
+            total_team_size = db.session.query(Employee).filter(Employee.dept == dept).count()
+            wfh_count = count_wfh(dept, arrangement_date)
+            # print(total_team_size)
+            # print(wfh_count)
+            if status == "Approved" and (wfh_count + 1)/ total_team_size > 0.5:
+                return jsonify({"message": "Approval would exceed the 50% WFH threshold!",
+                            "code": 403}), 403
+        
+        # 4: update the request status
         arrangement_update_data = {
             "request_id": request_id,
             "status": status,
@@ -62,7 +100,7 @@ def manage_request():
             return jsonify({"message": "Failed to update request status", 
                             "code": 500}), 500
 
-        # 4: if status is Approved, insert the request into the arrangement table
+        # 5: if status is Approved, insert the request into the arrangement table
         if status == "Approved":
             arrangement_data = {
                 "request_id": request_id,
@@ -71,14 +109,13 @@ def manage_request():
                 "timeslot": timeslot,
                 "reason": reason
             }
-            print(arrangement_data)
             arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_arrangement", json=arrangement_data)
             
             if arrangement_response.status_code != 201:
                 return jsonify({"message": "Failed to create arrangement entry", 
                                 "code": 500}), 500
             
-        # 5: call notification.py to notify the staff of the updated status
+        # 6: call notification.py to notify the staff of the updated status
         notification_data = {
             "staff_email": staff_email,  
             "status": status,
