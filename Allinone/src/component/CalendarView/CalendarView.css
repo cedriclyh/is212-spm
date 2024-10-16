@@ -7,13 +7,27 @@
   }
   
   .calendar-title {
-    font-size: 24px;
+    font-size: 20px;
     margin-bottom: 10px;
+  }
+
+  .custom-calendar {
+    margin: auto;
+    /* flex: 1; */
+    margin-left: 10px ;
+    padding: 40px; 
+  }
+
+  .calendar-box{
+    display: flex;
+    margin-bottom: 10px;
+    height: 400px;
+    align-content: space-between;
   }
 
   /* Set a fixed height for each date cell */
 .fc-daygrid-day {
-  height: 100px; /* Adjust the height as needed */
+  height: 100px; /* Adjust the height as needed */  
   max-height: 100px;
   position: relative;
 }
@@ -36,4 +50,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.fc-header-toolbar {
+  /*
+  the calendar will be butting up against the edges,
+  but let's scoot in the header's buttons
+  */
+  padding-top: 1em;
+  padding-left: 1em;
+  padding-right: 1em;
+  font-size: medium;
 }
