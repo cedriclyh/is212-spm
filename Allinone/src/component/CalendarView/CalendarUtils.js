@@ -1,5 +1,7 @@
 import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; // For date manipulation
 
+const userId = 140004; // Hardcoded user ID for demo purposes
+
 // Define valid range (2 months back, 3 months forward)
 export const getValidRange = (today) => {
     const startOfCurrentMonth = startOfMonth(today);
@@ -96,7 +98,7 @@ export async function getStaffName(userId) {
 // Retrieve personalEvents for CalendarView
 export const getPersonalEvents = async () => {
   try{
-    const response = await fetch('http://localhost:5003/get_requests/staff/140004',{
+    const response = await fetch('http://localhost:5003/get_requests/staff/'+userId,{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -165,12 +167,13 @@ export const getStaffTeamEvents = async () => {
    const staffTeamEvents = await Promise.all(
     requests.map(async (req) => {
       // Check for manager_id condition
+      if (req.staff_id == userId) {
+        return null; // Skip this request if staff_id is the same as the staff in personal events
+      }
       if (req.manager_id !== 140894) {
         return null; // Skip this request if manager_id doesn't match
       }
-      if (req.staff_id == 140004) {
-        return null; // Skip this request if staff_id is the same as the staff in personal events
-      }
+      
       if (!req.timeslot || !req.arrangement_date) {
         console.warn("Missing timeslot or arrangement_date in request:", req);
         return null; // Skip this request if data is missing

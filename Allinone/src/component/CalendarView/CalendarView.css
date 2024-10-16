@@ -62,3 +62,9 @@
   padding-right: 1em;
   font-size: medium;
 }
+
+.fc-slats {
+  tr:nth-child(n+8) {
+      height: 68px;
+  }
+}
