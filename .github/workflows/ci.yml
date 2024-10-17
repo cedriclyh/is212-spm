@@ -1,0 +1,74 @@
+name: CI Pipeline
+
+# Trigger the workflow on push and pull request to the main branch
+on:
+    push:
+        branches:
+        - main
+    pull_request:
+        branches:
+        - main
+
+jobs:
+    build:
+        runs-on: ubuntu-latest  # Use the latest Ubuntu environment
+        
+        steps:
+        # Step 1: Check out the repository code
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        # Step 2: Set up Node.js environment for JavaScript/React.js
+        - name: Set up Node.js
+          uses: actions/setup-node@v2
+          with:
+            node-version: '14'  # Adjust the Node.js version if needed
+    
+        # Step 3: Install dependencies for the frontend (React.js)
+        - name: Install Node.js dependencies
+          run: npm install
+          working-directory: ./Allinone/src  # Change this to your frontend directory
+    
+        # Step 4: Set up Python environment
+        - name: Set up Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: '3.12.6' 
+    
+        # Step 5: Install Python dependencies for the backend (Flask)
+        - name: Install Python dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+          working-directory: ./Allinone/microservice   # Change this to your backend directory
+
+        # Step 6: Run tests (using pytest for Python)
+        - name: Run Python unit tests
+          run: pytest
+          working-directory: ./Allinone/microservice  # Folder for unittests kiv
+
+        # Optional: Run tests for JavaScript/React (adjust based on your test setup)
+        - name: Run JS/React unit tests
+          run: npm test
+          working-directory: ./Allinone/src # Folder to JS/React tests kiv
+
+# Docker build job (commented out until deployment is confirmed)
+# docker-build:
+#   runs-on: ubuntu-latest
+#   steps:
+#   - name: Checkout code
+#     uses: actions/checkout@v2
+#
+#   - name: Build Docker image
+#     run: docker build -t your-image-name .
+#
+# AWS deployment (commented out until deployment is confirmed)
+# aws-deploy:
+#   needs: docker-build
+#   runs-on: ubuntu-latest
+#   steps:
+#   - name: Deploy to AWS
+#     run: echo "Deploying to AWS..."
+#     env:
+#       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
