@@ -1,62 +1,51 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './CalendarView.css'; // Import the CSS file
-
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-
 import { Button } from '@mui/material'; // You can use any button component you prefer
 import { CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
-import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; // For date manipulation
+import { getValidRange, getTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 
 export default function GoogleCalendarClone() {
-  // State to toggle between day and month views
   const [view, setView] = useState('dayGridMonth');
-  const calendarRef = useRef(null); // Ref for FullCalendar instance
+  const calendarRef = useRef(null); 
+  const [teamEvents, setTeamEvents] = useState([]);
+  const [personalEvents, setPersonalEvents] = useState([]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const teamEvents = await getTeamEvents(); // Fetch the team events
+      // console.log("Fetched Events:", teamEvents.teamEvents); 
+      setTeamEvents(teamEvents); // Update state with fetched events
+
+      const personalEvents = await getPersonalEvents(); // Fetch the personal events
+      // console.log("Fetched Personal Events:", personalEvents.personalEvents); 
+      setPersonalEvents(personalEvents); // Update state with fetched events
+    };
+    fetchEvents(); // Call the fetch function
+  }, []); // Run once on mount
 
   // Get the current month
   const today = new Date();
-  const startOfCurrentMonth = startOfMonth(today);
-  
-  // Define valid range (2 months back, 3 months forward)
-  const validRange = {
-    start: format(subMonths(startOfCurrentMonth, 2), 'yyyy-MM-dd'), // 2 months back from current month
-    end: format(addMonths(endOfMonth(today), 3), 'yyyy-MM-dd')    // 3 months forward from current month
-  };
+  const validRange = getValidRange(today);
 
   // Toggle between day and month views
   const toggleView = () => {
-    const calendarApi = calendarRef.current.getApi(); // Get FullCalendar API
+    const calendarApi = calendarRef.current.getApi(); 
     if (view === 'dayGridMonth') {
-      calendarApi.changeView('timeGridDay'); // Switch to day view
-      setView('timeGridDay');
+      calendarApi.changeView('timeGridWeek'); // Switch to week view
+      setView('timeGridWeek');
     } else {
       calendarApi.changeView('dayGridMonth'); // Switch to month view
       setView('dayGridMonth');
     }
   };
 
-  const getEvents = () => {
-    // Dummy events
-    const personalEvents = [
-      { id: 1, title: 'Personal Meeting', start: '2024-10-01T10:00:00', end: '2024-10-01T11:00:00' },
-      { id: 2, title: 'Doctor Appointment', date: '2024-09-30', allDay: true }
-    ];
-    
-    const teamEvents = [
-      { id: 3, title: 'Team Standup', start: '2024-09-29', end: '2024-10-03' },
-      { id: 4, title: 'Project Demo', start: '2024-09-30', end: '2024-09-30' }
-    ];
-
-    return { personalEvents, teamEvents };
-  }; 
-
-  // Destructure the events from the function
-  const { personalEvents, teamEvents } = getEvents();
 
   // State to manage which checkboxes are selected
   const [showPersonal, setShowPersonal] = useState(true); //Set to be checked by default
-  const [showTeam, setShowTeam] = useState(false);
+  const [showTeam, setShowTeam] = useState(true);
 
   // Handler for checkbox change
   const handleCheckboxChange = (event) => {
@@ -67,10 +56,17 @@ export default function GoogleCalendarClone() {
       setShowTeam(checked);
     }
   };
+
+  const blockedEvents = [
+    { id: 'grey1', start: '2024-10-04', end: '2024-10-05', allDay: true, display: 'background', title:'Blocked', classNames:['blocked-event'], color: '#808080' }, // Darker grey
+    { id: 'grey2', start: '2024-10-10', end: '2024-10-12', allDay: true, display: 'background', title:'Blocked',classNames:['blocked-event'], color: '#808080' }  // Darker grey
+  ];
+
   // Combine personal and team events based on checkbox states
   const filteredEvents = [
     ...(showPersonal ? personalEvents : []),
     ...(showTeam ? teamEvents : []),
+    ...blockedEvents // Add blocked events
   ];
 
   // Render the calendar
@@ -90,7 +86,6 @@ export default function GoogleCalendarClone() {
             <div>
               <h2>My Department <br/> Calendar</h2>
               
-              {/* to fetch team/department name from API */}
               <input type="checkbox" name='personal' id='personal' style={{ transform: 'scale(1.5)' }} onChange={handleCheckboxChange} checked={showPersonal}/>
               <label htmlFor="personal" style={{fontSize: '20px'}}> Personal</label>
               <br/>
@@ -102,7 +97,7 @@ export default function GoogleCalendarClone() {
           <div style={{flex: 1, marginLeft: '10px' }}>
             <div style={{display: "flex", justifyContent: "flex-end", marginBottom: '10px' }}> 
             <Button variant="contained" onClick={toggleView} startIcon={view === 'dayGridMonth' ? <ViewAgenda /> : <CalendarToday />}>
-              {view === 'dayGridMonth' ? 'Day View' : 'Month View'}
+              {view === 'dayGridMonth' ? 'Week View' : 'Month View'}
             </Button> 
           </div>
             <FullCalendar
@@ -116,7 +111,6 @@ export default function GoogleCalendarClone() {
                 right: '' // Hide the default view buttons (since we're using custom toggle buttons)
               }}
               validRange={validRange} // Limit navigation range
-              eventColor="blue" // Event styling
             />
           </div>
         </div>

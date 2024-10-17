@@ -1,0 +1,39 @@
+.calendar-container {
+    padding: 20px;
+  }
+  
+  .calendar-header {
+    margin-bottom: 20px;
+  }
+  
+  .calendar-title {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  /* Set a fixed height for each date cell */
+.fc-daygrid-day {
+  height: 100px; /* Adjust the height as needed */
+  max-height: 100px;
+  position: relative;
+}
+
+/* Ensure that the event list inside the cell respects the height */
+.fc-daygrid-event-harness {
+  max-height: 80px; /* Adjust this value to allow space for events */
+}
+
+  /* Styles for the grey background "Blocked" events */
+.fc-event.blocked-event .fc-event-title {
+  color: rgb(255, 253, 253); /* Make the text white for contrast */
+  font-weight: bold;
+  text-align: center;
+  font-size: 40px;
+  margin-top: 10px;
+}
+
+.fc-event.blocked-event {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

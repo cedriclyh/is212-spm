@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 # URL endpoints for the existing microservices
 EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5003"
+REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
 
 # Route to handle the make request scenario
@@ -24,26 +24,26 @@ def make_request():
             employee_fname = employee_data.get("staff_fname")
             employee_lname = employee_data.get("staff_lname")
             employee_name = employee_fname + " " + employee_lname
+            manager_id = employee_data.get("reporting_manager")
             
             # log employee data in terminal
             app.logger.info(f"Employee found: {employee_response}")
 
-            # 2. create WFH request using arrangement.py
+            # 2. create WFH request using requests_log.py
             arrangement_data = {
                 "staff_id": staff_id,
-                "manager_id": data.get("manager_id"),
+                "manager_id": manager_id,
                 "request_date": data.get("request_date"),
                 "arrangement_date" : data.get("arrangement_date"),
                 "timeslot": data.get("timeslot"),
                 "reason": data.get("reason")
             }
 
-            # send POST request to create a WFH request
-            arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_request", json=arrangement_data)
-
+            # Send POST request to create a WFH request
+            arrangement_response = requests.post(f"{REQUEST_LOG_MICROSERVICE_URL}/create_request", json=arrangement_data)
             if arrangement_response.status_code == 201:
                 created_request = arrangement_response.json().get("data")
-                print(created_request)
+                # print(created_request)
                 manager_id = created_request.get("manager_id")
 
                 # 3. retrieve the manager's email using employee.py
@@ -79,10 +79,12 @@ def make_request():
                     }), 500
                 
                 else:
-                    return jsonify({"message": "Failed to retrieve manager email", "code": 500}), 500
+                    return jsonify({"message": "Failed to retrieve manager email", 
+                                    "code": 500}), 500
                 
             else:
-                return jsonify({"message": "Failed to create WFH request", "code": 500}), 500
+                return jsonify({"message": "Failed to create WFH request", 
+                                "code": 500}), 500
 
         else:
             return jsonify({
