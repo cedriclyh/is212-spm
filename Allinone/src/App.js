@@ -1,29 +1,14 @@
 import './App.css';
 import React from "react";
 import { BrowserRouter, Routes, Route  } from 'react-router-dom';
-import CalenderView from './component/CalendarView';
-import Login from './component/login';
-import RequestPage from './component/Table/RequestPage';
-import ArrangementForm from './component/arrangement_form';
 
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
+import CalenderView from './component/CalendarView/CalendarView'
+import Login from './component/login'
+import RequestPage  from './component/RequestPage/RequestPage';
+import Sidebar from './component/Sidebar/Sidebar';
 
-        
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//         <br></br>
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
+
+
 
 const App = () => {
   return(
@@ -33,6 +18,7 @@ const App = () => {
           <Route path="/login" element={ <Login /> } />
           {/* <Route path="/manager-data" component={ Manager-Data } /> */}
           <Route path="/requests" element={ <RequestPage /> } />
+          <Route path="/test" element={ <Sidebar /> } />
       </Routes>
     </BrowserRouter>
   )
