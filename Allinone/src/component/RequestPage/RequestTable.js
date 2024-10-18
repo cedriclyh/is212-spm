@@ -53,20 +53,23 @@ export default function RequestTable() {
 
   const filteredItems = React.useMemo(() => {
     let filteredRequests = [...pulled_data];
-
+  
+    // Search by arrangement_date
     if (hasSearchFilter) {
-      filteredRequests = filteredRequests.filter((request) =>
-        request.name.toLowerCase().includes(filterValue.toLowerCase()),
-      );
+      filteredRequests = filteredRequests.filter((request) => {
+        const formattedDate = formatDate(request.arrangement_date).join(' '); // Format the arrangement date
+        return formattedDate.toLowerCase().includes(filterValue.toLowerCase()); // Search by formatted date
+      });
     }
+  
     if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
       filteredRequests = filteredRequests.filter((request) =>
-        Array.from(statusFilter).includes(request.status),
+        Array.from(statusFilter).includes(request.status)
       );
     }
-
+  
     return filteredRequests;
-  }, [ filterValue, statusFilter, hasSearchFilter ]);
+  }, [filterValue, statusFilter, hasSearchFilter]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -190,7 +193,7 @@ export default function RequestTable() {
           <Input
             isClearable
             className="w-full sm:max-w-[44%]"
-            placeholder="Search by name..."
+            placeholder="Search by arrangement date..."
             startContent={<SearchIcon />}
             value={filterValue}
             onClear={() => onClear()}
@@ -240,7 +243,7 @@ export default function RequestTable() {
               </DropdownMenu>
             </Dropdown>
             <Button color="primary" endContent={<PlusIcon />}>
-              Add New
+              <a href="/new_request">Add New</a>
             </Button>
           </div>
         </div>
