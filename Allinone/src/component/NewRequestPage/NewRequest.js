@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   DatePicker,
   Chip,
@@ -10,24 +10,42 @@ import {
   DropdownItem,
   Button,
   Textarea,
-  DateRangePicker
+  DateRangePicker,
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell
 } from "@nextui-org/react";
-import {getLocalTimeZone, parseDate, today} from "@internationalized/date";
+import { extractWeekdays, checkAvailability } from "./NewRequestUtils";
+import { getLocalTimeZone, today } from "@internationalized/date";
 
-const initialDates = ["20-10-2024"];
+const individualDates = ["20-10-2024"];
+
+const statusColorMap = {
+  Available: "success",
+  Blocked: "danger"
+};
 
 export default function NewRequest() {
-  const [inputDates, setInputDates] = React.useState(initialDates);
-  const [selectedDate, setSelectedDate] = React.useState(null);
-  const [selectedTimeslot, setSelectedTimeslot] = React.useState("Choose a Timeslot");
-  const [SelectedDayOfTheWeek, setSelectedDayOfTheWeek] = React.useState("Choose a Week Day");
-  const [isRecurring, setIsRecurring] = React.useState(false); 
+  const [inputDates, setInputDates] = useState(individualDates);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTimeslot, setSelectedTimeslot] = useState("Choose a Timeslot");
+  const [SelectedDayOfTheWeek, setSelectedDayOfTheWeek] = useState("Choose a Week Day");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [extractedDates, setExtractedDates] = useState([]);
+  const [availability, setAvailability] = useState({});
+
+  const blockOutDates = React.useMemo(() => ["21-10-2024"], []);
 
   // Function to format the date from the object returned by DatePicker
   const formatDateFromPicker = (dateObject) => {
     if (dateObject && dateObject.year && dateObject.month && dateObject.day) {
-      const day = String(dateObject.day).padStart(2, '0');
-      const month = String(dateObject.month).padStart(2, '0');
+      const day = String(dateObject.day).padStart(2, "0");
+      const month = String(dateObject.month).padStart(2, "0");
       const year = dateObject.year;
       return `${day}-${month}-${year}`;
     }
@@ -36,7 +54,7 @@ export default function NewRequest() {
 
   const addDateInputs = (inputDateToAdd) => {
     const formattedDate = formatDateFromPicker(inputDateToAdd);
-    
+
     // Only add if it's a valid date and not already in the list
     if (formattedDate && !inputDates.includes(formattedDate)) {
       setInputDates([...inputDates, formattedDate]);
@@ -45,7 +63,7 @@ export default function NewRequest() {
   };
 
   const handleClose = (inputDateToRemove) => {
-    const updatedDates = inputDates.filter(date => date !== inputDateToRemove);
+    const updatedDates = inputDates.filter((date) => date !== inputDateToRemove);
     setInputDates(updatedDates);
   };
 
@@ -60,6 +78,24 @@ export default function NewRequest() {
   const handleRecurringChange = (value) => {
     setIsRecurring(value === "Yes");
   };
+
+  // Update availability status when dates are extracted
+  useEffect(() => {
+    if (extractedDates.length > 0) {
+      const result = checkAvailability(extractedDates, blockOutDates);
+      setAvailability(result);
+    }
+  }, [extractedDates, blockOutDates]);
+
+  // UseEffect to trigger extractWeekdays whenever the startDate, endDate, or SelectedDayOfTheWeek changes
+  useEffect(() => {
+    if (isRecurring && startDate && endDate && SelectedDayOfTheWeek) {
+      const formattedStartDate = formatDateFromPicker(startDate);
+      const formattedEndDate = formatDateFromPicker(endDate);
+      const dates = extractWeekdays(formattedStartDate, formattedEndDate, SelectedDayOfTheWeek);
+      setExtractedDates(dates); 
+    }
+  }, [startDate, endDate, SelectedDayOfTheWeek, isRecurring]);
 
   return (
     <form className="space-y-12">
@@ -91,7 +127,7 @@ export default function NewRequest() {
           {!isRecurring && (
             <>
               {/* Select WFM Date */}
-              <div className="mt-4" style={{ marginTop: "24px" }}> {/* mt-4 applied with inline style */}
+              <div className="mt-4" style={{ marginTop: "24px" }}>
                 <p>Select WFM Date</p>
                 <DatePicker
                   className="mt-2 w-full max-w-[284px]"
@@ -137,7 +173,6 @@ export default function NewRequest() {
             </>
           )}
           
-          
           {/* Conditionally render recurring date range and days of the week selection */}
           {isRecurring && (
             <>
@@ -151,6 +186,10 @@ export default function NewRequest() {
                     isRequired={true}
                     minValue={today(getLocalTimeZone()).subtract({months: 2})}
                     maxValue={today(getLocalTimeZone()).add({months: 3})}
+                    onChange={({ start, end }) => {
+                      setStartDate(start);
+                      setEndDate(end);
+                    }}
                   />
               </div>
 
@@ -172,9 +211,32 @@ export default function NewRequest() {
                   </DropdownMenu>
                 </Dropdown>
               </div>
+
+              {/* Table to view extracted recurring dates with availability */}
+              <div className="mt-4" style={{ marginTop: "24px" }}>
+                <p>Requested Dates</p>
+                <p style={{ fontSize: "0.875rem", color: "gray" }}>Only Available Dates will be submitted</p>
+                <Table aria-label="Extracted Recurring Dates with Availability" className="mt-2">
+                  <TableHeader>
+                    <TableColumn>DATE</TableColumn>
+                    <TableColumn>STATUS</TableColumn>
+                  </TableHeader>
+                  <TableBody emptyContent={"No dates selected."}>
+                    {extractedDates.map((date, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{date}</TableCell>
+                        <TableCell>
+                          <Chip color={statusColorMap[availability[date]]} size="sm" variant="flat">
+                            {availability[date]}
+                          </Chip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </>
           )}
-          
 
           {/* Reason Input */}
           <div className="mt-4" style={{ marginTop: "24px" }}>
@@ -189,7 +251,14 @@ export default function NewRequest() {
 
           {/* Submit Button */}
           <div className="mt-4 flex gap-2"  style={{ marginTop: "24px" }}>
-            <Button color="default">
+            <Button
+              color="default"
+              onPress={() => {
+                setStartDate(null);
+                setEndDate(null);
+                setExtractedDates([]);
+              }}
+            >
               Reset
             </Button>
             <Button color="primary">
