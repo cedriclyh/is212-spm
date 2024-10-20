@@ -16,12 +16,12 @@ import {
   // User,
   Pagination,
 } from "@nextui-org/react";
-import {PlusIcon} from "./PlusIcon";
-import {VerticalDotsIcon} from "./VerticalDotsIcon";
+import {PlusIcon} from "../Icons/PlusIcon";
+import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
 import {SearchIcon} from "./SearchIcon";
-import {ChevronDownIcon} from "./ChevronDownIcon";
+import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
 import {columns, statusOptions, pulled_data} from "./RequestData";
-import {capitalize, formatDate, formatTimeslot} from "./utils";
+import {capitalize, formatDate, formatTimeslot} from "./RequestPageUtils";
 
 const statusColorMap = {
   Approved: "success",
