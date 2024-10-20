@@ -2,7 +2,6 @@ import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns
 
 const userId = 140004; // Hardcoded user ID for demo purposes
 
-// Define valid range (2 months back, 3 months forward)
 export const getValidRange = (today) => {
     const startOfCurrentMonth = startOfMonth(today);
   
@@ -167,7 +166,7 @@ export const getStaffTeamEvents = async () => {
    const staffTeamEvents = await Promise.all(
     requests.map(async (req) => {
       // Check for manager_id condition
-      if (req.staff_id == userId) {
+      if (req.staff_id === userId) {
         return null; // Skip this request if staff_id is the same as the staff in personal events
       }
       if (req.manager_id !== 140894) {

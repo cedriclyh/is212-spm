@@ -63,10 +63,10 @@ export default function GoogleCalendarClone() {
     <div className="calendar-container">
       <Header view={view} toggleView={toggleView} />
       <div className="calendar-box">
-        <div>
+        <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>
           <EventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange}/>
         </div>
-        <div style={{flex:'1'}}>
+        <div style={{flex:'1', minHeight: '0' }}>
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin]}
@@ -79,6 +79,7 @@ export default function GoogleCalendarClone() {
             }}
             validRange={validRange}
             fontSize={16}
+            height="100%"
           />
         </div>
       </div>

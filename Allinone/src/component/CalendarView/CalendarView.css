@@ -1,66 +1,75 @@
 .calendar-container {
-    padding: 20px;
-  }
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
   
-  .calendar-header {
-    margin-bottom: 20px;
-  }
-  
-  .calendar-title {
-    font-size: 20px;
-    margin-bottom: 10px;
-  }
+.calendar-header {
+  margin-bottom: 20px;
+}
 
-  .custom-calendar {
-    margin: auto;
-    /* flex: 1; */
-    margin-left: 10px ;
-    padding: 40px; 
-  }
+.calendar-title {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
 
-  .calendar-box{
-    display: flex;
-    margin-bottom: 10px;
-    height: 400px;
-    align-content: space-between;
-  }
+.custom-calendar {
+  margin: auto;
+  margin-left: 10px ;
+  padding: 40px; 
+}
+
+.calendar-box{
+  display: flex;
+  margin-bottom: 10px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.calendar-box > div:first-child {
+  flex: 0 0 200px; /* Set a fixed width for the filter section */
+  padding-right: 10px; /* Add some space between the filter and the calendar */
+}
+
+.calendar-box > div:last-child {
+  flex: 1; /* Let the calendar take up the remaining space */
+}
 
   /* Set a fixed height for each date cell */
 .fc-daygrid-day {
-  height: 100px; /* Adjust the height as needed */  
+  height: 100px;   
   max-height: 100px;
   position: relative;
 }
 
 /* Ensure that the event list inside the cell respects the height */
-.fc-daygrid-event-harness {
-  max-height: 80px; /* Adjust this value to allow space for events */
-}
+/* .fc-daygrid-event-harness {
+  max-height: 80px; /* Adjust this value to allow space for events 
+} */
 
   /* Styles for the grey background "Blocked" events */
-.fc-event.blocked-event .fc-event-title {
-  color: rgb(255, 253, 253); /* Make the text white for contrast */
+/* .fc-event.blocked-event .fc-event-title {
+  color: rgb(255, 253, 253); /* Make the text white for contrast 
   font-weight: bold;
   text-align: center;
   font-size: 40px;
   margin-top: 10px;
-}
+} */
 
-.fc-event.blocked-event {
+/* .fc-event.blocked-event {
   display: flex;
   justify-content: center;
   align-items: center;
+} */
+
+.fc-toolbar {
+  min-height: 20px; /* Set your desired minimum height */
+  height: 40px; /* Adjust as needed */
 }
 
-.fc-header-toolbar {
-  /*
-  the calendar will be butting up against the edges,
-  but let's scoot in the header's buttons
-  */
-  padding-top: 1em;
-  padding-left: 1em;
-  padding-right: 1em;
-  font-size: medium;
+.fc-toolbar button {
+  font-size: 0.1rem; /* Change font size for the buttons */
 }
 
 .fc-slats {
