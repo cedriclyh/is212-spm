@@ -322,8 +322,8 @@ export const getStaffTeamEvents = async () => {
     }
   } catch (error) {
       console.error('Failed to fetch staff team events:', error);
-  }; 
-  
+  }; }
+
     // Map the requests into event categories 
   //   const staffTeamEvents = await Promise.all(
   //   requests.map(async (req) => {
