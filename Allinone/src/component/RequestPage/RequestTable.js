@@ -15,10 +15,11 @@ import {
   Chip,
   // User,
   Pagination,
+  Spinner
 } from "@nextui-org/react";
 import {PlusIcon} from "../Icons/PlusIcon";
 import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
-import {SearchIcon} from "./SearchIcon";
+import {SearchIcon} from "../Icons/SearchIcon";
 import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
 import {columns, statusOptions, pulled_data} from "./RequestData";
 import {capitalize, formatDate, formatTimeslot} from "./RequestPageUtils";
@@ -329,7 +330,11 @@ export default function RequestTable() {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody emptyContent={"No Requests found"} items={sortedItems}>
+      <TableBody 
+      emptyContent={"No Requests found"} 
+      items={sortedItems}
+      loadingContent={<Spinner label="Loading..." />}
+      >
         {(item, rowIndex) => (
           <TableRow key={item.request_id}>
             {(columnKey) => <TableCell>{renderCell(item, columnKey, rowIndex)}</TableCell>}
