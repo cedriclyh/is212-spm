@@ -24,7 +24,6 @@ export default function EventFilter({ showPersonal, showTeam, handleCheckboxChan
       label="My Department"
       defaultValue={['personal']}>
         <Checkbox 
-          type="checkbox"
           name="personal"
           id="personal"
           value="personal"
@@ -35,33 +34,13 @@ export default function EventFilter({ showPersonal, showTeam, handleCheckboxChan
         <Checkbox 
           name="team"
           id="team"
+          value="team"
           onChange={handleCheckboxChange}
           checked={showTeam}>
             {deptName}
         </Checkbox>
     </CheckboxGroup>
   </div>
-      /* <input
-        type="checkbox"
-        name="personal"
-        id="personal"
-        style={{ transform: 'scale(1.5)' }}
-        onChange={handleCheckboxChange}
-        checked={showPersonal}
-      />
-      <label htmlFor="personal" style={{ fontSize: '20px' }}> Personal</label>
-      <br />
-
-      <input
-        type="checkbox"
-        name="team"
-        id="team"
-        style={{ transform: 'scale(1.5)' }}
-        onChange={handleCheckboxChange}
-        checked={showTeam}
-      />
-      <label htmlFor="team" style={{ fontSize: '20px' }}> {deptName}</label>
-    </div> */
 );}
 
 //Fetch Department Name
@@ -72,11 +51,8 @@ export const getDeptName = async (userId) => {
       if (!response.ok) {
         throw new Error(`Error fetching user data: ${response.status}`);
       }
-
       const userData = await response.json();
-      
       const staff_dept= userData.data.dept;
-
       return staff_dept;
     } catch (error) {
       console.error("Failed to fetch department name:", error);

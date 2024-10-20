@@ -12,19 +12,30 @@ export default function GoogleCalendarClone() {
   const calendarRef = useRef(null); 
   const [teamEvents, setTeamEvents] = useState([]);
   const [personalEvents, setPersonalEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const teamEvents = await getStaffTeamEvents(); // Fetch the team events
-      setTeamEvents(teamEvents); // Update state with fetched events
+      const teamEvents = await getStaffTeamEvents(); 
+      setTeamEvents(teamEvents); 
 
-      const personalEvents = await getPersonalEvents(); // Fetch the personal events
-      setPersonalEvents(personalEvents); // Update state with fetched events
+      const personalEvents = await getPersonalEvents(); 
+      setPersonalEvents(personalEvents);
     };
     fetchEvents();
   }, []); // Run once on mount
+
+  useEffect(() => {
+    if (personalEvents && teamEvents) {
+      const combinedEvents = [
+          ...(showPersonal ? personalEvents : []),
+          ...(showTeam ? teamEvents : []),
+      ];
+      setFilteredEvents(combinedEvents); // Update filtered events based on states
+  }
+}, [showPersonal, showTeam, personalEvents, teamEvents]);
 
   // Get the current month
   const today = new Date();
@@ -47,16 +58,15 @@ export default function GoogleCalendarClone() {
     const { name, checked } = event.target;
     if (name === 'personal') {
       setShowPersonal(checked);
-    } else if (name === 'team') {
+    } 
+    else if (name === 'team') {
       setShowTeam(checked);
     }
   };
 
-  // Combine personal and team events based on checkbox states
-  const filteredEvents = [
-    ...(showPersonal ? personalEvents : []),
-    ...(showTeam ? teamEvents : []),
-  ];
+  console.log("Personal Events:", personalEvents);
+  console.log("Team Events:", teamEvents);
+  console.log("Filtered Events:", filteredEvents);
 
   // Render the calendar
   return (
