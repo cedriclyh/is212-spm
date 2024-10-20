@@ -26,7 +26,7 @@
 
 /* Styling for blocked events */
 .fc-event.blocked-event {
-  background-color: #808080 !important; /* Apply grey color */
+  background-color: #808080 !important;
   border: none !important; /* Remove border */
   color: white !important; /* Text color for better contrast */
   font-weight: bold;
@@ -44,3 +44,15 @@
   font-size: 20px;
   margin-top: 10px;
 }
+
+.fc-event.full-day {
+  background-color: rgb(128, 128, 128); /* Grey for full-day blockouts */
+}
+
+/* .fc-event.am-blockout {
+  background-color: rgb(255, 166, 0);
+}
+
+.fc-event.pm-blockout {
+  background-color: rgb(48, 141, 48);
+}  */

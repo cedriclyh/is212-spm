@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS Block_Out_Dates (
     end_date DATE NOT NULL,
     title VARCHAR(255) NOT NULL,
     blockout_description VARCHAR(255),
+    timeslot VARCHAR(50) NOT NULL,
     PRIMARY KEY (blockout_id)
 );
 
@@ -672,9 +673,9 @@ INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reaso
 (3, 140004, '2024-10-01', "FULL", '');
 
 -- Block_Out_Dates values (with description)
-INSERT INTO Block_Out_Dates (start_date, end_date, title, blockout_description) VALUES
-('2024-12-25', '2024-12-25', 'Christmas', 'Public holiday'),
-('2024-11-11', '2024-11-11', 'Veterans Day', 'Public holiday');
+INSERT INTO Block_Out_Dates (start_date, end_date, timeslot, title, blockout_description) VALUES
+('2024-12-25', '2024-12-25', 'FULL', 'Christmas', 'Public holiday'),
+('2024-11-11', '2024-11-11', 'FULL', 'Veterans Day', 'Public holiday');
 
 -- Block_Out_Dates values (without description)
 -- INSERT INTO Block_Out_Dates (blockout_date, title) VALUES

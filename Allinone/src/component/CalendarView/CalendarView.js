@@ -29,14 +29,14 @@ export default function GoogleCalendarClone() {
     };
 
     const fetchBlockoutDates = async () => {
-      const blockouts = await getBlockoutDates(); // Fetch blockout dates
+      const blockouts = await getBlockoutDates(view); // Fetch blockout dates
       console.log("Fetched Blockouts:", blockouts);
       setBlockouts(blockouts || []); // Update state with fetched blockout events
     };
 
     fetchBlockoutDates();
     fetchEvents(); // Call the fetch function
-  }, []); // Run once on mount
+  }, [view]); // Run once on mount
 
   // Get the current month
   const today = new Date();

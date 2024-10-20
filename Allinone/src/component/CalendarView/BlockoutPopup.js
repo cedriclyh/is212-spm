@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Button } from '@mui/material';
+import {Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
 import './Popup.css';
 
 const BlockoutPopup = () => {
@@ -10,6 +11,7 @@ const BlockoutPopup = () => {
   const [endDate, setEndDate] = useState('');
   const [blockoutDescription, setBlockoutDescription] = useState('');
   const [errors, setErrors] = useState([]);
+  const [timeslot, setTimeslot] = useState('');
 
   const openPopup = () => {
     setIsOpen(true);
@@ -32,6 +34,7 @@ const BlockoutPopup = () => {
     setEndDate('');
     setBlockoutDescription('');
     setErrors([]);
+    setTimeslot('');
   };
 
   const handleSubmit = async () => {
@@ -39,10 +42,11 @@ const BlockoutPopup = () => {
     if (!validateInputs()) return; // Validate and exit if errors exist
 
     try {
-      const response = await axios.post('http://localhost:5005/blockout', {
+      const response = await axios.post('http://localhost:5012/manage_blockout', {
         title,
         start_date: startDate,
         end_date: endDate,
+        timeslot: timeslot,
         blockout_description: blockoutDescription,
       });
       if (response.status === 200) {
@@ -141,6 +145,19 @@ const BlockoutPopup = () => {
     return false;
   };
 
+  // For Timeslot dropdown
+  const [selectedKey, setSelectedKey] = React.useState(new Set(["FULL DAY"]));
+
+  const selectedValue = React.useMemo(
+    () => Array.from(selectedKey).join(", ").replaceAll("_", " "),
+    [selectedKey]
+  );
+
+  const handleTimeslotChange = (key) => {
+    setSelectedKey(key);
+    setTimeslot(key);
+  }
+
   return (
     <div>
       <Button variant="contained" onClick={openPopup}>Block Out Dates</Button>
@@ -187,6 +204,28 @@ const BlockoutPopup = () => {
                 onChange={(e) => handleInputChange('endDate', e.target.value)}
                 required
               />
+            </label>
+            <label>
+              Timeslot:
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button color="secondary" variant="outlined">
+                    {selectedValue}
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Timeslot selection"
+                  variant="flat"
+                  disallowEmptySelection
+                  selectionMode="single"
+                  selectedKey={selectedKey}
+                  onSelectionChange={handleTimeslotChange}
+                >
+                  <DropdownItem key="FULL">FULL DAY</DropdownItem>
+                  <DropdownItem key="AM">AM</DropdownItem>
+                  <DropdownItem key="PM">PM</DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
             </label>
             <label style={{display:"flex"}}>
               <span style={{alignItems:"top"}}>Description (optional):</span>

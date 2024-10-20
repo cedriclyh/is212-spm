@@ -51,6 +51,7 @@ class BlockoutDates(db.Model):
     blockout_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
+    timeslot = db.Column(db.String(50), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     blockout_description = db.Column(db.String(255), nullable=False)
 
@@ -60,12 +61,13 @@ class BlockoutDates(db.Model):
             'start_date': str(self.start_date),
             'end_date': str(self.end_date),
             'title': self.title,
+            'timeslot': self.timeslot,
             'blockout_description': self.blockout_description
     }
 
 # Create a new WFH request
-@app.route('/create_request', methods=['POST'])
-def create_request():
+@app.route('/create_arrangement', methods=['POST'])
+def create_arrangement():
     try:
         data = request.json
         request_id = data.get("request_id")
@@ -138,16 +140,44 @@ def get_arrangements_by_staff_id(staff_id):
         if arrangements:
             return jsonify({'message': f'Requests from staff {staff_id} found', 'data': [arrangement.json() for arrangement in arrangements], 'code': 200}), 200
         else:
-            return jsonify({'message': f'No requests from staff {staff_id}', 'code': 404}), 404
+            return jsonify({'message': f'No requests from staff {staff_id}', 'data': [], 'code': 200}), 200
     except Exception as e:
         app.logger.error(f"Failed to retrieve requests by staff ID: {e}")
         return jsonify({'message': 'Failed to retrieve requests by staff ID', 'code': 500}), 500
 
+# Delete arrangments by request_id
+@app.route('/delete_arrangements', methods=['DELETE'])
+def delete_request():
+
+    try:
+        data = request.json
+        arrangement_ids = data.get("arrangement_ids")
+        
+        if not arrangement_ids or not isinstance(arrangement_ids, list):
+            return jsonify({"message": "Invalid input: arrangement_ids is required and must be a list", "code": 400}), 400
+
+        arrangements_to_delete = Arrangement.query.filter(Arrangement.request_id.in_(arrangement_ids)).all()
+
+        if not arrangements_to_delete:
+            return jsonify({'message': 'No matching arrangements found to delete', 'code': 404}), 404
+
+        # Delete all matching arrangements
+        for arrangement in arrangements_to_delete:
+            db.session.delete(arrangement)
+            print(f"{arrangement} deleted")
+
+        db.session.commit()
+        return jsonify({'message': 'Arrangements deleted successfully', 'code': 200}), 200
+
+    except Exception as e:
+        app.logger.error(f"Failed to delete arrangements: {e}")
+        return jsonify({'message': 'Failed to delete arrangements', 'code': 500}), 500
 
 # Create new blockout dates
-@app.route('/blockout', methods=['POST'])
+@app.route('/create_blockout', methods=['POST'])
 def blockDate():
     try:
+        # print("test")
         data = request.json
         print(data)
         
@@ -157,17 +187,21 @@ def blockDate():
         blockout = BlockoutDates(
             start_date = start_date,
             end_date = end_date,
+            timeslot = data["timeslot"]["anchorKey"],
             title = data["title"],
             blockout_description = data["blockout_description"],
         )
 
-        if get_blockout_by_date(start_date, end_date).data:
-            # Commit changes for all dates 
-            db.session.add(blockout)
-            db.session.commit()
-            print(f"Failed to create blockout. At least one blockout already exists within the selected date range.")
-            return jsonify({'message': 'Failed to create blockout. At least one blockout already exists within the selected date range.', 'data': blockout.json(), 'code':409}), 409        
+        if fetch_blockout_by_date(start_date, end_date):
+            print("Error fetching:  " + fetch_blockout_by_date(start_date, end_date))
+            return jsonify({'message': 'Failed to create blockout. Blockout already exists within the selected date range.', 'code': 409}), 409
+ 
         else:
+            # Commit changes for all dates 
+            print(fetch_blockout_by_date(start_date, end_date))
+            db.session.add(blockout)
+            print("hello")
+            db.session.commit()
             print(f'Blockout created for {data["title"]} from {start_date} and {end_date}')
             return jsonify({'message': f'Blockout created for {data["title"]} from {start_date} and {end_date}', 'data': blockout.json(), 'code':200}), 200
 
@@ -180,32 +214,31 @@ def blockDate():
 def get_blockouts():
     try:
         blockouts = BlockoutDates.query.all()
+        print([blockout.json() for blockout in blockouts])
         return jsonify({'message': 'All requests', 'data': [blockout.json() for blockout in blockouts], 'code': 200}), 200
 
     except Exception as e:
         app.logger.error(f"Failed to retrieve blockout dates: {e}")
         return jsonify({'message': 'Failed to retrieve blockout dates', 'code': 500}), 500
 
-@app.route('/get_blockout/date/<string:query_start_date><string:query_end_date>', methods=['GET'])
-def get_blockout_by_date(query_start_date, query_end_date):
-    # Convert query_date to datetime.date object
-    # query_start_date = date.fromisoformat(query_start_date)
-    # query_end_date = date.fromisoformat(query_end_date)
-
+def fetch_blockout_by_date(query_start_date, query_end_date):
     try:
         blockout = BlockoutDates.query.filter(
             BlockoutDates.start_date <= query_end_date,
             BlockoutDates.end_date >= query_start_date
         ).first()
-
-        if blockout:
-            return jsonify({'message': f'Blockout found', 'data': blockout.json()})
-        else:
-            return jsonify({'message': 'No blockout date found for given date', 'data': False})
-
+        return blockout
     except Exception as e:
-        app.logger.error(f"Failed to retrieve blockouts for the date {date}: {e}")
-        return jsonify({'message':f'Failed to retrieve blockouts for the date {date}', 'code': 500}), 500
+        app.logger.error(f"Error fetching blockouts for dates: {query_start_date} to {query_end_date}: {e}")
+        return None
+
+@app.route('/get_blockout/date/<string:query_start_date><string:query_end_date>', methods=['GET'])
+def get_blockout_by_date(query_start_date, query_end_date):
+    blockout = fetch_blockout_by_date(query_start_date, query_end_date)
+    if blockout:
+        return jsonify({'message': 'Blockout found', 'data': blockout.json()})
+    else:
+        return jsonify({'message': 'No blockout date found for given date', 'data': False})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005, debug=True)  
