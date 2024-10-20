@@ -22,17 +22,32 @@ NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
 from arrangement import Arrangement
 from employee import Employee
 
-def count_wfh(dept, arrangement_date):
+def count_wfh(manager_id, arrangement_date):
     try:
-        # count the number of WFH arrangements for a specific department on a specific date
-        count = db.session.query(Arrangement) \
+        # count the number of WFH arrangements for AM, PM, and FULL shifts
+        am_count = db.session.query(Arrangement) \
             .join(Employee, Employee.staff_id == Arrangement.staff_id) \
-            .filter(Employee.dept == dept, Arrangement.arrangement_date == arrangement_date) \
+            .filter(Employee.reporting_manager == manager_id, Arrangement.arrangement_date == arrangement_date, Arrangement.timeslot == 'AM') \
             .count()
-        return count
+        
+        pm_count = db.session.query(Arrangement) \
+            .join(Employee, Employee.staff_id == Arrangement.staff_id) \
+            .filter(Employee.reporting_manager == manager_id, Arrangement.arrangement_date == arrangement_date, Arrangement.timeslot == 'PM') \
+            .count()
+        
+        full_count = db.session.query(Arrangement) \
+            .join(Employee, Employee.staff_id == Arrangement.staff_id) \
+            .filter(Employee.reporting_manager == manager_id, Arrangement.arrangement_date == arrangement_date, Arrangement.timeslot == 'FULL') \
+            .count()
+        
+        # full_count counts towards both AM and PM shifts
+        am_count += full_count
+        pm_count += full_count
+
+        return am_count, pm_count
     except Exception as e:
         app.logger.error(
-            f"Failed to count WFH for department {dept} on {arrangement_date}: {e}")
+            f"Failed to count WFH for maanger {manager_id} on {arrangement_date}: {e}")
         return 0
 
 @app.route('/manage_request', methods=['PUT'])
@@ -72,22 +87,44 @@ def manage_request():
         employee_data = employee_response.json().get("data")
         staff_email = employee_data.get("email")
         dept = employee_data.get("dept")
+        reporting_manager = employee_data.get("reporting_manager")
 
         if not staff_email:
             return jsonify({"message": "Staff email not found", 
                             "code": 404}), 404
         
-        #3: check WFH threshold before approving
+        #3: fetch team members under this manager 
+        team_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/users/team/{reporting_manager}")
+
+        if team_response.status_code != 200:
+            return jsonify({"message": "Failed to fetch team members", 
+                            "code": 404}), 404
+
+        team_data = team_response.json().get("data")
+        total_team_size = len(team_data)
+        # print(total_team_size)
+
+        # 4: check WFH threshold before approving (only if not CEO)
         if dept != "CEO":
-            total_team_size = db.session.query(Employee).filter(Employee.dept == dept).count()
-            wfh_count = count_wfh(dept, arrangement_date)
-            # print(total_team_size)
-            # print(wfh_count)
-            if status == "Approved" and (wfh_count + 1)/ total_team_size > 0.5:
-                return jsonify({"message": "Approval would exceed the 50% WFH threshold!",
-                            "code": 403}), 403
+            am_count, pm_count = count_wfh(reporting_manager, arrangement_date)
+            print(am_count)
+            print(pm_count)
+            if status == "Approved":
+                if timeslot == "AM":
+                    if (am_count + 1)/ total_team_size > 0.5:
+                        return jsonify({"message": "Approval would exceed the 50% WFH threshold for AM shift!",
+                                        "code": 403}), 403
+                    
+                elif timeslot == "PM":
+                    if (pm_count + 1)/ total_team_size > 0.5:
+                        return jsonify({"message": "Approval would exceed the 50% WFH threshold for PM shift!",
+                                        "code": 403}), 403
+                elif timeslot == "FULL":
+                    if (am_count + 1)/ total_team_size > 0.5 or (pm_count + 1)/ total_team_size > 0.5:
+                        return jsonify({"message": "Approval would exceed the 50% WFH threshold for FULL shift!",
+                                        "code": 403}), 403
         
-        # 4: update the request status
+        # 5: update the request status
         arrangement_update_data = {
             "request_id": request_id,
             "status": status,
@@ -100,7 +137,7 @@ def manage_request():
             return jsonify({"message": "Failed to update request status", 
                             "code": 500}), 500
 
-        # 5: if status is Approved, insert the request into the arrangement table
+        # 6: if status is Approved, insert the request into the arrangement table
         if status == "Approved":
             arrangement_data = {
                 "request_id": request_id,
@@ -115,7 +152,7 @@ def manage_request():
                 return jsonify({"message": "Failed to create arrangement entry", 
                                 "code": 500}), 500
             
-        # 6: call notification.py to notify the staff of the updated status
+        # 7: call notification.py to notify the staff of the updated status
         notification_data = {
             "staff_email": staff_email,  
             "status": status,
