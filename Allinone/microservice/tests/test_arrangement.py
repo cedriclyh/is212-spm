@@ -1,5 +1,6 @@
 import pytest, os
 from arrangement import app, db, Arrangement
+from my_flask_app.models import Arrangement
 
 @pytest.fixture
 def client():
@@ -70,14 +71,25 @@ def test_create_arrangement_missing_fields(client):
 #testing /get_all_arrangements/<int:arrangement_id> endpoint
 def test_get_arrangement(client):
     # Create a mock arrangement for testing
-    arrangement = Arrangement(request_id=1, staff_id=101, arrangement_date="2024-10-15", timeslot="10:00 AM - 12:00 PM", reason="Team meeting")
+    arrangement = Arrangement(
+        request_id=1, 
+        staff_id=140002, 
+        arrangement_date="2024-10-01", 
+        timeslot="AM", 
+        reason="Medical Appointment"
+    )
     db.session.add(arrangement)
     db.session.commit()
 
     # Retrieve the arrangement by ID
     response = client.get('/get_arrangement/1')
     assert response.status_code == 200
-    assert response.json['data']['request_id'] == 1
+    assert response.status_code == 200
+    assert response.json['request_id'] == arrangement.request_id
+    assert response.json['staff_id'] == arrangement.staff_id
+    assert response.json['arrangement_date'] == arrangement.arrangement_date
+    assert response.json['timeslot'] == arrangement.timeslot
+    assert response.json['reason'] == arrangement.reason
 
 def test_get_arrangement_not_found(client):
     # Try to get an arrangement that doesn't exist
