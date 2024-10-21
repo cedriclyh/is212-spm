@@ -38,6 +38,7 @@ export default function NewRequest() {
   const [endDate, setEndDate] = useState(null);
   const [extractedDates, setExtractedDates] = useState([]);
   const [availability, setAvailability] = useState({});
+  const [reason, setReason] = useState('')
 
   const blockOutDates = React.useMemo(() => ["21-10-2024"], []);
 
@@ -76,17 +77,17 @@ export default function NewRequest() {
   };
 
   const handleRecurringChange = (value) => {
-    // Set isRecurring value
     setIsRecurring(value === "Yes");
   
     // Clear all the related states
-    setInputDates([]); // Clear individual dates
-    setSelectedTimeslot("Choose a Timeslot"); // Clear selected timeslot
-    setSelectedDayOfTheWeek("Choose a Week Day"); // Clear selected weekday
-    setStartDate(null); // Clear start date
-    setEndDate(null); // Clear end date
-    setExtractedDates([]); // Clear extracted dates
-    setAvailability({}); // Clear availability
+    setInputDates([]);
+    setSelectedTimeslot("Choose a Timeslot");
+    setSelectedDayOfTheWeek("Choose a Week Day");
+    setStartDate(null); 
+    setEndDate(null); 
+    setExtractedDates([]); 
+    setAvailability({}); 
+    setReason('');
   };
 
   // Update availability status when dates are extracted
@@ -111,8 +112,14 @@ export default function NewRequest() {
     }
   }, [startDate, endDate, SelectedDayOfTheWeek, isRecurring]);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault(); 
+    
+    
+  }
+
   return (
-    <form className="space-y-12">
+    <form className="space-y-12" onSubmit={handleSubmit}>
       {/* Form Container with Border, Padding, and Rounded Corners */}
       <div className="space-y-6 bg-white border border-gray-300 shadow-lg p-6" style={{ padding: "10px 20px", borderRadius: "10px" }}>
         {/* Form Title */}
@@ -300,6 +307,8 @@ export default function NewRequest() {
               variant="bordered"
               placeholder="Enter your reason"
               className="mt-2 w-full"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
             />
           </div>
 
@@ -308,9 +317,13 @@ export default function NewRequest() {
             <Button
               color="default"
               onPress={() => {
+                setInputDates([]);
+                setSelectedTimeslot("Choose a Timeslot");
+                setSelectedDayOfTheWeek("Choose a Week Day");
                 setStartDate(null);
                 setEndDate(null);
                 setExtractedDates([]);
+                setAvailability({});
               }}
             >
               Reset
