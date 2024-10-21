@@ -9,10 +9,14 @@ from datetime import date, datetime, timedelta
 import json
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" or os.environ.get('DB_URL')
-    # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
-)
+if app.config['TESTING']:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        environ.get("dbURL") or
+        os.environ.get('DB_URL', 'mysql+mysqlconnector://root@localhost:3306/spm_db')
+        # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)

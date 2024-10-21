@@ -4,12 +4,12 @@ from arrangement import app, db, Arrangement
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'  # In-memory SQLite DB
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_URL', 'sqlite:///:memory:')  # Use the database URL or fallback to SQLite
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     with app.test_client() as client:
         with app.app_context():
-            db.create_all()  # Create tables in the in-memory database
+            db.create_all()  # Create tables in the in-memory or provided database
         yield client
 
 
