@@ -106,5 +106,46 @@ def get_arrangement(arrangement_id):
         app.logger.error(f"Failed to retrieve arrangement: {e}")
         return jsonify({"message": "Failed to retrieve arrangement", "code": 500}), 500
     
+# Delete an arrangement (withdraw)
+@app.route('/delete_arrangement/<int:request_id>', methods=['DELETE'])
+def delete_arrangement(request_id):
+    try:
+        arrangement = Arrangement.query.filter_by(request_id=request_id).first()
+        if not arrangement:
+            return jsonify({"message": "Arrangement not found", "code": 404}), 404
+
+        # Delete the arrangement
+        db.session.delete(arrangement)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Arrangement deleted (withdrawn) successfully",
+            "code": 200
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f"Failed to delete arrangement: {e}")
+        return jsonify({"message": "Failed to delete arrangement", "code": 500}), 500
+
+# to be added to frontend page with buttons 
+# function withdrawArrangement(requestId) {
+#     fetch(`/delete_arrangement/${requestId}`, {
+#         method: 'DELETE',
+#         headers: {
+#             'Content-Type': 'application/json',
+#         },
+#     })
+#     .then(response => response.json())
+#     .then(data => {
+#         if (data.code === 200) {
+#             alert('Arrangement withdrawn successfully!');
+#             // Optionally, refresh the page or update the UI to remove the deleted arrangement
+#         } else {
+#             alert(`Error: ${data.message}`);
+#         }
+#     })
+#     .catch(error => console.error('Error:', error));
+# }
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005, debug=True)  
