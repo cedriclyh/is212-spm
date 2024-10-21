@@ -1,5 +1,5 @@
 import pytest
-from .arrangement import app, db, Arrangement
+from arrangement import app, db, Arrangement
 
 @pytest.fixture
 def client():
