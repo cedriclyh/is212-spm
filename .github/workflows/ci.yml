@@ -36,7 +36,7 @@ jobs:
             VALIDATE_PYTHON: true  # Enable Python linting
             VALIDATE_JAVASCRIPT_ES: true  # Enable JS/ES linting
             VALIDATE_MARKDOWN: true  # Optionally enable Markdown linting
-            FILTER_REGEX_INCLUDE: "^Allinone/microservice/.*\.py$"  # Only lint Python files in microservice folder
+            FILTER_REGEX_INCLUDE: "^Allinone/microservice/.*\\.py$"  # Only lint Python files in microservice folder
             FILTER_REGEX_EXCLUDE: "^Allinone/src/node_modules/"  # Exclude node_modules folder
             DEFAULT_BRANCH: main  # Set the default branch for the linter
 
