@@ -190,6 +190,7 @@ export default function RequestTable() {
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
+        <p className="text-lg font-semibold text-gray-900">My Requests</p>
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
