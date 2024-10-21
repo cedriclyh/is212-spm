@@ -1,12 +1,41 @@
 from flask import Flask, request, jsonify
 import requests
+from datetime import datetime, timedelta, timezone
+from apscheduler.schedulers.background import BackgroundScheduler
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+db = SQLAlchemy(app)
 
 # URL endpoints for the existing microservices
 EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
 REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
+
+from arrangement import Arrangement
+
+# Function to check and reject overdue requests
+def auto_reject_pending_requests():
+    two_months_ago = datetime.now(tz=timezone.utc) - timedelta(days=60)
+
+    overdue_requests = db.session.query(Arrangement) \
+        .filter(Arrangement.status == 'Pending', Arrangement.created_at <= two_months_ago).all()
+
+    for request in overdue_requests:
+        request.status = 'Rejected'
+        db.session.commit()
+        print(f"Request {request.request_id} automatically rejected due to inactivity.")
+
+# Initialize and configure APScheduler
+def start_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=auto_reject_pending_requests, trigger="interval", days=1)
+    scheduler.start()
+
+# Start the scheduler when the Flask app starts
+@app.before_first_request
+def start_auto_rejection_scheduler():
+    start_scheduler()
 
 # Route to handle the make request scenario
 @app.route('/make_request', methods=['POST'])
@@ -36,8 +65,10 @@ def make_request():
                 "request_date": data.get("request_date"),
                 "arrangement_date" : data.get("arrangement_date"),
                 "timeslot": data.get("timeslot"),
-                "reason": data.get("reason")
+                "reason": data.get("reason"),
+                "created_at": datetime.utcnow()
             }
+            print(arrangement_data)
 
             # Send POST request to create a WFH request
             arrangement_response = requests.post(f"{REQUEST_LOG_MICROSERVICE_URL}/create_request", json=arrangement_data)

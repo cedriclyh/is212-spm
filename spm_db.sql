@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS Request_Log (
     status VARCHAR(50) NOT NULL DEFAULT 'Pending',           
     reason VARCHAR(255) NOT NULL,
     remarks VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
