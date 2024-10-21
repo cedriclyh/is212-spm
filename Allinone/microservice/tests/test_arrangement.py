@@ -1,6 +1,5 @@
 import pytest, os
 from arrangement import app, db, Arrangement
-from my_flask_app.models import Arrangement
 
 @pytest.fixture
 def client():
@@ -10,8 +9,10 @@ def client():
 
     with app.test_client() as client:
         with app.app_context():
-            db.create_all()  # Create tables in the in-memory or provided database
+            db.create_all()  # Create tables before running the tests
         yield client
+        with app.app_context():
+            db.drop_all()  # Clean up the tables after the tests
 
 
 # testing /create_arrangement endpoint
