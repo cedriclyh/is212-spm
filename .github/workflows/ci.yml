@@ -76,14 +76,6 @@ jobs:
           run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
           working-directory: ./Allinone/microservice
 
-        # Step 9: Wait for MySQL to be available
-        - name: Wait for MySQL to be ready
-          run: |
-            until mysqladmin ping -h "localhost" --silent; do
-              echo 'waiting for MySQL to be available...'
-              sleep 2
-            done
-
         # Step 10: Set the database URL environment variable for tests
         - name: Set environment for tests
           run: echo "DB_URL=mysql+mysqlconnector://root:root@localhost:3306/spm_db" >> $GITHUB_ENV
