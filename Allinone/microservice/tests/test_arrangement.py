@@ -12,6 +12,7 @@ def client():
             db.create_all()  # Create tables in the in-memory database
         yield client
 
+
 # testing /create_arrangement endpoint
 def test_create_arrangement_success(client):
     # Sample data to send in POST request

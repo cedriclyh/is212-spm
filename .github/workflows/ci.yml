@@ -58,6 +58,13 @@ jobs:
           run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
           working-directory: ./Allinone/microservice
 
+        # Extra: Wait for MySQL to be available
+        - name: Wait for MySQL to be ready
+          run: |
+            until mysqladmin ping -h "127.0.0.1" --silent; do
+              echo 'waiting for MySQL to be available...'
+              sleep 2
+            done
 
         # Step 6: Run tests (using pytest for Python)
         - name: Run Python unit tests
