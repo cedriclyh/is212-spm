@@ -146,7 +146,7 @@ const BlockoutPopup = () => {
   };
 
   // For Timeslot dropdown
-  const [selectedKey, setSelectedKey] = React.useState(new Set(["FULL DAY"]));
+  const [selectedKey, setSelectedKey] = React.useState(new Set(["FULL"]));
 
   const selectedValue = React.useMemo(
     () => Array.from(selectedKey).join(", ").replaceAll("_", " "),
@@ -160,7 +160,7 @@ const BlockoutPopup = () => {
 
   return (
     <div>
-      <Button variant="contained" onClick={openPopup}>Block Out Dates</Button>
+      <Button style={{marginLeft:"5px"}} variant="contained" onClick={openPopup}>Block Out Dates</Button>
 
       {isOpen && (
         <div className="popup">
@@ -209,7 +209,7 @@ const BlockoutPopup = () => {
               Timeslot:
               <Dropdown>
                 <DropdownTrigger>
-                  <Button color="secondary" variant="outlined">
+                  <Button color="primary" variant="outlined" style={{marginLeft:"10px"}}>
                     {selectedValue}
                   </Button>
                 </DropdownTrigger>
@@ -221,7 +221,7 @@ const BlockoutPopup = () => {
                   selectedKey={selectedKey}
                   onSelectionChange={handleTimeslotChange}
                 >
-                  <DropdownItem key="FULL">FULL DAY</DropdownItem>
+                  <DropdownItem key="FULL">FULL</DropdownItem>
                   <DropdownItem key="AM">AM</DropdownItem>
                   <DropdownItem key="PM">PM</DropdownItem>
                 </DropdownMenu>

@@ -159,7 +159,7 @@ def delete_request():
         arrangements_to_delete = Arrangement.query.filter(Arrangement.request_id.in_(arrangement_ids)).all()
 
         if not arrangements_to_delete:
-            return jsonify({'message': 'No matching arrangements found to delete', 'code': 404}), 404
+            return jsonify({'message': 'No matching arrangements found to delete', 'code': 200}), 200
 
         # Delete all matching arrangements
         for arrangement in arrangements_to_delete:

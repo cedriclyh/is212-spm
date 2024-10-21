@@ -20,7 +20,7 @@ function getTimeRange(timeslot, startDate, endDate) {
     case "FULL":
       return { start: `${startDate}T09:00:00`, end: `${endDate}T18:00:00` };
     default:
-      return { start: startDate}, { end: endDate };  // Fallback to all-day event if timeslot is unknown
+      return { start: startDate, end: endDate };  // Fallback to all-day event if timeslot is unknown
   }
 };
 
@@ -229,7 +229,7 @@ export const getBlockoutDates = async (currentView) => {
           start,
           end,
           classNames,
-          display: 'background',
+          // display: 'background',
           allDay: currentView === 'dayGridMonth' || allDay, // Set allDay based on the current view
         }
       })

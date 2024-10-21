@@ -24,9 +24,13 @@
   max-height: 80px; /* Adjust this value to allow space for events */
 }
 
+.fc-event {
+  border: none;
+}
+
 /* Styling for blocked events */
 .fc-event.blocked-event {
-  background-color: #808080 !important;
+  background-color: #4577e4 !important;
   border: none !important; /* Remove border */
   color: white !important; /* Text color for better contrast */
   font-weight: bold;
@@ -42,7 +46,7 @@
   font-weight: bold;
   text-align: center;
   font-size: 20px;
-  margin-top: 10px;
+  /* margin-top: 10px; */
 }
 
 .fc-event.full-day {
