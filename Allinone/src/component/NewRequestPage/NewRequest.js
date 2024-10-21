@@ -21,7 +21,7 @@ import {
 import { extractWeekdays, checkAvailability } from "./NewRequestUtils";
 import { getLocalTimeZone, today } from "@internationalized/date";
 
-const individualDates = ["20-10-2024"];
+const individualDates = [];
 
 const statusColorMap = {
   Available: "success",
@@ -76,16 +76,30 @@ export default function NewRequest() {
   };
 
   const handleRecurringChange = (value) => {
+    // Set isRecurring value
     setIsRecurring(value === "Yes");
+  
+    // Clear all the related states
+    setInputDates([]); // Clear individual dates
+    setSelectedTimeslot("Choose a Timeslot"); // Clear selected timeslot
+    setSelectedDayOfTheWeek("Choose a Week Day"); // Clear selected weekday
+    setStartDate(null); // Clear start date
+    setEndDate(null); // Clear end date
+    setExtractedDates([]); // Clear extracted dates
+    setAvailability({}); // Clear availability
   };
 
   // Update availability status when dates are extracted
   useEffect(() => {
-    if (extractedDates.length > 0) {
+    if (inputDates.length > 0 && !isRecurring) {
+      const result = checkAvailability(inputDates, blockOutDates);
+      setAvailability(result);
+    } else if (extractedDates.length > 0 && isRecurring) {
       const result = checkAvailability(extractedDates, blockOutDates);
       setAvailability(result);
     }
-  }, [extractedDates, blockOutDates]);
+  }, [inputDates, extractedDates, blockOutDates, isRecurring]);
+  
 
   // UseEffect to trigger extractWeekdays whenever the startDate, endDate, or SelectedDayOfTheWeek changes
   useEffect(() => {
@@ -170,6 +184,29 @@ export default function NewRequest() {
                   </DropdownMenu>
                 </Dropdown>
               </div>
+
+              <div className="mt-4" style={{ marginTop: "24px" }}>
+                <p>Requested Dates</p>
+                <p style={{ fontSize: "0.875rem", color: "gray" }}>Only Available Dates will be submitted</p>
+                <Table aria-label="Selected Dates with Availability" className="mt-2">
+                  <TableHeader>
+                    <TableColumn>DATE</TableColumn>
+                    <TableColumn>STATUS</TableColumn>
+                  </TableHeader>
+                  <TableBody emptyContent={"No dates selected."}>
+                    {inputDates.map((date, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{date}</TableCell>
+                        <TableCell>
+                          <Chip color={statusColorMap[availability[date] || "Available"]} size="sm" variant="flat">
+                            {availability[date] || "Available"}
+                          </Chip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </>
           )}
           
@@ -191,6 +228,23 @@ export default function NewRequest() {
                       setEndDate(end);
                     }}
                   />
+              </div>
+
+              {/* Timeslot Selection */}
+              <div className="mt-4" style={{ marginTop: "24px" }}>
+                <p>Timeslot</p>
+                <Dropdown isRequired={true}>
+                  <DropdownTrigger>
+                    <Button variant="bordered" className="mt-2">
+                      {selectedTimeslot || "Choose a Timeslot"}
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu onAction={handleSelection}>
+                    <DropdownItem key="Whole Day" description="9AM - 6PM">Whole Day</DropdownItem>
+                    <DropdownItem key="Morning" description="9AM - 1PM">Morning</DropdownItem>
+                    <DropdownItem key="Afternoon" description="2PM - 6PM">Afternoon</DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
               </div>
 
               {/* Select which days of the week for recurring dates */}
