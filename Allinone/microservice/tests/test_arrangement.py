@@ -1,4 +1,4 @@
-import pytest
+import pytest, os
 from arrangement import app, db, Arrangement
 
 @pytest.fixture
