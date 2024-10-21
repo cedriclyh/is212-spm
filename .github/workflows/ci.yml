@@ -45,7 +45,7 @@ jobs:
 
         # Step 6: Run tests (using pytest for Python)
         - name: Run Python unit tests
-          run: pytest
+          run: pytest microservice/tests
           working-directory: ./Allinone/microservice  # Folder for unittests kiv
 
         # Optional: Run tests for JavaScript/React (adjust based on your test setup)
