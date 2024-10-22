@@ -53,13 +53,16 @@ def test_get_arrangement(client):
         db.session.add(arrangement)
         db.session.commit()
 
+        arrangement_from_db = Arrangement.query.filter_by(request_id=1).first()
+
+
     response = client.get('/get_arrangement/1')  # Using request_id instead of arrangement_id
     assert response.status_code == 200
-    assert response.json['data']['request_id'] == arrangement.request_id
-    assert response.json['data']['staff_id'] == arrangement.staff_id
-    assert response.json['data']['arrangement_date'] == str(arrangement.arrangement_date)
-    assert response.json['data']['timeslot'] == arrangement.timeslot
-    assert response.json['data']['reason'] == arrangement.reason
+    assert response.json['data']['request_id'] == arrangement_from_db.request_id
+    assert response.json['data']['staff_id'] == arrangement_from_db.staff_id
+    assert response.json['data']['arrangement_date'] == str(arrangement_from_db.arrangement_date)
+    assert response.json['data']['timeslot'] == arrangement_from_db.timeslot
+    assert response.json['data']['reason'] == arrangement_from_db.reason
 
 # Test retrieving an arrangement that does not exist
 def test_get_arrangement_not_found(client):
