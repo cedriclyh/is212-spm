@@ -191,7 +191,8 @@ def blockDate():
         blockout = BlockoutDates(
             start_date = start_date,
             end_date = end_date,
-            timeslot = data["timeslot"]["anchorKey"],
+            # timeslot = data["timeslot"]["anchorKey"],
+            timeslot = data["timeslot"],
             title = data["title"],
             blockout_description = data["blockout_description"],
         )
@@ -199,7 +200,7 @@ def blockDate():
         if fetch_blockout_by_date(start_date, end_date):
             print("Error fetching:  " + fetch_blockout_by_date(start_date, end_date))
             return jsonify({'message': 'Failed to create blockout. Blockout already exists within the selected date range.', 'code': 409}), 409
- 
+
         else:
             # Commit changes for all dates 
             print(fetch_blockout_by_date(start_date, end_date))

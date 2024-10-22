@@ -1,5 +1,5 @@
 import pytest, os
-from arrangement import app, db, Arrangement
+from arrangement import app, db, Arrangement, BlockoutDates
 
 @pytest.fixture
 def client():
