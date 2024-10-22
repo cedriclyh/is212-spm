@@ -26,8 +26,12 @@ jobs:
 
         steps:
         # Step 1: Check out the repository code
-        - name: Checkout code
-          uses: actions/checkout@v2
+        - name: Checkout Code
+          uses: actions/checkout@v4
+          with:
+            # Full git history is needed to get a proper
+            # list of changed files within `super-linter`
+            fetch-depth: 0
 
         # SUPER LINTER
         - name: Run Super-Linter
@@ -37,8 +41,8 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Add this line to provide the token
             VALIDATE_PYTHON_PYLINT: true
             VALIDATE_JAVASCRIPT_ES: true
-            VALIDATE_MARKDOWN: true  # Optionally enable Markdown linting
             DEFAULT_BRANCH: main  # Set the default branch for the linter
+            FILTER_REGEX_EXCLUDE: "^Allinone/src/node_modules/" # Not include node_modules stuff
 
         # Step 2: Cache Node.js modules (optional, speeds up future builds)
         - name: Cache Node.js modules
