@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import axios from 'axios';
 import { Button } from '@mui/material';
 import {Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
@@ -11,7 +11,7 @@ const BlockoutPopup = () => {
   const [endDate, setEndDate] = useState('');
   const [blockoutDescription, setBlockoutDescription] = useState('');
   const [errors, setErrors] = useState([]);
-  const [timeslot, setTimeslot] = useState('');
+  const [timeslot, setTimeslot] = useState({'anchorKey': 'FULL', 'currentKey': 'FULL'}); // Default: FULL day
 
   const openPopup = () => {
     setIsOpen(true);
@@ -34,7 +34,7 @@ const BlockoutPopup = () => {
     setEndDate('');
     setBlockoutDescription('');
     setErrors([]);
-    setTimeslot('');
+    setTimeslot({'anchorKey': 'FULL', 'currentKey': 'FULL'});
   };
 
   const handleSubmit = async () => {
@@ -146,12 +146,13 @@ const BlockoutPopup = () => {
   };
 
   // For Timeslot dropdown
-  const [selectedKey, setSelectedKey] = React.useState(new Set(["FULL"]));
+  const [selectedKey, setSelectedKey] = useState(["FULL"]);
 
-  const selectedValue = React.useMemo(
+  const selectedValue = useMemo(
     () => Array.from(selectedKey).join(", ").replaceAll("_", " "),
     [selectedKey]
   );
+  
 
   const handleTimeslotChange = (key) => {
     setSelectedKey(key);

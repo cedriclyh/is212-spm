@@ -156,8 +156,11 @@ def delete_request():
     try:
         data = request.json
         arrangement_ids = data.get("arrangement_ids")
-        
+        print("[delete_arrangements] Arrangement IDs:", arrangement_ids)
+        print("Deleting arrangement...")
+
         if not arrangement_ids or not isinstance(arrangement_ids, list):
+            print("Invalid input: arrangement_ids is required and must be a list")
             return jsonify({"message": "Invalid input: arrangement_ids is required and must be a list", "code": 400}), 400
 
         arrangements_to_delete = Arrangement.query.filter(Arrangement.request_id.in_(arrangement_ids)).all()
@@ -181,10 +184,10 @@ def delete_request():
 @app.route('/create_blockout', methods=['POST'])
 def blockDate():
     try:
-        # print("test")
         data = request.json
         print(data)
         
+        print("[create_blockout] Creating blockout...")
         start_date = datetime.strptime(data["start_date"], '%Y-%m-%d').date()
         end_date = datetime.strptime(data["end_date"], '%Y-%m-%d').date()
 
@@ -197,17 +200,18 @@ def blockDate():
             blockout_description = data["blockout_description"],
         )
 
+        # Check if blockout exists
+        print("[create_blockout] Checking for existing blockouts...")
         if fetch_blockout_by_date(start_date, end_date):
-            print("Error fetching:  " + fetch_blockout_by_date(start_date, end_date))
+            print("[create_blockout] Error fetching:", fetch_blockout_by_date(start_date, end_date))
             return jsonify({'message': 'Failed to create blockout. Blockout already exists within the selected date range.', 'code': 409}), 409
-
+ 
         else:
-            # Commit changes for all dates 
-            print(fetch_blockout_by_date(start_date, end_date))
+            # Commit changes for blockout 
+            print("[create_blockout] No existing blockouts")
             db.session.add(blockout)
-            print("hello")
             db.session.commit()
-            print(f'Blockout created for {data["title"]} from {start_date} and {end_date}')
+            print(f'[create_blockout] Blockout created for {data["title"]} from {start_date} and {end_date}')
             return jsonify({'message': f'Blockout created for {data["title"]} from {start_date} and {end_date}', 'data': blockout.json(), 'code':200}), 200
 
     except Exception as e:
@@ -228,10 +232,14 @@ def get_blockouts():
 
 def fetch_blockout_by_date(query_start_date, query_end_date):
     try:
+        print("[fetch_blockout_by_date] Fetching blockouts...")
         blockout = BlockoutDates.query.filter(
             BlockoutDates.start_date <= query_end_date,
             BlockoutDates.end_date >= query_start_date
         ).first()
+
+        print("[fetch_blockout_by_date] Returning blockout...")
+        print("[fetch_blockout_by_date] Blockout:", blockout)
         return blockout
     except Exception as e:
         app.logger.error(f"Error fetching blockouts for dates: {query_start_date} to {query_end_date}: {e}")
