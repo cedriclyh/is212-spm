@@ -194,8 +194,7 @@ def blockDate():
         blockout = BlockoutDates(
             start_date = start_date,
             end_date = end_date,
-            # timeslot = data["timeslot"]["anchorKey"],
-            timeslot = data["timeslot"],
+            timeslot = data["timeslot"]["anchorKey"],
             title = data["title"],
             blockout_description = data["blockout_description"],
         )
