@@ -83,9 +83,6 @@ def make_request():
         # calculate valid date range
         earliest_date = request_date - relativedelta(months=2)
         latest_date = request_date + relativedelta(months=3)
-        print(earliest_date)
-        print("hi")
-        print(latest_date)
 
         if recurring_day:
             start_date = data.get("start_date")
