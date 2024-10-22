@@ -33,12 +33,11 @@ jobs:
         - name: Run Super-Linter
           uses: github/super-linter@v5
           env:
+            VALIDATE_ALL_CODEBASE: false
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Add this line to provide the token
-            VALIDATE_PYTHON: true  # Enable Python linting
-            VALIDATE_JAVASCRIPT_ES: true  # Enable JS/ES linting
+            VALIDATE_PYTHON_PYLINT: true
+            VALIDATE_JAVASCRIPT_ES: true
             VALIDATE_MARKDOWN: true  # Optionally enable Markdown linting
-            FILTER_REGEX_INCLUDE: ".*\\.py$"  # Include all Python files
-            FILTER_REGEX_EXCLUDE: "^Allinone/src/node_modules/"  # Exclude node_modules folder
             DEFAULT_BRANCH: main  # Set the default branch for the linter
 
         # Step 2: Cache Node.js modules (optional, speeds up future builds)
