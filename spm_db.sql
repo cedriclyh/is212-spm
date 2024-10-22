@@ -72,11 +72,6 @@ CREATE TABLE IF NOT EXISTS Block_Out_Dates (
     PRIMARY KEY (blockout_id)
 );
 
-ALTER TABLE Request_Log
-ADD COLUMN recurrence_start_date DATE NULL,
-ADD COLUMN recurrence_end_date DATE NULL,
-ADD COLUMN recurring_day VARCHAR(10) NULL;  -- E.g., "Monday", "Tuesday"
-
 -- Request_Dates Table for recurring dates
 CREATE TABLE IF NOT EXISTS RequestDates (
     id INT AUTO_INCREMENT PRIMARY KEY,
