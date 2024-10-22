@@ -3,6 +3,9 @@ import requests
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
 from flask_cors import CORS
+from dateutil.relativedelta import relativedelta
+from datetime import datetime, timezone
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
@@ -21,6 +24,7 @@ NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
 
 from arrangement import Arrangement
 from employee import Employee
+from requests_log import Request
 
 def count_wfh(manager_id, arrangement_date):
     try:
@@ -60,6 +64,29 @@ def past_wfh(staff_id, arrangement_date):
         app.logger.error(f"Failed to check if staff {staff_id} already worked from home on {arrangement_date}: {e}")
         return False
 
+# Function to check and reject overdue requests
+def auto_reject_pending_requests():
+    two_months_ago = datetime.now(tz=timezone.utc) - relativedelta(months=2)
+
+    overdue_requests = db.session.query(Request) \
+        .filter(Request.status == 'Pending', Request.request_date <= two_months_ago).all()
+
+    for request in overdue_requests:
+        request.status = 'Rejected'
+        db.session.commit()
+        print(f"Request {request.request_id} automatically rejected as it has been 'pending' for more than 2 months")
+
+# Initialize and configure APScheduler
+def start_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=auto_reject_pending_requests, trigger="interval", days=1)
+    scheduler.start()
+
+@app.before_request
+def start_auto_rejection_scheduler():
+    if not getattr(app, 'scheduler_started', False):
+        start_scheduler()
+        app.scheduler_started = True
 
 @app.route('/manage_request', methods=['PUT'])
 def manage_request():
@@ -72,14 +99,16 @@ def manage_request():
 
         if not request_id or not status or status not in ['Approved', 'Rejected']:
             return jsonify({"message": "Invalid data", 
-                            "code": 400}), 400
+                            "code": 400
+            }), 400
 
         # 1: fetch request from database via arrangement.py
         fetch_response = requests.get(f"{REQUEST_LOG_MICROSERVICE_URL}/get_request/{request_id}")
         
         if fetch_response.status_code != 200:
             return jsonify({"message": "Failed to fetch request from database", 
-                            "code": 404}), 404
+                            "code": 404
+            }), 404
         
         request_entry = fetch_response.json().get("data")
         request_id - request_entry.get("request_id")
@@ -93,7 +122,8 @@ def manage_request():
         
         if employee_response.status_code != 200:
             return jsonify({"message": "Failed to fetch employee details", 
-                            "code": 404}), 404
+                            "code": 404
+            }), 404
 
         employee_data = employee_response.json().get("data")
         staff_email = employee_data.get("email")
@@ -102,7 +132,8 @@ def manage_request():
 
         if not staff_email:
             return jsonify({"message": "Staff email not found", 
-                            "code": 404}), 404
+                            "code": 404
+            }), 404
         
         if status == "Rejected":
             # directly update the request status
@@ -116,7 +147,8 @@ def manage_request():
             
             if update_response.status_code != 200:
                 return jsonify({"message": "Failed to update request status", 
-                                "code": 500}), 500
+                                "code": 500
+                }), 500
 
             # send notification to the staff about the rejection
             notification_data = {
@@ -130,7 +162,8 @@ def manage_request():
 
             if notification_response.status_code != 200:
                 return jsonify({"message": "Request status updated but failed to notify staff", 
-                                "code": 500}), 500
+                                "code": 500
+                }), 500
 
             return jsonify({
                 "message": f"Request {status} successfully and staff notified",
@@ -147,7 +180,8 @@ def manage_request():
 
             if team_response.status_code != 200:
                 return jsonify({"message": "Failed to fetch team members", 
-                                "code": 404}), 404
+                                "code": 404
+                }), 404
 
             team_data = team_response.json().get("data")
             total_team_size = len(team_data)
@@ -162,16 +196,19 @@ def manage_request():
                     if timeslot == "AM":
                         if (am_count + 1)/ total_team_size > 0.5:
                             return jsonify({"message": "Approval would exceed the 50% WFH threshold for AM shift!",
-                                            "code": 403}), 403
+                                            "code": 403
+                            }), 403
                         
                     elif timeslot == "PM":
                         if (pm_count + 1)/ total_team_size > 0.5:
                             return jsonify({"message": "Approval would exceed the 50% WFH threshold for PM shift!",
-                                            "code": 403}), 403
+                                            "code": 403
+                            }), 403
                     elif timeslot == "FULL":
                         if (am_count + 1)/ total_team_size > 0.5 or (pm_count + 1)/ total_team_size > 0.5:
                             return jsonify({"message": "Approval would exceed the 50% WFH threshold for FULL shift!",
-                                            "code": 403}), 403
+                                            "code": 403
+                            }), 403
         
         # 5: update the request status
         arrangement_update_data = {
@@ -184,7 +221,8 @@ def manage_request():
         
         if update_response.status_code != 200:
             return jsonify({"message": "Failed to update request status", 
-                            "code": 500}), 500
+                            "code": 500
+            }), 500
 
         # 6: if status is Approved, insert the request into the arrangement table
         if status == "Approved":
@@ -199,7 +237,8 @@ def manage_request():
             
             if arrangement_response.status_code != 201:
                 return jsonify({"message": "Failed to create arrangement entry", 
-                                "code": 500}), 500
+                                "code": 500
+                }), 500
             
         # 7: call notification.py to notify the staff of the updated status
         notification_data = {
@@ -213,7 +252,8 @@ def manage_request():
 
         if notification_response.status_code != 200:
             return jsonify({"message": "Request status updated but failed to notify staff", 
-                            "code": 500}), 500
+                            "code": 500
+        }), 500
 
         return jsonify({
             "message": f"Request {status} successfully and staff notified",
@@ -223,7 +263,8 @@ def manage_request():
     except Exception as e:
         app.logger.error(f"Failed to manage request: {e}")
         return jsonify({"message": "Internal server error", 
-                        "code": 500}), 500
+                        "code": 500
+        }), 500
 
 
 if __name__ == "__main__":
