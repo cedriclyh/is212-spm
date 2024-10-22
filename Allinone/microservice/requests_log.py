@@ -221,9 +221,5 @@ def update_request(request_id):
                         'code': 500
         }), 500
 
-@app.route('/arrangement_form')
-def arrangement_form():
-    return render_template('arrangement_form.html')
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003, debug=True)
