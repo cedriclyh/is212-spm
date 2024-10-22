@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS Request_Log (
     status VARCHAR(50) NOT NULL DEFAULT 'Pending',           
     reason VARCHAR(255) NOT NULL,
     remarks VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
@@ -74,7 +75,18 @@ CREATE TABLE IF NOT EXISTS Block_Out_Dates (
     PRIMARY KEY (blockout_id)
 );
 
+ALTER TABLE Request_Log
+ADD COLUMN recurrence_start_date DATE NULL,
+ADD COLUMN recurrence_end_date DATE NULL,
+ADD COLUMN recurring_day VARCHAR(10) NULL;  -- E.g., "Monday", "Tuesday"
 
+-- Request_Dates Table for recurring dates
+CREATE TABLE IF NOT EXISTS RequestDates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    request_id INT NOT NULL,
+    arrangement_date DATE NOT NULL,
+    FOREIGN KEY (request_id) REFERENCES Request_log(request_id)
+);
 
 -- User_Role Values
 -- IMPT NEED TO IRON OUT

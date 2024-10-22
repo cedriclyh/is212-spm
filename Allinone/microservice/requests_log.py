@@ -10,7 +10,7 @@ from os import environ
 from flask_cors import CORS
 import os
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
 
 import json
 
@@ -49,6 +49,7 @@ class Request(db.Model):
     timeslot = db.Column(db.String(50), nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
     reason = db.Column(db.String(255), nullable=False, default="") # Reason for WFH request
+    created_at = db.Column(db.DateTime, default=datetime.now(tz=timezone.utc))
 
     employee = relationship("Employee", backref="requests")
 
@@ -73,36 +74,43 @@ class Request(db.Model):
             'status': self.status
         }
     
-# class TimeSlot(db.Model):
-#     __tablename__ = 'Time_Slot'
+class RequestDates(db.Model):
+    __tablename__ = 'RequestDates'
 
-#     timeslot = db.Column(db.Integer, primary_key=True)
-#     timeslot_description = db.Column(db.Integer, nullable=False)
-
-#     def __init__(self, timeslot, timeslot_description):
-#         self.timeslot = timeslot
-#         self.timeslot_description = timeslot_description
-
-#     def json(self):
-#         return {
-#             'timeslot': self.timeslot
-#         }
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    request_id = db.Column(db.Integer, ForeignKey('Request_log.request_id'), nullable=False)
+    arrangement_date = db.Column(db.Date, nullable=False)
 
 # Create a new WFH request
 @app.route('/create_request', methods=['POST'])
 def create_request():
     try:
         data = request.json
+
+        arrangement_dates = data.get("arrangement_date")
+        if isinstance(arrangement_dates, str):
+            arrangement_dates = [arrangement_dates]
+
         new_request = Request(
             staff_id = data["staff_id"],
             manager_id = data["manager_id"],
-            arrangement_date = data["arrangement_date"],
             request_date = data["request_date"],
+            arrangement_date = arrangement_dates[0],
             timeslot = data["timeslot"],
             reason = data["reason"],
         )
         # print(new_request)
         db.session.add(new_request)
+        db.session.commit()
+
+        # If it's a recurring request, insert the additional dates into RequestDates
+        for date in arrangement_dates:
+            request_date_entry = RequestDates(
+                request_id=new_request.request_id,
+                arrangement_date=date
+            )
+            db.session.add(request_date_entry)
+
         db.session.commit()
 
         return jsonify({
@@ -122,28 +130,46 @@ def create_request():
 @app.route('/get_all_requests', methods = ["GET"])
 def get_all_requests():
     try: 
-        requests = Request.query.all()
-        return jsonify({'message': 'All requests', 'data': [req.json() for req in requests], 'code': 200}), 200
+        all_requests = Request.query.all()
+        requests_with_dates = []
+        for request in all_requests:
+            request_data = request.json()
+            related_dates = db.session.query(RequestDates.arrangement_date).filter_by(request_id=request.request_id).all()
+            request_data["arrangement_dates"] = [str(date.arrangement_date) for date in related_dates]
+            requests_with_dates.append(request_data)
+        return jsonify({'message': 'All requests', 
+                        'data': requests_with_dates, 
+                        'code': 200
+        }), 200
     except Exception as e:
         app.logger.error(f"Failed to retrieve requests: {e}")
-        return jsonify({'message': 'Failed to retrieve requests', 'code': 500}), 500
+        return jsonify({'message': 'Failed to retrieve requests', 
+                        'code': 500
+        }), 500
     
 # Retrieve a specific WFH request
 @app.route('/get_request/<int:request_id>', methods=['GET'])
 def get_request(request_id):
     try:
         request = Request.query.filter_by(request_id=request_id).first()
+        related_dates = db.session.query(RequestDates.arrangement_date).filter_by(request_id=request_id).all()
         if request:
+            request_data = request.json()
+            request_data["arrangement_dates"] = [str(date.arrangement_date) for date in related_dates]
             return jsonify({
                 'message': 'Request found', 
-                'data': request.json(), 
+                'data': request_data, 
                 'code': 200
             }), 200
         else:
-            return jsonify({'message': 'Request not found', 'code': 404}), 404
+            return jsonify({'message': 'Request not found', 
+                            'code': 404
+            }), 404
     except Exception as e:
         app.logger.error(f"Failed to retrieve request: {e}")
-        return jsonify({'message': 'Failed to retrieve request', 'code': 500}), 500
+        return jsonify({'message': 'Failed to retrieve request', 
+                        'code': 500
+        }), 500
 
 #Retrieve a WFH request by staff
 @app.route('/get_requests/staff/<int:staff_id>', methods=['GET'])
@@ -151,16 +177,26 @@ def get_requests_by_staff_id(staff_id):
     try:
         requests = Request.query.filter_by(staff_id=staff_id).all()
         if requests:
+            request_with_dates = []
+            for request in requests:
+                request_data = request.json()
+                related_dates = db.session.query(RequestDates.arrangement_date).filter_by(request_id=request.request_id).all()
+                request_data["arrangement_dates"] = [str(date.arrangement_date) for date in related_dates]
+                request_with_dates.append(request_data)
             return jsonify({
                 'message': f'Requests from staff {staff_id} found', 
-                'data': [req.json() for req in requests], 
+                'data': request_with_dates, 
                 'code': 200
             }), 200
         else:
-            return jsonify({'message': f'No requests from staff {staff_id}', 'code': 404}), 404
+            return jsonify({'message': f'No requests from staff {staff_id}', 
+                            'code': 404
+            }), 404
     except Exception as e:
         app.logger.error(f"Failed to retrieve requests by staff ID: {e}")
-        return jsonify({'message': 'Failed to retrieve requests by staff ID', 'code': 500}), 500
+        return jsonify({'message': 'Failed to retrieve requests by staff ID', 
+                        'code': 500
+        }), 500
     
 # Update request status
 @app.route('/update_request/<int:request_id>', methods=['PUT'])
@@ -171,12 +207,19 @@ def update_request(request_id):
         if request_to_update:
             request_to_update.status = data.get('status', request_to_update.status)
             db.session.commit()
-            return jsonify({'message': 'Request updated', 'data': request_to_update.json(), 'code': 200}), 200
+            return jsonify({'message': 'Request updated', 
+                            'data': request_to_update.json(), 
+                            'code': 200
+            }), 200
         else:
-            return jsonify({'message': 'Request not found', 'code': 404}), 404
+            return jsonify({'message': 'Request not found', 
+                            'code': 404
+            }), 404
     except Exception as e:
         app.logger.error(f"Failed to update request: {e}")
-        return jsonify({'message': 'Failed to update request', 'code': 500}), 500
+        return jsonify({'message': 'Failed to update request', 
+                        'code': 500
+        }), 500
 
 @app.route('/arrangement_form')
 def arrangement_form():
