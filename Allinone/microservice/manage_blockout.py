@@ -28,22 +28,13 @@ def manage_blockout():
         data = request.json
         print(data)
 
-        # 1. Create blockout via arrangement.py
-        post_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_blockout", json=data)
-
-        if post_response.status_code != 200:
-           return jsonify({"message": "Failed to post to database", 
-                            "code": 500}), 500
-        
+        start_date = data["start_date"]
+        end_date = data["end_date"]
+        timeslot = data["timeslot"]["anchorKey"]
         staff_id = 140003  # replace code to retrieve from json
 
-        post_response = post_response.json().get("data")
-        start_date = post_response.get("start_date")
-        end_date = post_response.get("end_date")
-        timeslot = post_response.get("timeslot")
 
-
-        # 2: fetch staff email and department from employee.py using staff_id
+        # 1: fetch staff email and department from employee.py using staff_id
         employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
         
         if employee_response.status_code != 200:
@@ -58,34 +49,49 @@ def manage_blockout():
             return jsonify({"message": "Staff email not found", 
                             "code": 404}), 404
 
-        # 3. Delete all existing arrangements within blockout range
-        arrangements_to_delete = db.session.query(Arrangement) \
+        # 2. Delete all existing arrangements within blockout range
+        
+        delete_arrangements_query = db.session.query(Arrangement) \
             .join(Employee, Employee.staff_id == Arrangement.staff_id) \
-            .filter(Employee.dept == dept, Arrangement.arrangement_date >= start_date, Arrangement.arrangement_date <= end_date)
+            .filter(Employee.dept == dept, 
+                    Arrangement.arrangement_date >= start_date, 
+                    Arrangement.arrangement_date <= end_date)
+
+        print("Arrangements to delete query created")
+
+        arrangements_to_delete = delete_arrangements_query.all()
+        print("Arrangements to delete", arrangements_to_delete)
 
         if arrangements_to_delete:
             if timeslot == "FULL":
-                arrangements_to_delete = arrangements_to_delete.filter(Arrangement.timeslot.in_(["AM", "PM", "FULL"]))
+                arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_(["AM", "PM", "FULL"])).all()
             else:
-                arrangements_to_delete = arrangements_to_delete.filter(Arrangement.timeslot.in_([timeslot, "FULL"]))
-
-            arrangements_to_delete = arrangements_to_delete.all()
+                arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_([timeslot, "FULL"])).all()
 
             # Extracting the arrangement request_ids
             arrangement_ids = [arrangement.request_id for arrangement in arrangements_to_delete]
 
-            # 4. Call delete_arrangements endpoint to delete the arrangements
+            # 3. Call delete_arrangements endpoint to delete the arrangements
             delete_response = requests.delete(f"{ARRANGEMENT_MICROSERVICE_URL}/delete_arrangements", json={"arrangement_ids": arrangement_ids})
 
             if delete_response.status_code != 200:
-                return jsonify({"message": "Failed to delete arrangements", "code": 500}), 500
+                print("Delete response:", delete_response.json())
+                return delete_response.json(), delete_response.status_code
 
+        # 4. Reject all approved/pending requests that coincide with blockout 
+        
+        # 5. Create blockout via arrangement.py
+        post_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_blockout", json=data)
+
+        if post_response.status_code != 200:
+            print("Post response:", post_response.json())
+            return post_response.json(), post_response.status_code
+    
         return jsonify({"message": "Blockout created successfully. Approved arrangements within the selected range have been deleted. ", "code": 200}), 200
 
     except Exception as e:
         app.logger.error(f"Failed to manage blockout: {e}")
         return jsonify({"message": "Internal server error", "code": 500}), 500
-
 
     
 if __name__ == "__main__":

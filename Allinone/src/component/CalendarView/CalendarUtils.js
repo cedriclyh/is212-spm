@@ -202,8 +202,8 @@ export const getBlockoutDates = async (currentView) => {
 
         // Determine start and end based on timeslot
         if (timeslot === "FULL") {
-          start = `${start_date}T00:00:00`; // Full day blockout starts at midnight
-          end = end_date; // Ends at the end of the day
+          start = `${start_date}T09:00:00`; // Full day blockout starts at midnight
+          end = `${end_date}T18:00:00`; // Ends at the end of the day
           allDay = true;
           classNames.push('full-day'); // Additional class for full-day
         } else if (timeslot === "AM") {
@@ -230,7 +230,7 @@ export const getBlockoutDates = async (currentView) => {
           end,
           classNames,
           // display: 'background',
-          allDay: currentView === 'dayGridMonth' || allDay, // Set allDay based on the current view
+          allDay: currentView === 'dayGridMonth', // Set allDay based on the current view
         }
       })
     );  

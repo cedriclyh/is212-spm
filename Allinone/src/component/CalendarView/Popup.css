@@ -29,6 +29,7 @@
 
 .popup label {
   margin-bottom: 10px;
+  
 }
 
 .popup-buttons {
@@ -78,8 +79,4 @@ h2 {
 .error-input > input {
   border: 1px solid red; 
   background-color: rgb(255, 229, 229);
-}
-
-.MuiButton {
-  margin: 5px;
 }
