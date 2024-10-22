@@ -3,6 +3,7 @@ import requests
 from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
+from dateutil.relativedelta import relativedelta
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
@@ -75,6 +76,16 @@ def make_request():
         # 2. check if it is a single-day request or recurring request
         arrangement_date = data.get("arrangement_date")
         recurring_day = data.get("recurring_day")
+        request_date_str = data.get("request_date")
+
+        request_date = datetime.strptime(request_date_str, "%Y-%m-%d")
+
+        # calculate valid date range
+        earliest_date = request_date - relativedelta(months=2)
+        latest_date = request_date + relativedelta(months=3)
+        print(earliest_date)
+        print("hi")
+        print(latest_date)
 
         if recurring_day:
             start_date = data.get("start_date")
@@ -94,11 +105,28 @@ def make_request():
             
             arrangement_dates = []
             for date in recurring_dates:
+                # Convert the string date to a datetime object for validation
+                arrangement_date_obj = datetime.strptime(date, "%Y-%m-%d")
+                
+                # Check if the date is within the valid range
+                if not (earliest_date <= arrangement_date_obj <= latest_date):
+                    return jsonify({
+                        "message": f"Arrangement date {date} is out of the valid range. The request must be within 2 months before and 3 months after the request date.", 
+                        "code": 400
+                    }), 400
                 arrangement_dates.append(date)
         else:  
             if not arrangement_date:
                 return jsonify({"message": "Arrangement date is required for single-day requests", 
                                 "code": 400
+                }), 400
+            
+            arrangement_date_obj = datetime.strptime(arrangement_date, "%Y-%m-%d")
+            # Check if the single arrangement date is within the valid range
+            if not (earliest_date <= arrangement_date_obj <= latest_date):
+                return jsonify({
+                    "message": f"Arrangement date {arrangement_date} is out of the valid range. The request must be within 2 months before and 3 months after the request date.", 
+                    "code": 400
                 }), 400
             arrangement_dates = [arrangement_date]
                 
