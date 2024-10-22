@@ -49,7 +49,6 @@ class Request(db.Model):
     timeslot = db.Column(db.String(50), nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
     reason = db.Column(db.String(255), nullable=False, default="") # Reason for WFH request
-    created_at = db.Column(db.DateTime, default=datetime.now(tz=timezone.utc))
 
     employee = relationship("Employee", backref="requests")
 
