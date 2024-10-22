@@ -49,7 +49,6 @@ class Request(db.Model):
     timeslot = db.Column(db.String(50), nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
     reason = db.Column(db.String(255), nullable=False, default="") # Reason for WFH request
-    created_at = db.Column(db.DateTime, default=datetime.now(tz=timezone.utc))
 
     employee = relationship("Employee", backref="requests")
 
@@ -220,10 +219,6 @@ def update_request(request_id):
         return jsonify({'message': 'Failed to update request', 
                         'code': 500
         }), 500
-
-@app.route('/arrangement_form')
-def arrangement_form():
-    return render_template('arrangement_form.html')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003, debug=True)

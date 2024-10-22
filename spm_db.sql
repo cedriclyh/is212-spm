@@ -75,11 +75,6 @@ CREATE TABLE IF NOT EXISTS Block_Out_Dates (
     PRIMARY KEY (blockout_id)
 );
 
-ALTER TABLE Request_Log
-ADD COLUMN recurrence_start_date DATE NULL,
-ADD COLUMN recurrence_end_date DATE NULL,
-ADD COLUMN recurring_day VARCHAR(10) NULL;  -- E.g., "Monday", "Tuesday"
-
 -- Request_Dates Table for recurring dates
 CREATE TABLE IF NOT EXISTS RequestDates (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -665,7 +660,7 @@ INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
 INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason) VALUES
 (1, 140002, 140894, '2024-09-29', '2024-10-01', "AM", 'Approved', "Medical Appointment"),
 (2, 140003, 140894, '2024-09-29', '2024-10-01', "PM", 'Approved', "Lazy"),
-(3, 140004, 140894, '2024-09-19', '2024-10-01', "FULL", 'Pending', ''),
+(3, 140004, 140894, '2024-09-19', '2024-10-01', "FULL", 'Approved', ''),
 (4, 140004, 140894, '2024-08-09', '2024-10-02', "FULL", 'Pending', ''),
 (5, 140004, 140894, '2024-09-29', '2024-10-03', "PM", 'Rejected', ''),
 (6, 140004, 140894, '2024-07-09', '2024-12-01', "AM", 'Pending', ''),
@@ -681,8 +676,26 @@ INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrange
 -- meaning approved requests
 INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reason) VALUES
 (1, 140002, '2024-10-01', "AM", "Medical Appointment"),
-(2, 140003, '2024-10-01', "FULL", "Lazy"),
-(3, 140004, '2024-10-01', "FULL", '');
+(2, 140003, '2024-10-01', "PM", "Lazy"),
+(3, 140004, '2024-10-01', "FULL", ''),
+(7, 140004, '2025-01-01', "FULL", ''),
+(8, 140004, '2024-10-11', "PM", '');
+
+-- RequestDates values
+INSERT INTO RequestDates (id, request_id, arrangement_date) VALUES
+(1, 1, '2024-10-01'),
+(2, 2, '2024-10-01'),
+(3, 3, '2024-10-01'),
+(4, 4, '2024-10-02'),
+(5, 5, '2024-10-03'),
+(6, 6, '2024-12-01'),
+(7, 7, '2025-01-01'),
+(8, 8, '2024-10-11'),
+(9, 9, '2024-10-12'),
+(10, 10, '2024-10-15'),
+(11, 11, '2024-10-15'),
+(12, 12, '2024-10-15'),
+(13, 13, '2024-10-15');
 
 -- Block_Out_Dates values (with description)
 INSERT INTO Block_Out_Dates (start_date, end_date, timeslot, title, blockout_description) VALUES
