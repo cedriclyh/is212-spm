@@ -15,13 +15,14 @@ import {
   Chip,
   // User,
   Pagination,
+  Spinner
 } from "@nextui-org/react";
-import {PlusIcon} from "./PlusIcon";
-import {VerticalDotsIcon} from "./VerticalDotsIcon";
-import {SearchIcon} from "./SearchIcon";
-import {ChevronDownIcon} from "./ChevronDownIcon";
+import {PlusIcon} from "../Icons/PlusIcon";
+import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
+import {SearchIcon} from "../Icons/SearchIcon";
+import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
 import {columns, statusOptions, pulled_data} from "./RequestData";
-import {capitalize, formatDate, formatTimeslot} from "./utils";
+import {capitalize, formatDate, formatTimeslot} from "./RequestPageUtils";
 
 const statusColorMap = {
   Approved: "success",
@@ -189,6 +190,7 @@ export default function RequestTable() {
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
+        <p className="text-lg font-semibold text-gray-900">My Requests</p>
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
@@ -329,7 +331,11 @@ export default function RequestTable() {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody emptyContent={"No Requests found"} items={sortedItems}>
+      <TableBody 
+      emptyContent={"No Requests found"} 
+      items={sortedItems}
+      loadingContent={<Spinner label="Loading..." />}
+      >
         {(item, rowIndex) => (
           <TableRow key={item.request_id}>
             {(columnKey) => <TableCell>{renderCell(item, columnKey, rowIndex)}</TableCell>}

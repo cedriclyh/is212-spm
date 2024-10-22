@@ -67,8 +67,11 @@ CREATE TABLE IF NOT EXISTS Arrangement (
 -- Block Out Dates Table
 CREATE TABLE IF NOT EXISTS Block_Out_Dates (
     blockout_id INT AUTO_INCREMENT,
-    blockout_date DATE NOT NULL,
-    title VARCHAR(255),
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    blockout_description VARCHAR(255),
+    timeslot VARCHAR(50) NOT NULL,
     PRIMARY KEY (blockout_id)
 );
 
@@ -694,9 +697,12 @@ INSERT INTO RequestDates (id, request_id, arrangement_date) VALUES
 (12, 12, '2024-10-15'),
 (13, 13, '2024-10-15');
 
+-- Block_Out_Dates values (with description)
+INSERT INTO Block_Out_Dates (start_date, end_date, timeslot, title, blockout_description) VALUES
+('2024-12-25', '2024-12-25', 'FULL', 'Christmas', 'Public holiday'),
+('2024-11-11', '2024-11-11', 'FULL', 'Veterans Day', 'Public holiday');
 
-
--- Block_Out_Dates values
-INSERT INTO Block_Out_Dates (blockout_date, title) VALUES
-('2024-12-25', 'Christmas'),
-('2024-11-11', 'Veterans Day');
+-- Block_Out_Dates values (without description)
+-- INSERT INTO Block_Out_Dates (blockout_date, title) VALUES
+-- ('2024-12-25', 'Christmas'),
+-- ('2024-11-11', 'Veterans Day');

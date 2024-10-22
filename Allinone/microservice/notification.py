@@ -13,7 +13,9 @@ from dotenv import load_dotenv
 load_dotenv() 
 
 # Setup database connection 
-DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db"
+DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db" # For Windows
+
+# DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db" # For Mac
 engine = create_engine(DATABASE_URI)
 
 # Setup Sendinblue API configuration

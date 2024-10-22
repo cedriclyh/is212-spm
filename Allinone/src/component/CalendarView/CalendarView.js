@@ -4,27 +4,39 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { Button } from '@mui/material'; // You can use any button component you prefer
-import { CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
-import { getValidRange, getTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { Block, CalendarToday, ViewAgenda } from '@mui/icons-material'; // Material icons for view switching
+import { getValidRange, getTeamEvents, getPersonalEvents, getBlockoutDates } from './CalendarUtils'; // Import utility functions
+import BlockoutPopup from './BlockoutPopup';
 
 export default function GoogleCalendarClone() {
   const [view, setView] = useState('dayGridMonth');
   const calendarRef = useRef(null); 
   const [teamEvents, setTeamEvents] = useState([]);
   const [personalEvents, setPersonalEvents] = useState([]);
+  const [blockouts, setBlockouts] = useState([]);
 
   useEffect(() => {
     const fetchEvents = async () => {
+      console.log("Fetching team events..."); // Debugging log
       const teamEvents = await getTeamEvents(); // Fetch the team events
-      // console.log("Fetched Events:", teamEvents.teamEvents); 
+      console.log("Fetched Team Events:", teamEvents); 
       setTeamEvents(teamEvents); // Update state with fetched events
-
+    
+      console.log("Fetching personal events..."); // Debugging log
       const personalEvents = await getPersonalEvents(); // Fetch the personal events
-      // console.log("Fetched Personal Events:", personalEvents.personalEvents); 
+      console.log("Fetched Personal Events:", personalEvents); 
       setPersonalEvents(personalEvents); // Update state with fetched events
     };
+
+    const fetchBlockoutDates = async () => {
+      const blockouts = await getBlockoutDates(view); // Fetch blockout dates
+      console.log("Fetched Blockouts:", blockouts);
+      setBlockouts(blockouts || []); // Update state with fetched blockout events
+    };
+
+    fetchBlockoutDates();
     fetchEvents(); // Call the fetch function
-  }, []); // Run once on mount
+  }, [view]); // Run once on mount
 
   // Get the current month
   const today = new Date();
@@ -42,7 +54,6 @@ export default function GoogleCalendarClone() {
     }
   };
 
-
   // State to manage which checkboxes are selected
   const [showPersonal, setShowPersonal] = useState(true); //Set to be checked by default
   const [showTeam, setShowTeam] = useState(true);
@@ -56,17 +67,17 @@ export default function GoogleCalendarClone() {
       setShowTeam(checked);
     }
   };
-
-  const blockedEvents = [
-    { id: 'grey1', start: '2024-10-04', end: '2024-10-05', allDay: true, display: 'background', title:'Blocked', classNames:['blocked-event'], color: '#808080' }, // Darker grey
-    { id: 'grey2', start: '2024-10-10', end: '2024-10-12', allDay: true, display: 'background', title:'Blocked',classNames:['blocked-event'], color: '#808080' }  // Darker grey
-  ];
+  
+  // const blockedEvents = [
+    // { id: 'grey1', start: '2024-10-04', end: '2024-10-05', allDay: true, display: 'background', title:'Blocked', classNames:['blocked-event'], color: '#808080' }, // Darker grey
+    // { id: 'grey2', start: '2024-10-10', end: '2024-10-12', allDay: true, display: 'background', title:'Blocked',classNames:['blocked-event'], color: '#808080' }  // Darker grey
+  // ];
 
   // Combine personal and team events based on checkbox states
   const filteredEvents = [
     ...(showPersonal ? personalEvents : []),
     ...(showTeam ? teamEvents : []),
-    ...blockedEvents // Add blocked events
+    ...blockouts // Add blocked events
   ];
 
   // Render the calendar
@@ -99,6 +110,7 @@ export default function GoogleCalendarClone() {
             <Button variant="contained" onClick={toggleView} startIcon={view === 'dayGridMonth' ? <ViewAgenda /> : <CalendarToday />}>
               {view === 'dayGridMonth' ? 'Week View' : 'Month View'}
             </Button> 
+            <BlockoutPopup/>
           </div>
             <FullCalendar
               ref={calendarRef} // Reference to the FullCalendar component
