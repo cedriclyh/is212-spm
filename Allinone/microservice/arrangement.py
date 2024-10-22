@@ -120,10 +120,10 @@ def get_all_arrangements():
         return jsonify({"message": "Failed to retrieve arrangements", "code": 500}), 500
 
 # Fetch a specific arrangement by ID
-@app.route('/get_arrangement/<int:arrangement_id>', methods=['GET'])
-def get_arrangement(arrangement_id):
+@app.route('/get_arrangement/<int:request_id>', methods=['GET'])
+def get_arrangement(request_id):
     try:
-        arrangement = Arrangement.query.filter_by(arrangement_id=arrangement_id).first()
+        arrangement = Arrangement.query.filter_by(request_id=request_id).first()
         if arrangement:
             return jsonify({
                 "message": "Arrangement retrieved successfully",
@@ -133,8 +133,8 @@ def get_arrangement(arrangement_id):
         else:
             return jsonify({"message": "Arrangement not found", "code": 404}), 404
     except Exception as e:
-        app.logger.error(f"Failed to retrieve arrangement with id {arrangement_id}: {e}")
-        return jsonify({'message': f'Failed to retrieve arrangement with id {arrangement_id}', 'code': 500}), 500
+        app.logger.error(f"Failed to retrieve arrangement with id {request_id}: {e}")
+        return jsonify({'message': f'Failed to retrieve arrangement with id {request_id}', 'code': 500}), 500
     
 #Retrieve a WFH request by staff
 @app.route('/get_arrangement/staff/<int:staff_id>', methods=['GET'])
