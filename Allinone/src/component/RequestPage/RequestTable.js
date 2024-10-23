@@ -28,6 +28,8 @@ const statusColorMap = {
   Approved: "success",
   Rejected: "danger",
   Pending: "warning",
+  Cancelled: "default",
+  Withdrawn: "secondary",
 };
 
 const INITIAL_VISIBLE_COLUMNS = ["arrangement_date", "timeslot", "manager", "status", "actions"];
@@ -147,6 +149,8 @@ export default function RequestTable() {
               <DropdownMenu>
                 <DropdownItem>View</DropdownItem>
                 {request.status === "Pending" && <DropdownItem>Edit</DropdownItem>}
+                {request.status === "Pending" && <DropdownItem>Cancel</DropdownItem>}
+                {request.status === "Approved" && <DropdownItem>Withdraw</DropdownItem>}
               </DropdownMenu>
             </Dropdown>
           </div>
