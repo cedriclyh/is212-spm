@@ -14,6 +14,8 @@ const columns = [
     {name: "approved", uid: "Approved"},
     {name: "rejected", uid: "Rejected"},
     {name: "pending", uid: "Pending"},
+    {name: "withdrawn", uid: "Withdrawn"},
+    {name: "cancelled", uid: "Cancelled"},
   ];
 
   // for axios

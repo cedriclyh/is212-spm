@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import {
   DatePicker,
   Chip,
@@ -16,12 +17,21 @@ import {
   TableBody,
   TableColumn,
   TableRow,
-  TableCell
+  TableCell,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure
 } from "@nextui-org/react";
 import { extractWeekdays, checkAvailability } from "./NewRequestUtils";
 import { getLocalTimeZone, today } from "@internationalized/date";
 
 const individualDates = [];
+
+var modalTitle = "Error Message";
+var modalMsg = "";
 
 const statusColorMap = {
   Available: "success",
@@ -39,6 +49,13 @@ export default function NewRequest() {
   const [extractedDates, setExtractedDates] = useState([]);
   const [availability, setAvailability] = useState({});
   const [reason, setReason] = useState('')
+
+  // for modal
+  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+  const navigate = useNavigate();
+  const [countdown, setCountdown] = useState(3);
+  const [buttonColor, setButtonColor] = useState('danger');
+  const [showCountdown, setShowCountdown] = useState(false);
 
   const blockOutDates = React.useMemo(() => ["21-10-2024"], []);
 
@@ -59,7 +76,7 @@ export default function NewRequest() {
     // Only add if it's a valid date and not already in the list
     if (formattedDate && !inputDates.includes(formattedDate)) {
       setInputDates([...inputDates, formattedDate]);
-      setSelectedDate(null); // Clear DatePicker after selection
+      setSelectedDate(null);
     }
   };
 
@@ -69,11 +86,11 @@ export default function NewRequest() {
   };
 
   const handleSelection = (key) => {
-    setSelectedTimeslot(key); // Update the selected timeslot value
+    setSelectedTimeslot(key);
   };
 
   const handleSelectionDayOfTheWeek = (key) => {
-    setSelectedDayOfTheWeek(key); // Update week day value
+    setSelectedDayOfTheWeek(key);
   };
 
   const handleRecurringChange = (value) => {
@@ -113,13 +130,98 @@ export default function NewRequest() {
   }, [startDate, endDate, SelectedDayOfTheWeek, isRecurring]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); 
-    
-    
-  }
+
+    if (isRecurring) {
+      const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+      
+      if (!validDays.includes(SelectedDayOfTheWeek)) {
+        modalMsg = "Please select a valid recurring day (Monday to Friday)." ;
+        onOpen();
+        return; 
+      }
+  
+      if (!startDate || !endDate) {
+        modalMsg = "Please select both a start date and an end date.";
+        onOpen();
+        return; 
+      }
+    } else {
+
+      if (inputDates.length === 0) {
+        modalMsg = "Please select at least one WFM date.";
+        onOpen();
+        return; 
+      }
+  
+      if (selectedTimeslot === "Choose a Timeslot") {
+        modalMsg = "Please select a timeslot.";
+        onOpen();
+        return; 
+      }
+    };
+
+    const today = new Date();
+    const formattedRequestDate = today.toISOString().split('T')[0];
+
+    const formData = { 
+      "staff_id" : 140944,  // change staff_id
+      "request_date" : formattedRequestDate, 
+      "arrangement_date" : inputDates, 
+      "recurring_day": SelectedDayOfTheWeek, 
+      "start_date": startDate, 
+      "end_date": endDate, 
+      "timeslot": selectedTimeslot, 
+      "reason": reason,
+      "isRecurring": isRecurring,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5004", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        modalMsg = "Form processed successfully " + data.message;
+        modalTitle = "Success!";
+        setButtonColor("success");
+        setShowCountdown(true);
+        onOpen(); 
+
+        // Start the countdown
+        let countdownTimer = 3;
+        setCountdown(countdownTimer);
+
+        const timer = setInterval(() => {
+          countdownTimer--;
+          setCountdown(countdownTimer);
+
+          if (countdownTimer === 0) {
+            clearInterval(timer);
+            navigate("/requests");
+          }
+        }, 1000);
+
+        return () => clearInterval(timer);
+
+      } else {
+        modalMsg = "Error submitting form";
+        onOpen();
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      modalMsg = "Error submitting form " + error.message;
+      onOpen();
+    }
+  };
+  
 
   return (
-    <form className="space-y-12" onSubmit={handleSubmit}>
+    <div>
       {/* Form Container with Border, Padding, and Rounded Corners */}
       <div className="space-y-6 bg-white border border-gray-300 shadow-lg p-6" style={{ padding: "10px 20px", borderRadius: "10px" }}>
         {/* Form Title */}
@@ -136,7 +238,6 @@ export default function NewRequest() {
             <RadioGroup 
               orientation="horizontal" 
               defaultValue="No" 
-              isRequired={true}
               className="space-x-4 mt-2"
               onValueChange={handleRecurringChange} 
             >
@@ -151,6 +252,7 @@ export default function NewRequest() {
               <div className="mt-4" style={{ marginTop: "24px" }}>
                 <p>Select WFM Date</p>
                 <DatePicker
+                  aria-label="Select WFM Date"
                   className="mt-2 w-full max-w-[284px]"
                   labelPlacement="outside"
                   variant="bordered"
@@ -158,7 +260,6 @@ export default function NewRequest() {
                   value={selectedDate}
                   minValue={today(getLocalTimeZone()).subtract({months: 2})}
                   maxValue={today(getLocalTimeZone()).add({months: 3})}
-                  isRequired={true}
                   onChange={(date) => {
                     if (date && date.year && date.month && date.day) {
                       setSelectedDate(date);
@@ -178,7 +279,7 @@ export default function NewRequest() {
               {/* Timeslot Selection */}
               <div className="mt-4" style={{ marginTop: "24px" }}>
                 <p>Timeslot</p>
-                <Dropdown isRequired={true}>
+                <Dropdown aria-label="Select Timeslot">
                   <DropdownTrigger>
                     <Button variant="bordered" className="mt-2">
                       {selectedTimeslot || "Choose a Timeslot"}
@@ -224,10 +325,11 @@ export default function NewRequest() {
               <div className="mt-4" style={{ marginTop: "24px" }}>
                   <p>Select Date Range</p>
                   <DateRangePicker
+                    aria-label="Select Date Range"
                     visibleMonths={2}
                     variant="bordered"
                     className="mt-2"
-                    isRequired={true}
+                    value={{ start: startDate, end: endDate }}
                     minValue={today(getLocalTimeZone()).subtract({months: 2})}
                     maxValue={today(getLocalTimeZone()).add({months: 3})}
                     onChange={({ start, end }) => {
@@ -240,7 +342,7 @@ export default function NewRequest() {
               {/* Timeslot Selection */}
               <div className="mt-4" style={{ marginTop: "24px" }}>
                 <p>Timeslot</p>
-                <Dropdown isRequired={true}>
+                <Dropdown aria-label="Select Timeslot">
                   <DropdownTrigger>
                     <Button variant="bordered" className="mt-2">
                       {selectedTimeslot || "Choose a Timeslot"}
@@ -257,7 +359,7 @@ export default function NewRequest() {
               {/* Select which days of the week for recurring dates */}
               <div className="mt-4" style={{ marginTop: "24px" }}>
                   <p>Select Recurring Week Day</p>
-                  <Dropdown isRequired={true}> 
+                  <Dropdown aria-label="Select Recurring Week Day"> 
                   <DropdownTrigger>
                     <Button variant="bordered" className="mt-2">
                       {SelectedDayOfTheWeek || "Choose the Day of the Week"}
@@ -315,6 +417,7 @@ export default function NewRequest() {
           {/* Submit Button */}
           <div className="mt-4 flex gap-2"  style={{ marginTop: "24px" }}>
             <Button
+              aria-label="Reset Form"
               color="default"
               onPress={() => {
                 setInputDates([]);
@@ -328,13 +431,75 @@ export default function NewRequest() {
             >
               Reset
             </Button>
-            <Button color="primary">
+            <Button color="primary" onPress={handleSubmit} aria-label="Submit Form">
               Submit
             </Button>  
           </div>
 
         </div>
+          
+        <Modal 
+          backdrop="opaque" 
+          isOpen={isOpen} 
+          onOpenChange={(isOpen) => {
+            onOpenChange(isOpen);
+            if (!isOpen && buttonColor === "success") {
+              navigate("/requests");  // Navigate immediately if modal is closed after success
+            }
+          }}
+          motionProps={{
+            variants: {
+              enter: {
+                y: 0,
+                opacity: 1,
+                transition: {
+                  duration: 0.3,
+                  ease: "easeOut",
+                },
+              },
+              exit: {
+                y: -20,
+                opacity: 0,
+                transition: {
+                  duration: 0.2,
+                  ease: "easeIn",
+                },
+              },
+            }
+          }}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader 
+                  className="flex flex-col gap-1"
+                  placement="top"
+                  >
+                    {modalTitle}
+                </ModalHeader>
+                <ModalBody>
+                  <p>{modalMsg}</p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button 
+                      color={buttonColor}
+                      variant="light"
+                      onPress={() => {
+                        onClose();
+                        if (buttonColor === "success") {
+                          navigate("/requests");
+                        }
+                      }}
+                    >
+                    Close {showCountdown && `(${countdown})`}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
       </div>
-    </form>
+    </div>
   );
 }
