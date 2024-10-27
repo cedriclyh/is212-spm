@@ -1,4 +1,4 @@
-import axios from 'axios';
+// import axios from 'axios';
 
 const columns = [
     {name: "ARRANGEMENT DATE", uid: "arrangement_date", sortable: true},

@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '../Navbar/Navbar';
 import Sidebar from '../Sidebar/Sidebar';
 import './TeamRequestPage.css';
+import TeamRequestTable from './TeamRequest';
 
 
 export default function TeamRequestPage() {
@@ -17,7 +18,7 @@ export default function TeamRequestPage() {
         </div>
 
         <div className="page-content">
-          <p>hi</p>
+          <TeamRequestTable />
         </div>
       </div>
 </div>
