@@ -3,7 +3,7 @@ import './CalendarView.css'; // Import the CSS file
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getValidRange, getStaffTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { getValidRange, getManagerTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
 import EventFilter from './EventFilter';
 
@@ -18,7 +18,7 @@ export default function WFHcalendar() {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const teamEvents = await getStaffTeamEvents(); 
+      const teamEvents = await getManagerTeamEvents(); 
       setTeamEvents(teamEvents); 
 
       const personalEvents = await getPersonalEvents(); 

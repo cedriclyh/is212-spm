@@ -77,8 +77,9 @@ export const getStaffInformation = (data) => {
   const position = data.position;
   const staff_fname = data.staff_fname;
   const staff_lname = data.staff_lname;
+  const staff_id = data.staff_id;
 
-  return { manager_id, role_num, dept, position, staff_fname, staff_lname };
+  return { manager_id, role_num, dept, position, staff_fname, staff_lname, staff_id };
 };
   
 // Retrieve employee's Personal Events
@@ -91,7 +92,6 @@ export const getPersonalEvents = async () => {
       }
     });
     if (!response.ok) {
-      console.log(response);
       throw new Error('Failed to fetch data');
     }
 
@@ -153,12 +153,61 @@ export const getStaffTeamEvents = async () => {
       const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
       const title = await getArrangementName(req.staff_id) || 'Team Event';
       return {
-        id: req.staff_id,
         title,  
         start,
         end,
         allDay: false,
         backgroundColor: '#4caf50',
+      };
+    })
+  );
+
+  console.log("Staff's Team Events:", staffTeamEvents); // Log team events for debugging
+  return staffTeamEvents.filter(event=>event !=null);
+  } catch (error) {
+    console.error('Failed to fetch staff events:', error);
+  }
+};    
+
+// Retrieve reporting Manager's TeamEvents
+export const getManagerTeamEvents = async () => {
+  try {
+    const response = await fetch('http://localhost:5003/get_all_requests', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+
+    const data = await response.json();
+    const requests = data.data;
+    const {staff_id} = await getEmployeeInfo(userId);
+
+    // Map the requests into event categories 
+    const staffTeamEvents = await Promise.all(
+    requests.map(async (req) => {
+      if (req.staff_id === userId) {
+        return null; // remove any requests made by the manager himself
+      }
+      if (staff_id !== req.manager_id) {
+        return null; // Skip this request if manager_id doesn't match with the manager himself
+      }
+      if (!req.timeslot || !req.arrangement_date) {
+        console.warn("Missing timeslot or arrangement_date in request:", req);
+        return null; // Skip this request if data is missing
+      }
+      const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
+      const title = await getArrangementName(req.staff_id) || 'Team Event';
+      return {
+        title,  
+        start,
+        end,
+        allDay: false,
+        backgroundColor: getBackgroundColor(req.status),
       };
     })
   );
