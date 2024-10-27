@@ -6,12 +6,14 @@ import Login from './component/login'
 import RequestPage  from './component/RequestPage/RequestPage';
 import NewRequestPage from './component/NewRequestPage/NewRequestPage';
 import TeamRequestPage from './component/TeamRequest/TeamRequestPage';
+import Navbar from './component/Navbar/Navbar'; 
 
 
 
 const App = () => {
   return(
     <BrowserRouter>
+      <Navbar />
       <Routes>
           <Route path="/" element={ <CalenderView /> } /> {/* Default path */}
           <Route path="/login" element={ <Login /> } />

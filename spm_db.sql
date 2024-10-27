@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS Request_Log (
     status VARCHAR(50) NOT NULL DEFAULT 'Pending',           
     reason VARCHAR(255) NOT NULL,
     remarks VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
@@ -66,12 +67,21 @@ CREATE TABLE IF NOT EXISTS Arrangement (
 -- Block Out Dates Table
 CREATE TABLE IF NOT EXISTS Block_Out_Dates (
     blockout_id INT AUTO_INCREMENT,
-    blockout_date DATE NOT NULL,
-    title VARCHAR(255),
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    blockout_description VARCHAR(255),
+    timeslot VARCHAR(50) NOT NULL,
     PRIMARY KEY (blockout_id)
 );
 
-
+-- Request_Dates Table for recurring dates
+CREATE TABLE IF NOT EXISTS RequestDates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    request_id INT NOT NULL,
+    arrangement_date DATE NOT NULL,
+    FOREIGN KEY (request_id) REFERENCES Request_log(request_id)
+);
 
 -- User_Role Values
 -- IMPT NEED TO IRON OUT
@@ -650,7 +660,7 @@ INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
 INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason) VALUES
 (1, 140002, 140894, '2024-09-29', '2024-10-01', "AM", 'Approved', "Medical Appointment"),
 (2, 140003, 140894, '2024-09-29', '2024-10-01', "PM", 'Approved', "Lazy"),
-(3, 140004, 140894, '2024-09-19', '2024-10-01', "FULL", 'Pending', ''),
+(3, 140004, 140894, '2024-09-19', '2024-10-01', "FULL", 'Approved', ''),
 (4, 140004, 140894, '2024-08-09', '2024-10-02', "FULL", 'Pending', ''),
 (5, 140004, 140894, '2024-09-29', '2024-10-03', "PM", 'Rejected', ''),
 (6, 140004, 140894, '2024-07-09', '2024-12-01', "AM", 'Pending', ''),
@@ -667,9 +677,32 @@ INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrange
 INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reason) VALUES
 (1, 140002, '2024-10-01', "AM", "Medical Appointment"),
 (2, 140003, '2024-10-01', "PM", "Lazy"),
-(3, 140004, '2024-10-01', "FULL", '');
+(3, 140004, '2024-10-01', "FULL", ''),
+(7, 140004, '2025-01-01', "FULL", ''),
+(8, 140004, '2024-10-11', "PM", '');
 
--- Block_Out_Dates values
-INSERT INTO Block_Out_Dates (blockout_date, title) VALUES
-('2024-12-25', 'Christmas'),
-('2024-11-11', 'Veterans Day');
+-- RequestDates values
+INSERT INTO RequestDates (id, request_id, arrangement_date) VALUES
+(1, 1, '2024-10-01'),
+(2, 2, '2024-10-01'),
+(3, 3, '2024-10-01'),
+(4, 4, '2024-10-02'),
+(5, 5, '2024-10-03'),
+(6, 6, '2024-12-01'),
+(7, 7, '2025-01-01'),
+(8, 8, '2024-10-11'),
+(9, 9, '2024-10-12'),
+(10, 10, '2024-10-15'),
+(11, 11, '2024-10-15'),
+(12, 12, '2024-10-15'),
+(13, 13, '2024-10-15');
+
+-- Block_Out_Dates values (with description)
+INSERT INTO Block_Out_Dates (start_date, end_date, timeslot, title, blockout_description) VALUES
+('2024-12-25', '2024-12-25', 'FULL', 'Christmas', 'Public holiday'),
+('2024-11-11', '2024-11-11', 'FULL', 'Veterans Day', 'Public holiday');
+
+-- Block_Out_Dates values (without description)
+-- INSERT INTO Block_Out_Dates (blockout_date, title) VALUES
+-- ('2024-12-25', 'Christmas'),
+-- ('2024-11-11', 'Veterans Day');

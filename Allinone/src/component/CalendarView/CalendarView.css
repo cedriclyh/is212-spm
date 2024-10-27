@@ -41,12 +41,29 @@
   height: 100px;   
   max-height: 100px;
   position: relative;
+  cursor: pointer;
 }
 
 /* Ensure that the event list inside the cell respects the height */
-/* .fc-daygrid-event-harness {
-  max-height: 80px; /* Adjust this value to allow space for events 
-} */
+.fc-daygrid-event-harness {
+  max-height: 80px; /* Adjust this value to allow space for events */
+}
+
+.fc-event {
+  border: none;
+}
+
+/* Styling for blocked events */
+.fc-event.blocked-event {
+  background-color: #4577e4 !important;
+  border: none !important; /* Remove border */
+  color: white !important; /* Text color for better contrast */
+  font-weight: bold;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
   /* Styles for the grey background "Blocked" events */
 /* .fc-event.blocked-event .fc-event-title {
@@ -55,25 +72,10 @@
   text-align: center;
   font-size: 40px;
   margin-top: 10px;
-} */
+}
 
-/* .fc-event.blocked-event {
+.fc-event.blocked-event {
   display: flex;
   justify-content: center;
   align-items: center;
-} */
-
-.fc-toolbar {
-  min-height: 20px; /* Set your desired minimum height */
-  height: 40px; /* Adjust as needed */
-}
-
-.fc-toolbar button {
-  font-size: 0.1rem; /* Change font size for the buttons */
-}
-
-.fc-slats {
-  tr:nth-child(n+8) {
-      height: 68px;
-  }
 }
