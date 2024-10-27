@@ -174,7 +174,7 @@ export const getPersonalEvents = async () => {
 // Retrieve all blockout dates
 export const getBlockoutDates = async (currentView) => {
   try {
-    const response = await fetch('http://localhost:5005/get_blockouts', {
+    const response = await fetch('http://localhost:5010/get_blockouts', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

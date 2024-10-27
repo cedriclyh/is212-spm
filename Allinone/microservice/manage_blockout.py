@@ -15,11 +15,13 @@ db = SQLAlchemy(app)
 CORS(app)
 
 EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
+BLOCKOUT_URL = "http://localhost:5010"
 REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5005"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
 
-from arrangement import BlockoutDates, Arrangement
+from arrangement import Arrangement
+from blockout import BlockoutDates
 from employee import Employee
 
 @app.route('/manage_blockout', methods=['POST'])
@@ -81,7 +83,7 @@ def manage_blockout():
         # 4. Reject all approved/pending requests that coincide with blockout 
         
         # 5. Create blockout via arrangement.py
-        post_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_blockout", json=data)
+        post_response = requests.post(f"{BLOCKOUT_URL}/create_blockout", json=data)
 
         if post_response.status_code != 200:
             print("Post response:", post_response.json())
@@ -93,6 +95,5 @@ def manage_blockout():
         app.logger.error(f"Failed to manage blockout: {e}")
         return jsonify({"message": "Internal server error", "code": 500}), 500
 
-    
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5012, debug=True)  
