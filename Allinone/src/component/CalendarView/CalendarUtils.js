@@ -10,7 +10,7 @@ export const getValidRange = (today) => {
 }
 
 // All functions from here are used for fetching events
-const userId = 140004; // Hardcoded user ID for demo purposes
+const userId = 140894; // Hardcoded user ID for demo purposes
 
 // Calculate start and end times based on timeslot
 function getTimeRange(timeslot, startDate, endDate) {
@@ -243,22 +243,22 @@ export const getBlockoutDates = async (currentView) => {
 }
 
 // TO FIX: create a loop to check the list of staff_id under manager_id until it hits dead end.
-async function getListofStaffInMyDept(managerID){
-  const apiUrl = `http://127.0.0.1:5002/users/team/${managerID}`;
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error(`Error fetching user data: ${response.status}`);
-      }
-      const data = await response.json(); 
-      const unfilteredData = data.data;
-      const staffList = []; 
-      for (i in unfilteredData){
-        staffList.append(unfilteredData[i].staff_id);
-      }
-      return staffList;
-    } catch (error) {
-      console.error("Failed to fetch list of staff in the department:", error);
-      return null; 
-    }
-}
+// async function getListofStaffInMyDept(managerID){
+//   const apiUrl = `http://127.0.0.1:5002/users/team/${managerID}`;
+//     try {
+//       const response = await fetch(apiUrl);
+//       if (!response.ok) {
+//         throw new Error(`Error fetching user data: ${response.status}`);
+//       }
+//       const data = await response.json(); 
+//       const unfilteredData = data.data;
+//       const staffList = []; 
+//       for (i in unfilteredData){
+//         staffList.append(unfilteredData[i].staff_id);
+//       }
+//       return staffList;
+//     } catch (error) {
+//       console.error("Failed to fetch list of staff in the department:", error);
+//       return null; 
+//     }
+// }
