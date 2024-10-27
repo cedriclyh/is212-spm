@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS Arrangement (
     arrangement_date DATE NOT NULL,
     timeslot VARCHAR(50) NOT NULL,  
     reason VARCHAR(255) NOT NULL,
+    manager_id INT NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
@@ -674,12 +675,12 @@ INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrange
 
 -- Arrangement values
 -- meaning approved requests
-INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reason) VALUES
-(1, 140002, '2024-10-01', "AM", "Medical Appointment"),
-(2, 140003, '2024-10-01', "PM", "Lazy"),
-(3, 140004, '2024-10-01', "FULL", ''),
-(7, 140004, '2025-01-01', "FULL", ''),
-(8, 140004, '2024-10-11', "PM", '');
+INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reason, manager_id) VALUES
+(1, 140002, '2024-10-01', "AM", "Medical Appointment",'140894'),
+(2, 140003, '2024-10-01', "PM", "Lazy", '140894'),
+(3, 140004, '2024-10-01', "FULL", '','140894'),
+(7, 140004, '2025-01-01', "FULL", '','140894'),
+(8, 140004, '2024-10-11', "PM", '','140894');
 
 -- RequestDates values
 INSERT INTO RequestDates (id, request_id, arrangement_date) VALUES

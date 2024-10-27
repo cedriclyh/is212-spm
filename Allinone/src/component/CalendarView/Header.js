@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@mui/material';
 import { CalendarToday, ViewAgenda } from '@mui/icons-material';
+import BlockoutPopup from './BlockoutPopup';
 
 export default function CalendarHeader({ view, toggleView }) {
 
@@ -16,6 +17,7 @@ export default function CalendarHeader({ view, toggleView }) {
         >
           {view === 'dayGridMonth' ? 'Week View' : 'Month View'}
         </Button>
+        <BlockoutPopup/>
       </div>
     </div>
   );

@@ -64,10 +64,6 @@ export default function GoogleCalendarClone() {
     }
   };
 
-  console.log("Personal Events:", personalEvents);
-  console.log("Team Events:", teamEvents);
-  console.log("Filtered Events:", filteredEvents);
-
   // Render the calendar
   return (
     <div className="calendar-container">
@@ -82,6 +78,7 @@ export default function GoogleCalendarClone() {
             plugins={[dayGridPlugin, timeGridPlugin]}
             initialView={view}
             events={filteredEvents}
+            slotEventOverlap = {false}
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',
