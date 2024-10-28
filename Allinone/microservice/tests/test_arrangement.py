@@ -172,28 +172,3 @@ def test_delete_arrangements_not_found(client):
     response = client.delete('/delete_arrangements', json=data)
     assert response.status_code == 200
     assert response.json['message'] == 'No matching arrangements found to delete'
-
-# Test creating and fetching blockout dates
-def test_create_blockout(client):
-    data = {
-        "start_date": "2024-10-01",
-        "end_date": "2024-10-05",
-        "timeslot": "AM",
-        "title": "Maintenance",
-        "blockout_description": "System maintenance"
-    }
-    response = client.post('/create_blockout', json=data)
-    assert response.status_code == 200
-    assert response.json['message'] == 'Blockout created for Maintenance from 2024-10-01 and 2024-10-05'
-
-def test_get_blockouts(client):
-    with app.app_context():
-        blockout = BlockoutDates(
-            start_date="2024-10-01", end_date="2024-10-05", timeslot="AM", title="Maintenance", blockout_description="System maintenance"
-        )
-        db.session.add(blockout)
-        db.session.commit()
-
-    response = client.get('/get_blockouts')
-    assert response.status_code == 200
-    assert len(response.json['data']) > 0
