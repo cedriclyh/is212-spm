@@ -34,7 +34,7 @@ const statusColorMap = {
 
 const INITIAL_VISIBLE_COLUMNS = ["arrangement_date", "timeslot", "manager", "status", "actions"];
 
-export default function TeamRequestTable() {
+export default function TeamRequest() {
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(new Set(INITIAL_VISIBLE_COLUMNS));

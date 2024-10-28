@@ -1,5 +1,5 @@
 import {Navbar, NavbarBrand, NavbarContent, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar} from "@nextui-org/react";
-import profilePic from "./profile_pic.png"
+import profilePic from "../Icons/profile_pic.png"
 
 export default function App() {
   return (
@@ -26,12 +26,8 @@ export default function App() {
               <p className="font-semibold">Signed in as</p>
               <p className="font-semibold">zoey@example.com</p>
             </DropdownItem>
-            <DropdownItem key="settings">My Settings</DropdownItem>
-            <DropdownItem key="team_settings">Team Settings</DropdownItem>
-            <DropdownItem key="analytics">Analytics</DropdownItem>
-            <DropdownItem key="system">System</DropdownItem>
-            <DropdownItem key="configurations">Configurations</DropdownItem>
-            <DropdownItem key="help_and_feedback">Help & Feedback</DropdownItem>
+            <DropdownItem key="Account">My Account</DropdownItem>
+            <DropdownItem key="settings">Settings</DropdownItem>
             <DropdownItem key="logout" color="danger">
               Log Out
             </DropdownItem>
