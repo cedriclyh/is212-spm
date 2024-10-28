@@ -2,10 +2,11 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
 from flask_cors import CORS
+import requests
 import os
 import sys
 
-from datetime import date
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 
@@ -18,6 +19,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 CORS(app)
+
+MANAGE_REQUEST_URL = "http://localhost:5010"
 
 # Arrangement model
 class Arrangement(db.Model):
@@ -127,10 +130,14 @@ def get_arrangements_by_staff_id(staff_id):
 
 # Delete arrangments by request_id
 @app.route('/delete_arrangements', methods=['DELETE'])
-def delete_arrangement():
+def delete_arrangements(arrangement_ids=[]):
+    print(f"[delete_arrangements] Arrangement IDs: {arrangement_ids}")
     try:
-        data = request.json
-        arrangement_ids = data.get("arrangement_ids")
+        if arrangement_ids == []:
+            print(f"[delete_arrangements] Request Json: {request.json}")
+            data = request.json
+            arrangement_ids = data.get("arrangement_ids")
+
         print("[delete_arrangements] Arrangement IDs:", arrangement_ids)
         print("Deleting arrangement...")
 
@@ -160,37 +167,80 @@ def delete_arrangement():
 # Can provide reason for revoking approved arrangement
 # # Withdrawing arrangment must >24 hours start time
 # # withdrawal must be done withon 1 month ago and 3 months forward 
-@app.route('/revoke_arrangement')   
-def revoke_arrangement(staff_id, revoke_dates,):
+@app.route('/revoke_arrangements', methods=['POST'])   
+def revoke_arrangements():
+    
     data = request.json
+    # manager_id = data.get("manager_id")
+    staff_id = data.get("staff_id")
+    revoke_dates = data.get("revoke_dates")
+    revoke_dates = [datetime.strptime(revoke_date, '%Y-%m-%d').date() for revoke_date in revoke_dates]
+    
     try: 
-        
-        for revoke_date in revoke_dates:
         # 1. Check if arrangement is within 1 month ago and 3 months forward
-            checked_date_response = check_date(revoke_date)
-            if checked_date_response.json.code != 200:
-                return checked_date_response
+        checked_date_response, status_code = check_date(revoke_dates)
+        if status_code != 200:
+            return checked_date_response
+    
+         # 2. Delete arrangement from db
+        arrangements_to_delete = Arrangement.query.filter(
+            Arrangement.staff_id==staff_id,
+            Arrangement.arrangement_date.in_(revoke_dates)
+            ).all()   
+        
+        print(f"Arrangements to delete: {arrangements_to_delete}")
+
+        request_ids = [arrangement.request_id for arrangement in arrangements_to_delete]
+        print(f"Request IDs: {request_ids}")
+
+        print("Deleting arrangements...")
+        delete_response, delete_status_code = delete_arrangements(request_ids)
+        
+        if delete_status_code != 200:
+            return delete_response
+
+        print("All arrangements succesfully deleted")
+
+        #3. Update request_log list 
+        print("Updating request statuses...")
+        for request_id in request_ids:
+            print(f"Updating status for Request ID {request_id}")
+            update_request_data = {
+                "request_id": request_id,
+                "status": "Withdrawn",
+                "disable_notification": True
+            }
+
+            update_request_response = requests.put(f"{MANAGE_REQUEST_URL}/manage_request", json=update_request_data)        
+            print(update_request_response.json())
+            if(update_request_response.status_code) != 200:
+                print(f"Failed to update request status for Request ID {request_id}")
+                return update_request_response
             
-        # 2. Delete arrangement from db
-            arrangements_to_delete = Arrangement.query.filter_by(staff_id=staff_id,
-                                                       arrangement_date=revoke_date
-                                                       ).all()     
-            arrange_ids = [arrangement.request_id for arrangement in arrangements_to_delete]
+        print("All request statuses successfully updated.")
             
-        #2. Update list 
+        return jsonify({"message": f"All arrangments revoked successfully", "code": 200}), 200
+    
 
     except Exception as e:
         app.logger.error(f"Error revoking arrangments: {e}")
+        return jsonify({'message': 'Failed to revoke arrangements', 'code': 500}), 500
+
 
 # Checks for 1 month ago and 3 months back
-def check_date(date_to_check):
-    # if date_to_check <= date.today() + relativedelta(days=+1):
-        # return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement that", "code": 500}), 500
-    if date_to_check <= date.today() + relativedelta(months=-1):
-        return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement more than 1 month past the arrangement date.", "code": 500}), 500
-    if date_to_check >= date.today() + relativedelta(months=+3):
-        return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement more than 3 months ahead of current date.", "code": 500}), 500
-
+def check_date(dates_to_check):
+    for date_to_check in dates_to_check:
+        print("Checking if date is within 1 month ago and 3 months back...")
+        # if date_to_check <= date.today() + relativedelta(days=+1):
+            # return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement that", "code": 500}), 500
+        if date_to_check <= date.today() + relativedelta(months=-1):
+            return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement more than 1 month past the arrangement date.", "code": 500}), 500
+        if date_to_check >= date.today() + relativedelta(months=+3):
+            return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement more than 3 months ahead of current date.", "code": 500}), 500
+    
+    print("ALl arrangements are eligible to be revoked.")
+    return jsonify({"message": f"All arrangement dates are eligible to be revoked.", "code": 200}), 200
+ 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005, debug=True)  

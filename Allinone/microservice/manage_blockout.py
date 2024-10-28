@@ -15,7 +15,7 @@ db = SQLAlchemy(app)
 CORS(app)
 
 EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-BLOCKOUT_URL = "http://localhost:5010"
+BLOCKOUT_URL = "http://localhost:5014/blockout"
 REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5005"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"

@@ -1,5 +1,7 @@
 import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; // For date manipulation
 
+const BLOCKOUT_URL = "http://localhost:5010/blockout"
+
 // Define valid range (2 months back, 3 months forward)
 export const getValidRange = (today) => {
     const startOfCurrentMonth = startOfMonth(today);
@@ -101,7 +103,7 @@ export const getTeamEvents = async () => {
       const title = await getArrangementName(req.staff_id) || 'Team Event';
 
       return {
-        id: req.staff_id,
+        id: `${req.staff_id}-${req.arrangement_date}`, // Create a unique ID per date to show all 
         title,  
         start,
         end,
@@ -151,7 +153,7 @@ export const getPersonalEvents = async () => {
       const title = await getArrangementName(req.staff_id) || 'Team Event';
 
       return {
-        id: req.staff_id,
+        id: `${req.staff_id}-${req.arrangement_date}`, // Create a unique ID per date
         title,  
         start,
         end,
@@ -174,7 +176,7 @@ export const getPersonalEvents = async () => {
 // Retrieve all blockout dates
 export const getBlockoutDates = async (currentView) => {
   try {
-    const response = await fetch('http://localhost:5010/get_blockouts', {
+    const response = await fetch(`${BLOCKOUT_URL}/get_blockouts`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

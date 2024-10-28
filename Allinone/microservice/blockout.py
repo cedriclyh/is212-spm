@@ -38,7 +38,7 @@ class BlockoutDates(db.Model):
     }
 
 # Create new blockout dates
-@app.route('/create_blockout', methods=['POST'])
+@app.route('/blockout/create_blockout', methods=['POST'])
 def blockDate():
     try:
         data = request.json
@@ -75,7 +75,7 @@ def blockDate():
         return jsonify({'message': 'Failed to create blockout', 'code': 500}), 500
     
 # Retrieve all block out dates
-@app.route('/get_blockouts', methods=['GET'])
+@app.route('/blockout/get_blockouts', methods=['GET'])
 def get_blockouts():
     try:
         blockouts = BlockoutDates.query.all()
@@ -101,7 +101,7 @@ def fetch_blockout_by_date(query_start_date, query_end_date):
         app.logger.error(f"Error fetching blockouts for dates: {query_start_date} to {query_end_date}: {e}")
         return None
 
-@app.route('/get_blockout/date/<string:query_start_date><string:query_end_date>', methods=['GET'])
+@app.route('/blockout/get_blockout/date/<string:query_start_date><string:query_end_date>', methods=['GET'])
 def get_blockout_by_date(query_start_date, query_end_date):
     blockout = fetch_blockout_by_date(query_start_date, query_end_date)
     if blockout:
@@ -110,4 +110,4 @@ def get_blockout_by_date(query_start_date, query_end_date):
         return jsonify({'message': 'No blockout date found for given date', 'data': False})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5010, debug=True)  
+    app.run(host="0.0.0.0", port=5014, debug=True)  

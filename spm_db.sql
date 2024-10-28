@@ -663,14 +663,20 @@ INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrange
 (10, 140004, 140894, '2024-08-30', '2024-10-15', "FULL", 'Pending', ''),
 (11, 140004, 140894, '2024-08-30', '2024-10-15', "PM", 'Pending', ''),
 (12, 130002, 130002, '2024-10-31', '2024-10-15', "FULL", 'Pending', ''),
-(13, 130002, 130002, '2024-11-01', '2024-10-15', "FULL", 'Pending', '');
+(13, 130002, 130002, '2024-11-01', '2024-10-15', "FULL", 'Pending', ''),
+(14, 140004, 140894, '2024-10-01', '2024-10-02', "FULL", 'Approved', ''),
+(15, 140004, 140894, '2024-10-02', '2024-10-04', "FULL", 'Approved', ''),
+(16, 140004, 140894, '2024-10-03', '2024-10-21', "FULL", 'Approved', '');
 
 -- Arrangement values
 -- meaning approved requests
 INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reason) VALUES
 (1, 140002, '2024-10-01', "AM", "Medical Appointment"),
 (2, 140003, '2024-10-01', "FULL", "Lazy"),
-(3, 140004, '2024-10-01', "FULL", '');
+(3, 140004, '2024-10-01', "FULL", ''),
+(14, 140004, '2024-10-02', "FULL", ''),
+(15, 140004, '2024-10-04', "FULL", ''),
+(16, 140004, '2024-10-21', "FULL", '');
 
 -- Block_Out_Dates values (with description)
 INSERT INTO Block_Out_Dates (start_date, end_date, timeslot, title, blockout_description) VALUES
