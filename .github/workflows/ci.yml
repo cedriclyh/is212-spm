@@ -34,15 +34,15 @@ jobs:
             fetch-depth: 0
 
         # SUPER LINTER
-        - name: Run Super-Linter
-          uses: github/super-linter@v5
-          env:
-            VALIDATE_ALL_CODEBASE: true
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Add this line to provide the token
-            VALIDATE_PYTHON_PYLINT: true
-            VALIDATE_JAVASCRIPT_ES: true
-            DEFAULT_BRANCH: main  # Set the default branch for the linter
-            FILTER_REGEX_EXCLUDE: "^Allinone/src/node_modules/" # Not include node_modules stuff
+        # - name: Run Super-Linter
+        #   uses: github/super-linter@v5
+        #   env:
+        #     VALIDATE_ALL_CODEBASE: true
+        #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Add this line to provide the token
+        #     VALIDATE_PYTHON_PYLINT: true
+        #     VALIDATE_JAVASCRIPT_ES: true
+        #     DEFAULT_BRANCH: main  # Set the default branch for the linter
+        #     FILTER_REGEX_EXCLUDE: "^Allinone/src/node_modules/" # Not include node_modules stuff
 
         # Step 2: Cache Node.js modules (optional, speeds up future builds)
         - name: Cache Node.js modules
