@@ -1,6 +1,6 @@
 import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; // For date manipulation
 
-const BLOCKOUT_URL = "http://localhost:5010/blockout"
+const BLOCKOUT_URL = "http://localhost:5014/blockout"
 
 // Define valid range (2 months back, 3 months forward)
 export const getValidRange = (today) => {
