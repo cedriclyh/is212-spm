@@ -10,7 +10,7 @@ export const getValidRange = (today) => {
 }
 
 // All functions from here are used for fetching events
-const userId = 140894; // Hardcoded user ID for demo purposes
+const userId = 140004; // Hardcoded user ID for demo purposes
 
 // Calculate start and end times based on timeslot
 function getTimeRange(timeslot, startDate, endDate) {
@@ -83,7 +83,7 @@ export const getStaffInformation = (data) => {
 };
   
 // Retrieve employee's Personal Events
-export const getPersonalEvents = async () => {
+export const getPersonalEvents = async (userId) => {
   try{
     const response = await fetch(`http://localhost:5003/get_requests/staff/${userId}`,{
       method: 'GET',
@@ -103,6 +103,7 @@ export const getPersonalEvents = async () => {
         const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
         const title = await getArrangementName(req.staff_id);
         return {
+          id: req.request_id + req.arrangement_date,
           title,  
           start,
           end,
@@ -119,8 +120,8 @@ export const getPersonalEvents = async () => {
   }
 };    
 
-// Retrieve staff's TeamEvents
-export const getStaffTeamEvents = async () => {
+// Retrieve Approved Team Member's Events
+export const getStaffTeamEvents = async (userId) => {
   try {
     const response = await fetch('http://localhost:5005/get_all_arrangements', {
       method: 'GET',
@@ -153,6 +154,7 @@ export const getStaffTeamEvents = async () => {
       const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
       const title = await getArrangementName(req.staff_id) || 'Team Event';
       return {
+        id: req.request_id + req.arrangement_date,
         title,  
         start,
         end,
@@ -169,8 +171,8 @@ export const getStaffTeamEvents = async () => {
   }
 };    
 
-// Retrieve reporting Manager's TeamEvents
-export const getManagerTeamEvents = async () => {
+// Retrieve Reporting Manager's Approved and Pending Staff Events
+export const getManagerTeamEvents = async (userId) => {
   try {
     const response = await fetch('http://localhost:5003/get_all_requests', {
       method: 'GET',
@@ -188,7 +190,7 @@ export const getManagerTeamEvents = async () => {
     const {staff_id} = await getEmployeeInfo(userId);
 
     // Map the requests into event categories 
-    const staffTeamEvents = await Promise.all(
+    const managerTeamEvents = await Promise.all(
     requests.map(async (req) => {
       if (req.staff_id === userId) {
         return null; // remove any requests made by the manager himself
@@ -203,6 +205,7 @@ export const getManagerTeamEvents = async () => {
       const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
       const title = await getArrangementName(req.staff_id) || 'Team Event';
       return {
+        id: req.request_id + req.arrangement_date,
         title,  
         start,
         end,
@@ -212,10 +215,10 @@ export const getManagerTeamEvents = async () => {
     })
   );
 
-  console.log("Staff's Team Events:", staffTeamEvents); // Log team events for debugging
-  return staffTeamEvents.filter(event=>event !=null);
+  console.log("Manager's Team Events:", managerTeamEvents); // Log team events for debugging
+  return managerTeamEvents.filter(event=>event !=null);
   } catch (error) {
-    console.error('Failed to fetch staff events:', error);
+    console.error("Failed to fetch manager's team events:", error);
   }
 };    
 
@@ -291,23 +294,71 @@ export const getBlockoutDates = async (currentView) => {
   }
 }
 
-// TO FIX: create a loop to check the list of staff_id under manager_id until it hits dead end.
-// async function getListofStaffInMyDept(managerID){
-//   const apiUrl = `http://127.0.0.1:5002/users/team/${managerID}`;
-//     try {
-//       const response = await fetch(apiUrl);
-//       if (!response.ok) {
-//         throw new Error(`Error fetching user data: ${response.status}`);
-//       }
-//       const data = await response.json(); 
-//       const unfilteredData = data.data;
-//       const staffList = []; 
-//       for (i in unfilteredData){
-//         staffList.append(unfilteredData[i].staff_id);
-//       }
-//       return staffList;
-//     } catch (error) {
-//       console.error("Failed to fetch list of staff in the department:", error);
-//       return null; 
-//     }
-// }
+// get a list of all staffs under the same reporting manager
+export const getAllStaffUnderSameManager = async (userID) => {
+  try {
+    const response = await fetch(`http://localhost:5002/users/team/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+
+    const data = await response.json();
+    const requests = data.data;
+    const ListOfStaffIds = requests.map(req => req.staff_id);
+    return ListOfStaffIds;
+  
+  } catch (error) {
+    console.error('Failed to fetch staff events:', error);
+  }
+};    
+
+// Retrieve team events for all staff under the same manager who reports to the director
+export const getDirectorTeamEvents = async () => {
+  console.log(userId);
+    const ListOfManagerIds = await getAllStaffUnderSameManager(userId);
+    const allDirectorsTeamEvents = {}; 
+
+    for (const managerId of ListOfManagerIds){
+      try{
+        console.log(managerId);
+        let OneManagerEvents = await getPersonalEvents(managerId);
+        const ListOfStaffIds = await getAllStaffUnderSameManager(managerId);
+        for (const staffId of ListOfStaffIds){
+          try{
+            const AllstaffTeamEvents = await getStaffTeamEvents(staffId);
+            if (Array.isArray(AllstaffTeamEvents)) {
+              managerTeamEvents = OneManagerEvents.concat(AllstaffTeamEvents);
+            } else {
+              console.error(`Expected an array for AllstaffTeamEvents, got:`, AllstaffTeamEvents);
+            }
+          }catch (error) {
+            if (error.response && error.response.status === 404) {
+              console.warn(`Skipping staffId ${staffId} due to 404 error.`);
+              continue;
+            } else {
+              // Rethrow other errors
+              throw error;
+            }
+          }
+        }
+          allDirectorsTeamEvents[managerId] = {events: OneManagerEvents, totalEvents: OneManagerEvents.length,}; 
+      }catch (error) {
+        if (error.response && error.response.status === 404) {
+          console.warn(`Skipping managerId ${managerId} due to 404 error.`);
+          continue;
+        } else {
+          // Rethrow other errors
+          throw error;
+        }
+      }
+    } 
+  console.log("Director's Team Events:", allDirectorsTeamEvents); // Log team events for debugging
+  // return allDirectorsTeamEvents.filter(event=>event !=null);
+  
+};    
