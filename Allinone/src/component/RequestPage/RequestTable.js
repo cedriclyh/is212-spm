@@ -41,8 +41,8 @@ export default function RequestTable() {
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [sortDescriptor, setSortDescriptor] = React.useState({
-    column: "age",
-    direction: "ascending",
+    column: "request_date",
+    direction: "descending",
   });
   const [page, setPage] = React.useState(1);
 
@@ -100,17 +100,6 @@ export default function RequestTable() {
     const cellValue = request[columnKey];
 
     switch (columnKey) {
-      // case "name":
-      //   return (
-      //     <request
-      //       avatarProps={{radius: "lg", src: request.avatar}}
-      //       description={request.email}
-      //       name={cellValue}
-      //     >
-      //       {request.email}
-      //     </request>
-      //   );
-
         case "arrangement_date":
           return (
             <div>
@@ -254,7 +243,7 @@ export default function RequestTable() {
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-default-400 text-small">Total {pulled_data.length} Requests</span>
+          <span className="text-default-400 text-small">Total {filteredItems.length} Requests</span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
             <select
@@ -275,7 +264,8 @@ export default function RequestTable() {
     visibleColumns,
     onRowsPerPageChange,
     onSearchChange,
-    onClear
+    onClear,
+    filteredItems.length,
   ]);
 
   const bottomContent = React.useMemo(() => {

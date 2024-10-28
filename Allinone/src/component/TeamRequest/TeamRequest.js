@@ -13,16 +13,16 @@ import {
   DropdownMenu,
   DropdownItem,
   Chip,
-  // User,
+  User,
   Pagination,
-  Spinner
+  Spinner,
 } from "@nextui-org/react";
-import {PlusIcon} from "../Icons/PlusIcon";
 import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
 import {SearchIcon} from "../Icons/SearchIcon";
 import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
 import {columns, statusOptions, pulled_data} from "./TeamRequestData";
-import {capitalize, formatDate, formatTimeslot} from "../RequestPage/RequestPageUtils";
+import {capitalize} from "../TeamRequest/TeamRequestUtils";
+import profilePic from "../Icons/profile_pic.png"
 
 const statusColorMap = {
   Approved: "success",
@@ -32,17 +32,17 @@ const statusColorMap = {
   Withdrawn: "secondary",
 };
 
-const INITIAL_VISIBLE_COLUMNS = ["arrangement_date", "timeslot", "manager", "status", "actions"];
+const INITIAL_VISIBLE_COLUMNS = ["staff", "request_date", "arrangement_date", "timeslot", "status", "actions"];
 
 export default function TeamRequest() {
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(new Set(INITIAL_VISIBLE_COLUMNS));
-  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [statusFilter, setStatusFilter] = React.useState(new Set(["Pending"]));
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [sortDescriptor, setSortDescriptor] = React.useState({
-    column: "age",
-    direction: "ascending",
+    column: "request_date",
+    direction: "descending",
   });
   const [page, setPage] = React.useState(1);
 
@@ -57,17 +57,18 @@ export default function TeamRequest() {
   const filteredItems = React.useMemo(() => {
     let filteredRequests = [...pulled_data];
   
-    // Search by arrangement_date
+    // Search by staff name
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {
-        const formattedDate = formatDate(request.arrangement_date).join(' '); // Format the arrangement date
-        return formattedDate.toLowerCase().includes(filterValue.toLowerCase()); // Search by formatted date
+        const staffFName = request.staff_details.staff_fname.toLowerCase();
+        const staffLName = request.staff_details.staff_lname.toLowerCase();
+        return staffFName.includes(filterValue.toLowerCase()) || staffLName.includes(filterValue.toLowerCase());
       });
     }
   
-    if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
-      filteredRequests = filteredRequests.filter((request) =>
-        Array.from(statusFilter).includes(request.status)
+    if (statusFilter !== "all") {
+      filteredRequests = filteredRequests.filter((request) => 
+        statusFilter === "Pending" ? request.status === "Pending" : Array.from(statusFilter).includes(request.status)
       );
     }
   
@@ -100,37 +101,33 @@ export default function TeamRequest() {
     const cellValue = request[columnKey];
 
     switch (columnKey) {
-      // case "name":
-      //   return (
-      //     <request
-      //       avatarProps={{radius: "lg", src: request.avatar}}
-      //       description={request.email}
-      //       name={cellValue}
-      //     >
-      //       {request.email}
-      //     </request>
-      //   );
+      case "staff":
+        return (
+          <User
+            avatarProps={{radius: "lg", src: profilePic}}
+            description={request.staff_details.email}
+            name={request.staff_details.staff_fname + " " + request.staff_details.staff_lname}
+          >
+            {request.email}
+          </User>
+        );
 
         case "arrangement_date":
           return (
             <div>
-              <p className="text-bold text-small" >{request.arrangement_date[0]}</p>
-              <p className="text-bold text-tiny text-default-400">{request.arrangement_date[0]}</p>
+              <p className="text-bold text-small" >{request.arrangement_dates[0]}</p>
+              {/* <p className="text-bold text-tiny text-default-400">{request.arrangement_dates[0]}</p> */}
               </div>
           );
         case "timeslot":
           return (
             <div>
-              <p>{request.timeslot}</p>
+              <p className="text-bold text-small" >{request.timeslot}</p>
+              {request.timeslot === "AM" && <p className="text-bold text-tiny text-default-400">9AM - 1PM</p>}
+              {request.timeslot === "PM" && <p className="text-bold text-tiny text-default-400">2PM - 6PM</p>}
+              {request.timeslot === "FULL" && <p className="text-bold text-tiny text-default-400">9AM - 6PM</p>}
             </div>
           )
-        case "manager":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{request.staff_details.staff_fname + " " + request.staff_details.staff_lname}</p>
-            <p className="text-bold text-tiny capitalize text-default-400">{request.staff_details.email}</p>
-          </div>
-        );
       case "status":
         return (
           <Chip color={statusColorMap[request.status]} size="sm" variant="flat">
@@ -148,8 +145,8 @@ export default function TeamRequest() {
               </DropdownTrigger>
               <DropdownMenu>
                 <DropdownItem>View</DropdownItem>
-                {request.status === "Pending" && <DropdownItem>Edit</DropdownItem>}
-                {request.status === "Pending" && <DropdownItem>Cancel</DropdownItem>}
+                {request.status === "Pending" && <DropdownItem>Approve</DropdownItem>}
+                {request.status === "Pending" && <DropdownItem>Reject</DropdownItem>}
                 {request.status === "Approved" && <DropdownItem>Withdraw</DropdownItem>}
               </DropdownMenu>
             </Dropdown>
@@ -194,12 +191,12 @@ export default function TeamRequest() {
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-lg font-semibold text-gray-900">My Requests</p>
+        <p className="text-lg font-semibold text-gray-900">Team Requests</p>
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
             className="w-full sm:max-w-[44%]"
-            placeholder="Search by arrangement date..."
+            placeholder="Search by Staff's Name..."
             startContent={<SearchIcon />}
             value={filterValue}
             onClear={() => onClear()}
@@ -218,7 +215,7 @@ export default function TeamRequest() {
                 closeOnSelect={false}
                 selectedKeys={statusFilter}
                 selectionMode="multiple"
-                onSelectionChange={setStatusFilter}
+                onSelectionChange={(keys) => setStatusFilter(new Set(keys))}
               >
                 {statusOptions.map((status) => (
                   <DropdownItem key={status.uid} className="capitalize">
@@ -248,13 +245,10 @@ export default function TeamRequest() {
                 ))}
               </DropdownMenu>
             </Dropdown>
-            <Button color="primary" endContent={<PlusIcon />}>
-              <a href="/new_request">Add New</a>
-            </Button>
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-default-400 text-small">Total {pulled_data.length} Requests</span>
+          <span className="text-default-400 text-small">Total {filteredItems.length} Requests</span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
             <select
@@ -275,7 +269,8 @@ export default function TeamRequest() {
     visibleColumns,
     onRowsPerPageChange,
     onSearchChange,
-    onClear
+    onClear,
+    filteredItems.length,
   ]);
 
   const bottomContent = React.useMemo(() => {
