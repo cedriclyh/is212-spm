@@ -96,8 +96,10 @@ def manage_request():
         request_id = data.get("request_id")
         status = data.get("status")  # either 'Approved' or 'Rejected'
         remarks = data.get("remarks", "")  # optional remarks from the manager
+        disable_notification = data.get("disable_notification", False) # to avoid sending notifications when revoking multiple dates for same user 
+        print(f"Disable Notification: {disable_notification}")
 
-        if not request_id or not status or status not in ['Approved', 'Rejected']:
+        if not request_id or not status or status not in ['Approved', 'Rejected', 'Withdrawn']:
             return jsonify({"message": "Invalid data", 
                             "code": 400
             }), 400
@@ -176,40 +178,37 @@ def manage_request():
             app.logger.info(f"Staff {staff_id} already worked from home on {arrangement_date}, skipping threshold check.")
         else:
             # fetch team members under this manager 
-            team_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/users/team/{reporting_manager}")
+            if status == "Approved":
+                team_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/users/team/{reporting_manager}")
 
-            if team_response.status_code != 200:
-                return jsonify({"message": "Failed to fetch team members", 
-                                "code": 404
-                }), 404
+                if team_response.status_code != 200:
+                    return jsonify({"message": "Failed to fetch team members", 
+                                    "code": 404
+                    }), 404
 
-            team_data = team_response.json().get("data")
-            total_team_size = len(team_data)
-            # print(total_team_size)
+                team_data = team_response.json().get("data")
+                total_team_size = len(team_data)
+                # print(total_team_size)
 
-            # 4: check WFH threshold before approving (only if not CEO)
-            if dept != "CEO":
-                am_count, pm_count = count_wfh(reporting_manager, arrangement_date)
-                # print(am_count)
-                # print(pm_count)
-                if status == "Approved":
+                # 4: check WFH threshold before approving (only if not CEO)
+                if dept != "CEO":
+                    am_count, pm_count = count_wfh(reporting_manager, arrangement_date)
+                    print(am_count)
+                    print(pm_count)
                     if timeslot == "AM":
                         if (am_count + 1)/ total_team_size > 0.5:
                             return jsonify({"message": "Approval would exceed the 50% WFH threshold for AM shift!",
-                                            "code": 403
-                            }), 403
+                                            "code": 403}), 403
                         
                     elif timeslot == "PM":
                         if (pm_count + 1)/ total_team_size > 0.5:
                             return jsonify({"message": "Approval would exceed the 50% WFH threshold for PM shift!",
-                                            "code": 403
-                            }), 403
+                                            "code": 403}), 403
                     elif timeslot == "FULL":
                         if (am_count + 1)/ total_team_size > 0.5 or (pm_count + 1)/ total_team_size > 0.5:
                             return jsonify({"message": "Approval would exceed the 50% WFH threshold for FULL shift!",
-                                            "code": 403
-                            }), 403
-        
+                                            "code": 403}), 403
+            
         # 5: update the request status
         arrangement_update_data = {
             "request_id": request_id,
@@ -240,31 +239,37 @@ def manage_request():
                                 "code": 500
                 }), 500
             
-        # 7: call notification.py to notify the staff of the updated status
-        notification_data = {
-            "staff_email": staff_email,  
-            "status": status,
-            "request_id": request_id,
-            "remarks": remarks
-        }
+        # 7: call notification.py to notify the staff of the updated status (if notification is not disabled)
+        if not disable_notification:
+            notification_data = {
+                "staff_email": staff_email,  
+                "status": status,
+                "request_id": request_id,
+                "remarks": remarks
+            }
 
-        notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
+            notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
 
-        if notification_response.status_code != 200:
-            return jsonify({"message": "Request status updated but failed to notify staff", 
-                            "code": 500
-        }), 500
+            if notification_response.status_code != 200:
+                return jsonify({"message": "Request status updated but failed to notify staff", 
+                                "code": 500
+            }), 500
 
-        return jsonify({
-            "message": f"Request {status} successfully and staff notified",
-            "code": 200
-        }), 200
+            return jsonify({
+                "message": f"Request {status} successfully and staff notified",
+                "code": 200
+            }), 200
+        
+        else:
+            return jsonify({
+                "message": f"Request {status} successfully.",
+                "code": 200
+            }), 200
 
     except Exception as e:
         app.logger.error(f"Failed to manage request: {e}")
         return jsonify({"message": "Internal server error", 
-                        "code": 500
-        }), 500
+                        "code": 500}), 500
 
 
 if __name__ == "__main__":
