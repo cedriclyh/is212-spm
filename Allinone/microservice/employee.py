@@ -14,8 +14,8 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
-    environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -147,6 +147,37 @@ def get_manager_email(manager_id):
         app.logger.error(f"Failed to retrieve manager email: {e}")
         return jsonify({"message": "Failed to retrieve manager email", 
                         "error": str(e)}), 500
+    
+# Get all employees reporting to a specific manager
+@app.route('/users/team/<int:manager_id>', methods=['GET'])
+def get_team_by_manager(manager_id):
+    try:
+        # Fetch the employees reporting to the specific manager
+        team_members = db.session.query(Employee).filter_by(reporting_manager=manager_id).all()
+        count = len(team_members)
+        if team_members:
+            # Convert each employee object into a dictionary
+            team_data = [member.to_dict() for member in team_members]
+            return jsonify({
+                "message": "Team members found",
+                "data": team_data,
+                "team_count": count,
+                "code": 200
+            }), 200
+        else:
+            return jsonify({
+                "message": "No team members found for this manager",
+                "code": 404
+            }), 404
+
+    except Exception as e:
+        app.logger.error(f"Failed to retrieve team members: {e}")
+        return jsonify({
+            "message": "Failed to retrieve team members",
+            "error": str(e),
+            "team_count": count,
+            "code": 500
+        }), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)

@@ -21,8 +21,8 @@ import {PlusIcon} from "../Icons/PlusIcon";
 import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
 import {SearchIcon} from "../Icons/SearchIcon";
 import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
-import {columns, statusOptions, pulled_data} from "./RequestData";
-import {capitalize, formatDate, formatTimeslot} from "./RequestPageUtils";
+import {columns, statusOptions, pulled_data} from "./TeamRequestData";
+import {capitalize, formatDate, formatTimeslot} from "../RequestPage/RequestPageUtils";
 
 const statusColorMap = {
   Approved: "success",
@@ -34,7 +34,7 @@ const statusColorMap = {
 
 const INITIAL_VISIBLE_COLUMNS = ["arrangement_date", "timeslot", "manager", "status", "actions"];
 
-export default function RequestTable() {
+export default function TeamRequest() {
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(new Set(INITIAL_VISIBLE_COLUMNS));
@@ -114,21 +114,21 @@ export default function RequestTable() {
         case "arrangement_date":
           return (
             <div>
-              <p className="text-bold text-small" >{formatDate(request.arrangement_date)[0]}</p>
-              <p className="text-bold text-tiny text-default-400">{formatDate(request.arrangement_date)[1]}</p>
+              <p className="text-bold text-small" >{request.arrangement_date[0]}</p>
+              <p className="text-bold text-tiny text-default-400">{request.arrangement_date[0]}</p>
               </div>
           );
         case "timeslot":
           return (
             <div>
-              <p>{formatTimeslot(request.timeslot)[1]}</p>
+              <p>{request.timeslot}</p>
             </div>
           )
         case "manager":
         return (
           <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{request.manager_details.staff_fname + " " + request.manager_details.staff_lname}</p>
-            <p className="text-bold text-tiny capitalize text-default-400">{request.manager_details.email}</p>
+            <p className="text-bold text-small capitalize">{request.staff_details.staff_fname + " " + request.staff_details.staff_lname}</p>
+            <p className="text-bold text-tiny capitalize text-default-400">{request.staff_details.email}</p>
           </div>
         );
       case "status":

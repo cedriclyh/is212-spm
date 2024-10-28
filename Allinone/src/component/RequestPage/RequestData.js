@@ -1,4 +1,4 @@
-import axios from 'axios';
+// import axios from 'axios';
 
 const columns = [
     {name: "ARRANGEMENT DATE", uid: "arrangement_date", sortable: true},
@@ -14,6 +14,8 @@ const columns = [
     {name: "approved", uid: "Approved"},
     {name: "rejected", uid: "Rejected"},
     {name: "pending", uid: "Pending"},
+    {name: "withdrawn", uid: "Withdrawn"},
+    {name: "cancelled", uid: "Cancelled"},
   ];
 
   // for axios

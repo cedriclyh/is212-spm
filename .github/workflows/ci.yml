@@ -13,61 +13,94 @@ jobs:
     build:
         runs-on: ubuntu-latest  # Use the latest Ubuntu environment
         
+        # Set up MySQL service
+        services:
+          mysql:
+            image: mysql:5.7  # MySQL service setup for integration tests
+            env:
+              MYSQL_ROOT_PASSWORD: root
+              MYSQL_DATABASE: spm_db
+            ports:
+              - 3306:3306
+            options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=5
+
         steps:
         # Step 1: Check out the repository code
-        - name: Checkout code
-          uses: actions/checkout@v2
+        - name: Checkout Code
+          uses: actions/checkout@v4
+          with:
+            # Full git history is needed to get a proper
+            # list of changed files within `super-linter`
+            fetch-depth: 0
 
-        # Step 2: Set up Node.js environment for JavaScript/React.js
+        # SUPER LINTER
+        - name: Run Super-Linter
+          uses: github/super-linter@v5
+          env:
+            VALIDATE_ALL_CODEBASE: true
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Add this line to provide the token
+            VALIDATE_PYTHON_PYLINT: true
+            VALIDATE_JAVASCRIPT_ES: true
+            DEFAULT_BRANCH: main  # Set the default branch for the linter
+            FILTER_REGEX_EXCLUDE: "^Allinone/src/node_modules/" # Not include node_modules stuff
+
+        # Step 2: Cache Node.js modules (optional, speeds up future builds)
+        - name: Cache Node.js modules
+          uses: actions/cache@v2
+          with:
+            path: ./Allinone/src/node_modules
+            key: ${{ runner.os }}-node-${{ hashFiles('Allinone/src/package-lock.json') }}
+            restore-keys: |
+              ${{ runner.os }}-node-
+
+        # Step 3: Set up Node.js environment for JavaScript/React.js
         - name: Set up Node.js
           uses: actions/setup-node@v2
           with:
-            node-version: '14'  # Adjust the Node.js version if needed
+            node-version: '14'
     
-        # Step 3: Install dependencies for the frontend (React.js)
+        # Step 4: Install dependencies for the frontend (React.js)
         - name: Install Node.js dependencies
           run: npm install
-          working-directory: ./Allinone/src  # Change this to your frontend directory
+          working-directory: ./Allinone/src
     
-        # Step 4: Set up Python environment
+        # Step 5: Cache Python dependencies (optional)
+        - name: Cache Python dependencies
+          uses: actions/cache@v2
+          with:
+            path: ~/.cache/pip
+            key: ${{ runner.os }}-pip-${{ hashFiles('Allinone/microservice/requirements.txt') }}
+            restore-keys: |
+              ${{ runner.os }}-pip-
+
+        # Step 6: Set up Python environment
         - name: Set up Python
           uses: actions/setup-python@v2
           with:
-            python-version: '3.12.6' 
+            python-version: '3.12.6'
     
-        # Step 5: Install Python dependencies for the backend (Flask)
+        # Step 7: Install Python dependencies for the backend (Flask)
         - name: Install Python dependencies
           run: |
             python -m pip install --upgrade pip
-          working-directory: ./Allinone/microservice   # Change this to your backend directory
+            pip install -r requirements.txt
+          working-directory: ./Allinone/microservice
 
-        # Step 6: Run tests (using pytest for Python)
+        # Step 8: Set PYTHONPATH
+        - name: Set PYTHONPATH
+          run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+          working-directory: ./Allinone/microservice
+
+        # Step 10: Set the database URL environment variable for tests
+        - name: Set environment for tests
+          run: echo "DB_URL=mysql+mysqlconnector://root:root@localhost:3306/spm_db" >> $GITHUB_ENV
+
+        # Step 11: Run Python unit tests
         - name: Run Python unit tests
-          run: pytest
-          working-directory: ./Allinone/microservice  # Folder for unittests kiv
+          run: pytest tests
+          working-directory: ./Allinone/microservice
 
-        # Optional: Run tests for JavaScript/React (adjust based on your test setup)
+        # Step 12: Run JS/React unit tests (optional)
         - name: Run JS/React unit tests
           run: npm test
-          working-directory: ./Allinone/src # Folder to JS/React tests kiv
-
-# Docker build job (commented out until deployment is confirmed)
-# docker-build:
-#   runs-on: ubuntu-latest
-#   steps:
-#   - name: Checkout code
-#     uses: actions/checkout@v2
-#
-#   - name: Build Docker image
-#     run: docker build -t your-image-name .
-#
-# AWS deployment (commented out until deployment is confirmed)
-# aws-deploy:
-#   needs: docker-build
-#   runs-on: ubuntu-latest
-#   steps:
-#   - name: Deploy to AWS
-#     run: echo "Deploying to AWS..."
-#     env:
-#       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          working-directory: ./Allinone/src
