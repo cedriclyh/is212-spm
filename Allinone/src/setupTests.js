@@ -17,20 +17,30 @@ jest.mock('@mui/material', () => ({
 
 jest.mock('@nextui-org/react', () => ({
     Dropdown: function Dropdown({ children }) {
-        return <div>{children}</div>;
+        return <div data-testid="dropdown">{children}</div>;
     },
     DropdownTrigger: function DropdownTrigger({ children }) {
-        return <div>{children}</div>;
+        return <div data-testid="dropdown-trigger">{children}</div>;
     },
     DropdownMenu: function DropdownMenu({ children, onSelectionChange }) {
         return (
-            <select onChange={(e) => onSelectionChange?.(new Set([e.target.value]))}>
+            <select 
+                data-testid="dropdown-menu"
+                onChange={(e) => onSelectionChange?.(new Set([e.target.value]))}
+            >
                 {children}
             </select>
         );
     },
-    DropdownItem: function DropdownItem({ children, key }) {
-        return <option value={key}>{children}</option>;
+    DropdownItem: function DropdownItem(props) {
+        return (
+            <option 
+                value={props.key || props.children}
+                data-testid={`dropdown-item-${props.key || props.children}`}
+            >
+                {props.children}
+            </option>
+        );
     }
 }));
 
