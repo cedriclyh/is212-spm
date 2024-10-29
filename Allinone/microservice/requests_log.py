@@ -244,9 +244,8 @@ def update_request(request_id):
             }), 404
     except Exception as e:
         app.logger.error(f"Failed to update request: {e}")
-        return jsonify({'message': 'Failed to update request', 
-                        'code': 500
-        }), 500
+        return jsonify({'message': 'Failed to update request', 'code': 500}), 500   
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003, debug=True)

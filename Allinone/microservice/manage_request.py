@@ -113,7 +113,7 @@ def manage_request():
             }), 404
         
         request_entry = fetch_response.json().get("data")
-        request_id - request_entry.get("request_id")
+        request_id = request_entry.get("request_id")
         staff_id = request_entry.get("staff_id")
         arrangement_date = request_entry.get("arrangement_date")
         timeslot = request_entry.get("timeslot")
@@ -269,8 +269,66 @@ def manage_request():
     except Exception as e:
         app.logger.error(f"Failed to manage request: {e}")
         return jsonify({"message": "Internal server error", 
-                        "code": 500}), 500
+                        "code": 500
+        }), 500
+    
+@app.route('/cancel_request', methods=['PUT'])
+def cancel_request():
+    """
+    Withdraw an approved request by changing its status to 'Withdrawn'.
+    """
+    try:
+        data = request.json
+        request_id = data.get("request_id")
+        
+        if not request_id:
+            return jsonify({"message": "Request ID is required", "code": 400}), 400
+        
+        # Fetch the request details from the Request Log microservice
+        fetch_response = requests.get(f"{REQUEST_LOG_MICROSERVICE_URL}/get_request/{request_id}")
+        
+        if fetch_response.status_code != 200:
+            return jsonify({"message": "Request not found", "code": 404}), 404
+        
+        request_entry = fetch_response.json().get("data")
+        current_status = request_entry.get("status")
+        staff_email = request_entry.get("staff_email")  # Assuming email is part of the data
+        staff_id = request_entry.get("staff_id")
+        
+        # Check if the request is currently approved
+        if current_status != "Approved" or "Pending":
+            return jsonify({"message": "Only approved requests can be cancel", "code": 403}), 403
+        
+        # Update the status to 'cancelled' in the Request Log microservice
+        update_data = {
+            "request_id": request_id,
+            "status": "Cancelled"
+        }
+        update_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json=update_data)
+        
+        if update_response.status_code != 200:
+            return jsonify({"message": "Failed to update request status", "code": 500}), 500
+        
+        # #Notify the staff about the withdrawal
+        # notification_data = {
+        #     "staff_email": staff_email,
+        #     "status": "Withdrawn",
+        #     "request_id": request_id,
+        #     "remarks": "Your approved request has been successfully withdrawn."
+        # }
+        # notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
+        
+        # if notification_response.status_code != 200:
+        #     return jsonify({"message": "Request withdrawn but failed to notify staff", "code": 500}), 500
+        
+        return jsonify({
+            "message": f"Request successfully cancelled and staff notified",
+            "code": 200
+        }), 200
 
+    except Exception as e:
+        app.logger.error(f"Failed to withdraw request: {e}")
+        return jsonify({"message": "Internal server error", "code": 500}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5010, debug=True)  
