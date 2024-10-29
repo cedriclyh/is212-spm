@@ -110,33 +110,7 @@ export default function RequestTable() {
   }, [sortDescriptor, items]);
 
   const cancelRequest = async (requestId) => {
-    if (!window.confirm("Are you sure you want to cancel this pending request?")) {
-      return; // User cancelled the action
-    }
-  
-    try {
-      const response = await fetch(`http://localhost:5010/delete_request/${requestId}`, {
-        method: "DELETE", // Use DELETE method for removing a request
-      });
-  
-      if (response.ok) {
-        alert("Request successfully cancelled.");
-        // Refresh the request data to reflect the deletion
-        setRequests((prevRequests) => 
-          prevRequests.filter((request) => request.request_id !== requestId)
-        );
-      } else {
-        const result = await response.json();
-        alert(result.message || "Failed to cancel request.");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred while cancelling the request.");
-    }
-  };
-  
-  const withdrawRequest = async (requestId) => {
-    if (!window.confirm("Are you sure you want to withdraw this approved request?")) {
+    if (!window.confirm("Are you sure you want to cancel this request?")) {
       return; // User withdraw the action
     }
     try {
@@ -147,27 +121,27 @@ export default function RequestTable() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "Withdrawn" }),
+          body: JSON.stringify({ status: "Cancel" }),
         }
       );
 
       if (response.ok) {
-        alert("Request successfully withdrawn.");
+        alert("Request successfully cancelled.");
         // Refresh the request data to reflect the updated status
         setRequests((prevRequests) =>
           prevRequests.map((request) =>
             request.request_id === requestId
-              ? { ...request, status: "Withdrawn" }
+              ? { ...request, status: "Cancelled" }
               : request
           )
         );
       } else {
         const result = await response.json();
-        alert(result.message || "Failed to withdraw request.");
+        alert(result.message || "Failed to cancel request.");
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred while withdrawing the request.");
+      alert("An error occurred while cancelling the request.");
     }
   };
 
@@ -237,15 +211,17 @@ export default function RequestTable() {
                   <DropdownItem>Edit</DropdownItem>
                 )}
                 {request.status === "Pending" && (
-                  <DropdownItem onClick={() => cancelRequest(request.request_id)}
-                  >Cancel
+                  <DropdownItem
+                    onClick={() => cancelRequest(request.request_id)}
+                  >
+                    Cancel
                   </DropdownItem>
                 )}
                 {request.status === "Approved" && (
                   <DropdownItem
-                    onClick={() => withdrawRequest(request.request_id)}
+                    onClick={() => cancelRequest(request.request_id)}
                   >
-                    Withdraw
+                    Cancel
                   </DropdownItem>
                 )}
               </DropdownMenu>

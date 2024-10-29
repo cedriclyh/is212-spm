@@ -266,8 +266,8 @@ def manage_request():
                         "code": 500
         }), 500
     
-@app.route('/withdraw_request', methods=['PUT'])
-def withdraw_request():
+@app.route('/cancel_request', methods=['PUT'])
+def cancel_request():
     """
     Withdraw an approved request by changing its status to 'Withdrawn'.
     """
@@ -290,13 +290,13 @@ def withdraw_request():
         staff_id = request_entry.get("staff_id")
         
         # Check if the request is currently approved
-        if current_status != "Approved":
-            return jsonify({"message": "Only approved requests can be withdrawn", "code": 403}), 403
+        if current_status != "Approved" or "Pending":
+            return jsonify({"message": "Only approved requests can be cancel", "code": 403}), 403
         
-        # Update the status to 'Withdrawn' in the Request Log microservice
+        # Update the status to 'cancelled' in the Request Log microservice
         update_data = {
             "request_id": request_id,
-            "status": "Withdrawn"
+            "status": "Cancelled"
         }
         update_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json=update_data)
         
@@ -316,7 +316,7 @@ def withdraw_request():
         #     return jsonify({"message": "Request withdrawn but failed to notify staff", "code": 500}), 500
         
         return jsonify({
-            "message": f"Request successfully withdrawn and staff notified",
+            "message": f"Request successfully cancelled and staff notified",
             "code": 200
         }), 200
 
