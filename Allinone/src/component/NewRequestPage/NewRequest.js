@@ -129,6 +129,19 @@ export default function NewRequest() {
     }
   }, [startDate, endDate, SelectedDayOfTheWeek, isRecurring]);
 
+  const [formData, setFormData] = useState({
+    staff_id: 140944,  // Change to dynamic value if needed
+    request_date: new Date().toISOString().split('T')[0],
+    arrangement_date: inputDates,
+    recurring_day: SelectedDayOfTheWeek,
+    start_date: startDate,
+    end_date: endDate,
+    timeslot: selectedTimeslot,
+    reason: reason,
+    isRecurring: isRecurring,
+  });
+  
+
   const handleSubmit = async (e) => {
 
     if (isRecurring) {
@@ -158,21 +171,6 @@ export default function NewRequest() {
         onOpen();
         return; 
       }
-    };
-
-    const today = new Date();
-    const formattedRequestDate = today.toISOString().split('T')[0];
-
-    const formData = { 
-      "staff_id" : 140944,  // change staff_id
-      "request_date" : formattedRequestDate, 
-      "arrangement_date" : inputDates, 
-      "recurring_day": SelectedDayOfTheWeek, 
-      "start_date": startDate, 
-      "end_date": endDate, 
-      "timeslot": selectedTimeslot, 
-      "reason": reason,
-      "isRecurring": isRecurring,
     };
 
     try {
@@ -264,6 +262,10 @@ export default function NewRequest() {
                     if (date && date.year && date.month && date.day) {
                       setSelectedDate(date);
                       addDateInputs(date);
+                      setFormData((prev) => ({
+                        ...prev,
+                        arrangement_date: inputDates,
+                      }));
                     }
                   }}
                 />
@@ -285,7 +287,10 @@ export default function NewRequest() {
                       {selectedTimeslot || "Choose a Timeslot"}
                     </Button>
                   </DropdownTrigger>
-                  <DropdownMenu onAction={handleSelection}>
+                  <DropdownMenu onAction={(key) => {
+                    setSelectedTimeslot(key);
+                    setFormData((prev) => ({ ...prev, timeslot: key }));
+                  }}>
                     <DropdownItem key="Whole Day" description="9AM - 6PM">Whole Day</DropdownItem>
                     <DropdownItem key="Morning" description="9AM - 1PM">Morning</DropdownItem>
                     <DropdownItem key="Afternoon" description="2PM - 6PM">Afternoon</DropdownItem>
@@ -410,7 +415,10 @@ export default function NewRequest() {
               placeholder="Enter your reason"
               className="mt-2 w-full"
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(e) => {
+                setReason(e.target.value);
+                setFormData((prev) => ({ ...prev, reason: e.target.value }));
+              }}
             />
           </div>
 
