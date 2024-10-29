@@ -244,67 +244,8 @@ def update_request(request_id):
             }), 404
     except Exception as e:
         app.logger.error(f"Failed to update request: {e}")
-        return jsonify({'message': 'Failed to update request', 'code': 500}), 500    
+        return jsonify({'message': 'Failed to update request', 'code': 500}), 500   
 
-# Withdraw (Delete) a pending WFH request
-@app.route('/withdraw_request/<int:request_id>', methods=['DELETE'])
-def withdraw_request(request_id):
-    try:
-        # Fetch the request by request_id
-        request_to_delete = Request.query.filter_by(request_id=request_id).first()
-
-        if not request_to_delete:
-            return jsonify({
-                'message': 'Request not found',
-                'code': 404
-            }), 404
-
-        # Only allow withdrawal if the request status is 'Pending'
-        if request_to_delete.status != 'Pending':
-            return jsonify({
-                'message': 'Request cannot be withdrawn as it is no longer pending',
-                'code': 400
-            }), 400
-
-        # Delete the request if it is still pending
-        db.session.delete(request_to_delete)
-        db.session.commit()
-
-        return jsonify({
-            'message': 'Request withdrawn (deleted) successfully',
-            'code': 200
-        }), 200
-
-    except Exception as e:
-        app.logger.error(f"Failed to withdraw request: {e}")
-        return jsonify({
-            'message': 'Failed to withdraw request',
-            'code': 500
-        }), 500
-    
-# Implement buttons to withdraw the request, put at frontend page
-# function withdrawRequest(requestId) {
-#     fetch(`/withdraw_request/${requestId}`, {
-#         method: 'DELETE',
-#         headers: {
-#             'Content-Type': 'application/json',
-#         }
-#     })
-#     .then(response => response.json())
-#     .then(data => {
-#         if (data.code === 200) {
-#             alert('Request withdrawn successfully!');
-#             // Optionally, refresh the page or update the UI
-#         } else {
-#             alert(`Error: ${data.message}`);
-#         }
-#     })
-#     .catch(error => console.error('Error:', error));
-# }
-
-@app.route('/arrangement_form')
-def arrangement_form():
-    return render_template('arrangement_form.html')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003, debug=True)

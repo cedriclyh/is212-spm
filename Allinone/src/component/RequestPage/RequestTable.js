@@ -15,14 +15,14 @@ import {
   Chip,
   // User,
   Pagination,
-  Spinner
+  Spinner,
 } from "@nextui-org/react";
-import {PlusIcon} from "../Icons/PlusIcon";
-import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
-import {SearchIcon} from "../Icons/SearchIcon";
-import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
-import {columns, statusOptions, pulled_data} from "./RequestData";
-import {capitalize, formatDate, formatTimeslot} from "./RequestPageUtils";
+import { PlusIcon } from "../Icons/PlusIcon";
+import { VerticalDotsIcon } from "../Icons/VerticalDotsIcon";
+import { SearchIcon } from "../Icons/SearchIcon";
+import { ChevronDownIcon } from "../Icons/ChevronDownIcon";
+import { columns, statusOptions, pulled_data } from "./RequestData";
+import { capitalize, formatDate, formatTimeslot } from "./RequestPageUtils";
 
 const statusColorMap = {
   Approved: "success",
@@ -32,12 +32,20 @@ const statusColorMap = {
   Withdrawn: "secondary",
 };
 
-const INITIAL_VISIBLE_COLUMNS = ["arrangement_date", "timeslot", "manager", "status", "actions"];
+const INITIAL_VISIBLE_COLUMNS = [
+  "arrangement_date",
+  "timeslot",
+  "manager",
+  "status",
+  "actions",
+];
 
 export default function RequestTable() {
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
-  const [visibleColumns, setVisibleColumns] = React.useState(new Set(INITIAL_VISIBLE_COLUMNS));
+  const [visibleColumns, setVisibleColumns] = React.useState(
+    new Set(INITIAL_VISIBLE_COLUMNS)
+  );
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [sortDescriptor, setSortDescriptor] = React.useState({
@@ -45,56 +53,123 @@ export default function RequestTable() {
     direction: "ascending",
   });
   const [page, setPage] = React.useState(1);
+  const [requests, setRequests] = React.useState(pulled_data);
 
   const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
 
-    return columns.filter((column) => Array.from(visibleColumns).includes(column.uid));
+    return columns.filter((column) =>
+      Array.from(visibleColumns).includes(column.uid)
+    );
   }, [visibleColumns]);
 
   const filteredItems = React.useMemo(() => {
     let filteredRequests = [...pulled_data];
-  
+
     // Search by arrangement_date
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {
-        const formattedDate = formatDate(request.arrangement_date).join(' '); // Format the arrangement date
+        const formattedDate = formatDate(request.arrangement_date).join(" "); // Format the arrangement date
         return formattedDate.toLowerCase().includes(filterValue.toLowerCase()); // Search by formatted date
       });
     }
-  
-    if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
+
+    if (
+      statusFilter !== "all" &&
+      Array.from(statusFilter).length !== statusOptions.length
+    ) {
       filteredRequests = filteredRequests.filter((request) =>
         Array.from(statusFilter).includes(request.status)
       );
     }
-  
+
     return filteredRequests;
   }, [filterValue, statusFilter, hasSearchFilter]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
-  const pageNumber = Number(page); 
+  const pageNumber = Number(page);
   const rowsPerPageNumber = Number(rowsPerPage);
 
   const items = React.useMemo(() => {
     const start = (pageNumber - 1) * rowsPerPageNumber;
     const end = start + rowsPerPageNumber;
     return filteredItems.slice(start, end);
-
   }, [pageNumber, filteredItems, rowsPerPageNumber]);
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column] || '';
-      const second = b[sortDescriptor.column] || '';
+      const first = a[sortDescriptor.column] || "";
+      const second = b[sortDescriptor.column] || "";
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
+
+  const cancelRequest = async (requestId) => {
+    if (!window.confirm("Are you sure you want to cancel this pending request?")) {
+      return; // User cancelled the action
+    }
+  
+    try {
+      const response = await fetch(`http://localhost:5010/delete_request/${requestId}`, {
+        method: "DELETE", // Use DELETE method for removing a request
+      });
+  
+      if (response.ok) {
+        alert("Request successfully cancelled.");
+        // Refresh the request data to reflect the deletion
+        setRequests((prevRequests) => 
+          prevRequests.filter((request) => request.request_id !== requestId)
+        );
+      } else {
+        const result = await response.json();
+        alert(result.message || "Failed to cancel request.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while cancelling the request.");
+    }
+  };
+  
+  const withdrawRequest = async (requestId) => {
+    if (!window.confirm("Are you sure you want to withdraw this approved request?")) {
+      return; // User withdraw the action
+    }
+    try {
+      const response = await fetch(
+        `http://localhost:5010/update_request/${requestId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: "Withdrawn" }),
+        }
+      );
+
+      if (response.ok) {
+        alert("Request successfully withdrawn.");
+        // Refresh the request data to reflect the updated status
+        setRequests((prevRequests) =>
+          prevRequests.map((request) =>
+            request.request_id === requestId
+              ? { ...request, status: "Withdrawn" }
+              : request
+          )
+        );
+      } else {
+        const result = await response.json();
+        alert(result.message || "Failed to withdraw request.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while withdrawing the request.");
+    }
+  };
 
   const renderCell = React.useCallback((request, columnKey) => {
     const cellValue = request[columnKey];
@@ -111,24 +186,34 @@ export default function RequestTable() {
       //     </request>
       //   );
 
-        case "arrangement_date":
-          return (
-            <div>
-              <p className="text-bold text-small" >{formatDate(request.arrangement_date)[0]}</p>
-              <p className="text-bold text-tiny text-default-400">{formatDate(request.arrangement_date)[1]}</p>
-              </div>
-          );
-        case "timeslot":
-          return (
-            <div>
-              <p>{formatTimeslot(request.timeslot)[1]}</p>
-            </div>
-          )
-        case "manager":
+      case "arrangement_date":
+        return (
+          <div>
+            <p className="text-bold text-small">
+              {formatDate(request.arrangement_date)[0]}
+            </p>
+            <p className="text-bold text-tiny text-default-400">
+              {formatDate(request.arrangement_date)[1]}
+            </p>
+          </div>
+        );
+      case "timeslot":
+        return (
+          <div>
+            <p>{formatTimeslot(request.timeslot)[1]}</p>
+          </div>
+        );
+      case "manager":
         return (
           <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{request.manager_details.staff_fname + " " + request.manager_details.staff_lname}</p>
-            <p className="text-bold text-tiny capitalize text-default-400">{request.manager_details.email}</p>
+            <p className="text-bold text-small capitalize">
+              {request.manager_details.staff_fname +
+                " " +
+                request.manager_details.staff_lname}
+            </p>
+            <p className="text-bold text-tiny capitalize text-default-400">
+              {request.manager_details.email}
+            </p>
           </div>
         );
       case "status":
@@ -148,9 +233,21 @@ export default function RequestTable() {
               </DropdownTrigger>
               <DropdownMenu>
                 <DropdownItem>View</DropdownItem>
-                {request.status === "Pending" && <DropdownItem>Edit</DropdownItem>}
-                {request.status === "Pending" && <DropdownItem>Cancel</DropdownItem>}
-                {request.status === "Approved" && <DropdownItem>Withdraw</DropdownItem>}
+                {request.status === "Pending" && (
+                  <DropdownItem>Edit</DropdownItem>
+                )}
+                {request.status === "Pending" && (
+                  <DropdownItem onClick={() => cancelRequest(request.request_id)}
+                  >Cancel
+                  </DropdownItem>
+                )}
+                {request.status === "Approved" && (
+                  <DropdownItem
+                    onClick={() => withdrawRequest(request.request_id)}
+                  >
+                    Withdraw
+                  </DropdownItem>
+                )}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -186,10 +283,10 @@ export default function RequestTable() {
     }
   }, []);
 
-  const onClear = React.useCallback(()=>{
-    setFilterValue("")
-    setPage(1)
-  },[])
+  const onClear = React.useCallback(() => {
+    setFilterValue("");
+    setPage(1);
+  }, []);
 
   const topContent = React.useMemo(() => {
     return (
@@ -208,7 +305,10 @@ export default function RequestTable() {
           <div className="flex gap-3">
             <Dropdown>
               <DropdownTrigger className="sm:flex">
-                <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
+                <Button
+                  endContent={<ChevronDownIcon className="text-small" />}
+                  variant="flat"
+                >
                   Status
                 </Button>
               </DropdownTrigger>
@@ -229,7 +329,10 @@ export default function RequestTable() {
             </Dropdown>
             <Dropdown>
               <DropdownTrigger className="sm:flex">
-                <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
+                <Button
+                  endContent={<ChevronDownIcon className="text-small" />}
+                  variant="flat"
+                >
                   Columns
                 </Button>
               </DropdownTrigger>
@@ -254,7 +357,9 @@ export default function RequestTable() {
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-default-400 text-small">Total {pulled_data.length} Requests</span>
+          <span className="text-default-400 text-small">
+            Total {pulled_data.length} Requests
+          </span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
             <select
@@ -275,7 +380,7 @@ export default function RequestTable() {
     visibleColumns,
     onRowsPerPageChange,
     onSearchChange,
-    onClear
+    onClear,
   ]);
 
   const bottomContent = React.useMemo(() => {
@@ -296,16 +401,33 @@ export default function RequestTable() {
           onChange={setPage}
         />
         <div className="hidden sm:flex w-[30%] justify-end gap-2">
-          <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onPreviousPage}>
+          <Button
+            isDisabled={pages === 1}
+            size="sm"
+            variant="flat"
+            onPress={onPreviousPage}
+          >
             Previous
           </Button>
-          <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onNextPage}>
+          <Button
+            isDisabled={pages === 1}
+            size="sm"
+            variant="flat"
+            onPress={onNextPage}
+          >
             Next
           </Button>
         </div>
       </div>
     );
-  }, [selectedKeys, page, pages, filteredItems.length, onNextPage, onPreviousPage]);
+  }, [
+    selectedKeys,
+    page,
+    pages,
+    filteredItems.length,
+    onNextPage,
+    onPreviousPage,
+  ]);
 
   return (
     <Table
@@ -335,14 +457,16 @@ export default function RequestTable() {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody 
-      emptyContent={"No Requests found"} 
-      items={sortedItems}
-      loadingContent={<Spinner label="Loading..." />}
+      <TableBody
+        emptyContent={"No Requests found"}
+        items={sortedItems}
+        loadingContent={<Spinner label="Loading..." />}
       >
         {(item, rowIndex) => (
           <TableRow key={item.request_id}>
-            {(columnKey) => <TableCell>{renderCell(item, columnKey, rowIndex)}</TableCell>}
+            {(columnKey) => (
+              <TableCell>{renderCell(item, columnKey, rowIndex)}</TableCell>
+            )}
           </TableRow>
         )}
       </TableBody>
