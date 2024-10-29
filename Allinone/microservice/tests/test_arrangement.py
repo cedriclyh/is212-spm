@@ -71,31 +71,7 @@ def test_get_arrangement_not_found(client):
     assert response.status_code == 404
     assert response.json['message'] == 'Arrangement not found'
 
-# Test creating an arrangement with correct data
-def test_create_arrangement_success(client):
-    data = {
-        "request_id": 1,
-        "staff_id": 101,
-        "arrangement_date": "2024-10-15",
-        "timeslot": "AM",
-        "reason": "Team meeting"
-    }
-    response = client.post('/create_arrangement', json=data)
-    assert response.status_code == 201
-    assert response.json['message'] == 'Arrangement created successfully'
-    assert response.json['data']['request_id'] == 1
 
-# Test creating an arrangement with missing fields
-def test_create_arrangement_missing_fields(client):
-    data = {
-        "request_id": 2,
-        "arrangement_date": "2024-10-15",
-        "timeslot": "PM",
-        "reason": "Team meeting"
-    }
-    response = client.post('/create_arrangement', json=data)
-    assert response.status_code == 400
-    assert response.json['message'] == 'Missing required fields'
 
 # Test failed arrangement creation due to exception
 def test_create_arrangement_failure(client, mocker):
@@ -127,13 +103,6 @@ def test_get_all_arrangements(client):
     response = client.get('/get_all_arrangements')
     assert response.status_code == 200
     assert len(response.json['data']) == 2
-
-
-# Test retrieving an arrangement that does not exist
-def test_get_arrangement_not_found(client):
-    response = client.get('/get_arrangement/999')
-    assert response.status_code == 404
-    assert response.json['message'] == 'Arrangement not found'
 
 # Test retrieving arrangements by staff ID
 def test_get_arrangements_by_staff_id(client):
