@@ -9,16 +9,13 @@ from sib_api_v3_sdk.rest import ApiException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
-# configure database connection
-# DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db"
-DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db"
-
-email_cache = {}
+from dotenv import load_dotenv
+load_dotenv() 
 
 # Setup database connection 
-DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db" # For Windows
+# DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db" # For Windows
 
-# DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db" # For Mac
+DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db" # For Mac
 engine = create_engine(DATABASE_URI)
 
 # Setup Sendinblue API configuration
@@ -70,58 +67,8 @@ def request_sent():
         </html>
         """
 
-    data = request.get_json()
-
-    # Extract data from request
-    staff_id = data.get("staff_id")
-    requested_day = data.get("requested_day")
-    timeslot = data.get("timeslot")
-    reason = data.get("reason")
-    owner_email = data.get("owner_email")
-    
-    # email parameters
-    subject = f"WFH Request for {requested_day} successfully created"
-    sender = {"name": "Your Store Name", "email": "your.email@example.com"}
-    to = [{"name": "Store Owner", "email": owner_email}]
-
-    # html content of email
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta Notification</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; margin: 0; padding: 20px;">
-
-        <div style="background-color: #f4f4f4; padding: 20px; text-align: center;">
-            <h1 style="color: #333;">WFH Request for {requested_day} successfully created</h1>
-        </div>
-
-        <div style="padding: 20px;">
-            <p>Hello,</p>
-            <p>This is a notification to inform you that your request for your WFH arrangement has been successfully created.</p>
-            <p>Details are as followd:</p>
-            <p><strong>Staff ID:</strong> {staff_id}</p>
-            <p><strong>Requested Day:</strong> {requested_day}</p>
-            <p><strong>Timeslot:</strong> {timeslot}</p>
-            <p><strong>Reason:</strong> {reason}</p>
-            <br>
-            <p>Best regards,</p>
-            <p>Your Store Name</p>
-        </div>
-
-    </body>
-    </html>
-    """
-
-    # Creating a SendSmtpEmail object
-    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-        to=to, html_content=html_content, sender=sender, subject=subject
-    )
-
-    # Send the email
-    try:
+        # Send the email
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(to=to, html_content=html_content, sender=sender, subject=subject)
         api_response = api_instance.send_transac_email(send_smtp_email)
         print("Manager notification email sent successfully. API response:", api_response)
 
