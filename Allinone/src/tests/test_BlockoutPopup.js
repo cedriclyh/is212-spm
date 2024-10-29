@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react';
-import BlockoutPopup from '../src/component/CalendarView/BlockoutPopup';
+import BlockoutPopup from '../../src/component/CalendarView/BlockoutPopup';
 
 describe('BlockoutPopup Component', () => {
     it('should open and close the modal', async () => {

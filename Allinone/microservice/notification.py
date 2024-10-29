@@ -3,31 +3,17 @@
 # pip install python-dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-<<<<<<< Updated upstream
 import os
-=======
-
-# import requests
-# from your_notification_service_module.notification_service import NotificationService
-import os
-
-# import
->>>>>>> Stashed changes
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
-<<<<<<< Updated upstream
-from dotenv import load_dotenv
-load_dotenv() 
-=======
 # configure database connection
 # DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db"
 DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db"
 
 email_cache = {}
->>>>>>> Stashed changes
 
 # Setup database connection 
 DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db" # For Windows
@@ -37,17 +23,7 @@ engine = create_engine(DATABASE_URI)
 
 # Setup Sendinblue API configuration
 configuration = sib_api_v3_sdk.Configuration()
-<<<<<<< Updated upstream
 configuration.api_key["api-key"] = os.getenv("BREVOKEY")
-=======
-#find env filepath
-configuration.api_key["api-key"] = os.getenv("BREVOKEY")
-
-# creating one instance of the TransactionalEmailsApi
-api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
-    sib_api_v3_sdk.ApiClient(configuration)
-)
->>>>>>> Stashed changes
 
 # Create API instance for transactional emails
 api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
@@ -94,10 +70,6 @@ def request_sent():
         </html>
         """
 
-<<<<<<< Updated upstream
-        # Send the email
-        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(to=to, html_content=html_content, sender=sender, subject=subject)
-=======
     data = request.get_json()
 
     # Extract data from request
@@ -150,7 +122,6 @@ def request_sent():
 
     # Send the email
     try:
->>>>>>> Stashed changes
         api_response = api_instance.send_transac_email(send_smtp_email)
         print("Manager notification email sent successfully. API response:", api_response)
 
@@ -217,8 +188,8 @@ def notify_status_update():
                     VALUES (:request_id, :recipient_email, :status)
                     """),
                     {"request_id": request_id, 
-                     "recipient_email": staff_email, 
-                     "status": request_status}
+                    "recipient_email": staff_email, 
+                    "status": request_status}
                 )
         except SQLAlchemyError as e:
             print(f"Failed to log notification in database: {e}")
