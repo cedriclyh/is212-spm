@@ -275,7 +275,7 @@ def manage_request():
 @app.route('/cancel_request', methods=['PUT'])
 def cancel_request():
     """
-    Withdraw an approved request by changing its status to 'Withdrawn'.
+    Withdraw an approved request by changing its status to 'Cancel'.
     """
     try:
         data = request.json
