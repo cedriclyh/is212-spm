@@ -1,90 +1,141 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, waitFor, screen } from '@testing-library/react';
+import axios from 'axios';
 import BlockoutPopup from '../../src/component/CalendarView/BlockoutPopup';
 
+// Mock the dependencies
+jest.mock('axios');
+jest.mock('@mui/material', () => ({
+    Button: ({ children, onClick, ...props }) => (
+        <button onClick={onClick} {...props}>{children}</button>
+    )
+}));
+
+jest.mock('@nextui-org/react', () => ({
+    Dropdown: ({ children }) => <div data-testid="dropdown">{children}</div>,
+    DropdownTrigger: ({ children }) => <div data-testid="dropdown-trigger">{children}</div>,
+    DropdownMenu: ({ children, onSelectionChange }) => (
+        <select
+            data-testid="dropdown-menu"
+            onChange={(e) => onSelectionChange(new Set([e.target.value]))}
+        >
+            {React.Children.map(children, child => (
+                <option value={child.props.key}>{child.props.key}</option>
+            ))}
+        </select>
+    ),
+    DropdownItem: ({ children }) => <div>{children}</div>
+}));
+
 describe('BlockoutPopup Component', () => {
-    it('should open and close the modal', async () => {
-        const { getByTestId, queryByTestId } = render(<BlockoutPopup />);
-        fireEvent.click(getByTestId('open-modal-button')); // Trigger modal open
-        expect(getByTestId('blockout-modal')).toBeTruthy();
-
-        fireEvent.click(getByTestId('close-modal-button')); // Trigger modal close
-        await waitFor(() => {
-            expect(queryByTestId('blockout-modal')).toBeNull();
-        });
+    beforeEach(() => {
+        // Clear all mocks before each test
+        jest.clearAllMocks();
     });
 
-    it('should validate form inputs', async () => {
-        const { getByTestId, getByText } = render(<BlockoutPopup />);
-        fireEvent.click(getByTestId('open-modal-button'));
+    it('should open and close the popup', () => {
+        const { getByText, queryByText } = render(<BlockoutPopup />);
 
-        // Attempt to submit form with empty inputs
-        fireEvent.click(getByTestId('submit-button'));
-        await waitFor(() => {
-            expect(getByText('Please fill out this field.')).toBeTruthy();
-        });
+        // Open popup
+        fireEvent.click(getByText('Block Out Dates'));
+        expect(queryByText('Create Blockout')).toBeInTheDocument();
 
-        // Fill the form with valid data
-        fireEvent.change(getByTestId('date-input'), { target: { value: '2024-10-15' } });
-        fireEvent.change(getByTestId('timeslot-select'), { target: { value: 'AM' } });
-        fireEvent.change(getByTestId('reason-input'), { target: { value: 'Maintenance' } });
-
-        // Try submitting again
-        fireEvent.click(getByTestId('submit-button'));
-        await waitFor(() => {
-            expect(getByText('Blockout request submitted successfully')).toBeInTheDocument();
-        });
+        // Close popup
+        fireEvent.click(getByText('Close'));
+        expect(queryByText('Create Blockout')).not.toBeInTheDocument();
     });
 
-    it('should handle submission data correctly', async () => {
-        const onSubmitMock = jest.fn();
-        const { getByTestId } = render(<BlockoutPopup onSubmit={onSubmitMock} />);
-        fireEvent.click(getByTestId('open-modal-button'));
+    it('should show validation errors for empty required fields', async () => {
+        const { getByText } = render(<BlockoutPopup />);
 
-        // Fill the form with valid data and submit
-        fireEvent.change(getByTestId('date-input'), { target: { value: '2024-10-15' } });
-        fireEvent.change(getByTestId('timeslot-select'), { target: { value: 'AM' } });
-        fireEvent.change(getByTestId('reason-input'), { target: { value: 'Maintenance' } });
-        fireEvent.click(getByTestId('submit-button'));
+        // Open popup
+        fireEvent.click(getByText('Block Out Dates'));
+
+        // Submit without filling required fields
+        fireEvent.click(getByText('Submit'));
+
+        // Check for validation error messages
+        expect(getByText('Title is required.')).toBeInTheDocument();
+        expect(getByText('Start date is required.')).toBeInTheDocument();
+        expect(getByText('End date is required.')).toBeInTheDocument();
+    });
+
+    it('should handle successful form submission', async () => {
+        axios.post.mockResolvedValueOnce({ status: 200 });
+        const { getByText, getByLabelText } = render(<BlockoutPopup />);
+
+        // Open popup
+        fireEvent.click(getByText('Block Out Dates'));
+
+        // Fill out the form
+        fireEvent.change(getByLabelText('Title:'), { target: { value: 'Test Blockout' } });
+        fireEvent.change(getByLabelText('Start Date:'), { target: { value: '2024-10-15' } });
+        fireEvent.change(getByLabelText('End Date:'), { target: { value: '2024-10-16' } });
+
+        // Submit form
+        fireEvent.click(getByText('Submit'));
 
         await waitFor(() => {
-            expect(onSubmitMock).toHaveBeenCalledWith({
-                date: '2024-10-15',
-                timeslot: 'AM',
-                reason: 'Maintenance'
+            expect(axios.post).toHaveBeenCalledWith('http://localhost:5012/manage_blockout', {
+                title: 'Test Blockout',
+                start_date: '2024-10-15',
+                end_date: '2024-10-16',
+                timeslot: { anchorKey: 'FULL', currentKey: 'FULL' },
+                blockout_description: ''
             });
         });
     });
 
-    it('should display error messages on server error', async () => {
-        const { getByTestId, getByText } = render(<BlockoutPopup />);
-        fireEvent.click(getByTestId('open-modal-button'));
+    it('should handle server error response', async () => {
+        // Mock axios to simulate a 409 conflict error
+        axios.post.mockRejectedValueOnce({
+            response: { status: 409 }
+        });
 
-        // Simulate server error
-        jest.spyOn(global, 'fetch').mockImplementation(() =>
-            Promise.resolve({
-                status: 500,
-                json: () => Promise.resolve({ message: 'Internal Server Error' })
-            })
-        );
+        const { getByText, getByLabelText } = render(<BlockoutPopup />);
 
-        // Fill the form and submit
-        fireEvent.change(getByTestId('date-input'), { target: { value: '2024-10-15' } });
-        fireEvent.change(getByTestId('timeslot-select'), { target: { value: 'AM' } });
-        fireEvent.change(getByTestId('reason-input'), { target: { value: 'Maintenance' } });
-        fireEvent.click(getByTestId('submit-button'));
+        // Open popup
+        fireEvent.click(getByText('Block Out Dates'));
+
+        // Fill out the form
+        fireEvent.change(getByLabelText('Title:'), { target: { value: 'Test Blockout' } });
+        fireEvent.change(getByLabelText('Start Date:'), { target: { value: '2024-10-15' } });
+        fireEvent.change(getByLabelText('End Date:'), { target: { value: '2024-10-16' } });
+
+        // Submit form
+        fireEvent.click(getByText('Submit'));
 
         await waitFor(() => {
-            expect(getByText('Internal Server Error')).toBeInTheDocument();
+            expect(screen.getByText(/Failed to create blockout. At least one blockout already exists within the selected date range./i))
+                .toBeInTheDocument();
         });
     });
 
-    it('should ensure only available timeslots can be selected', async () => {
-        const { getByTestId, getByText } = render(<BlockoutPopup availableTimeslots={['AM', 'PM']} />);
-        fireEvent.click(getByTestId('open-modal-button'));
+    it('should validate date range', async () => {
+        const { getByText, getByLabelText } = render(<BlockoutPopup />);
 
-        const timeslotSelect = getByTestId('timeslot-select');
-        const availableOptions = Array.from(timeslotSelect.options).map(opt => opt.value);
-        expect(availableOptions).toEqual(expect.arrayContaining(['AM', 'PM']));
+        // Open popup
+        fireEvent.click(getByText('Block Out Dates'));
+
+        // Set invalid date range (end date before start date)
+        fireEvent.change(getByLabelText('Start Date:'), { target: { value: '2024-10-16' } });
+        fireEvent.change(getByLabelText('End Date:'), { target: { value: '2024-10-15' } });
+
+        // Submit form
+        fireEvent.click(getByText('Submit'));
+
+        expect(getByText('End date cannot be earlier than start date.')).toBeInTheDocument();
+    });
+
+    it('should handle timeslot selection', async () => {
+        const { getByText, getByTestId } = render(<BlockoutPopup />);
+
+        // Open popup
+        fireEvent.click(getByText('Block Out Dates'));
+
+        // Change timeslot
+        fireEvent.change(getByTestId('dropdown-menu'), { target: { value: 'AM' } });
+
+        expect(getByText('AM')).toBeInTheDocument();
     });
 });

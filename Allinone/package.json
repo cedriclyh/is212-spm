@@ -56,12 +56,14 @@
     "tailwindcss": "^3.4.13"
   },
   "jest": {
-  "transform": {
-    "^.+\\.[t|j]sx?$": "babel-jest"
-  },
-  "moduleNameMapper": {
-    "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+    "transform": {
+      "^. +\\- (js|jsx)$": "babel-jest"
+    },
+    "moduleNameMapper": {
+      "II. (css|less|scss|sass)$": "identity-obj-proxy",
+      "^@/components/ (•*)$": "<rootDir>/src/components/$1"
+    },
+      "testEnvironment": "jsdom",
+      "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"]
+    }
   }
-}
-
-}
