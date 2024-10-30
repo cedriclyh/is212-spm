@@ -13,7 +13,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Chip,
-  // User,
+  User,
   Pagination,
   Spinner,
 } from "@nextui-org/react";
@@ -23,6 +23,7 @@ import { SearchIcon } from "../Icons/SearchIcon";
 import { ChevronDownIcon } from "../Icons/ChevronDownIcon";
 import { columns, statusOptions, pulled_data } from "./RequestData";
 import { capitalize, formatDate, formatTimeslot } from "./RequestPageUtils";
+import profilePic from "../Icons/profile_pic.png"
 
 const statusColorMap = {
   Approved: "success",
@@ -155,6 +156,16 @@ export default function RequestTable() {
               <p className="text-bold text-small" >{formatDate(request.arrangement_date)[0]}</p>
               <p className="text-bold text-tiny text-default-400">{formatDate(request.arrangement_date)[1]}</p>
               </div>
+          );
+        case "staff":
+          return (
+            <User
+              avatarProps={{radius: "lg", src: profilePic}}
+              description={request.manager_details.email}
+              name={request.manager_details.staff_fname + " " + request.manager_details.staff_lname}
+            >
+              {request.email}
+            </User>
           );
         case "timeslot":
           return (

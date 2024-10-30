@@ -45,12 +45,15 @@ CREATE TABLE IF NOT EXISTS Request_Log (
     staff_id INT NOT NULL, 
     manager_id INT NOT NULL,        
     request_date DATE NOT NULL,
-    arrangement_date DATE NOT NULL, -- which day you are requesting for
+    arrangement_date VARCHAR(255) NOT NULL, -- which day you are requesting for
     timeslot VARCHAR(50) NOT NULL, 
     status VARCHAR(50) NOT NULL DEFAULT 'Pending',           
     reason VARCHAR(255) NOT NULL,
-    remarks VARCHAR(255) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    remark VARCHAR(255) NOT NULL DEFAULT "",
+    recurring_day VARCHAR(255) NOT NULL,
+    start_date VARCHAR(255) NOT NULL,
+    end_date VARCHAR(255) NOT NULL,
+    is_recurring BOOLEAN NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
@@ -657,25 +660,27 @@ INSERT INTO Credentials (Staff_ID, Email, Password) VALUES
     (140894, 'Rahim.Khalid@allinone.com.sg', 'Password140894');
 
 -- Request_Log values
-INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason) VALUES
-(1, 140002, 140894, '2024-09-29', '2024-10-01', "AM", 'Approved', "Medical Appointment"),
-(2, 140003, 140894, '2024-09-29', '2024-10-01', "PM", 'Approved', "Lazy"),
-(3, 140004, 140894, '2024-09-19', '2024-10-01', "FULL", 'Approved', ''),
-(4, 140004, 140894, '2024-08-09', '2024-10-02', "FULL", 'Pending', ''),
-(5, 140004, 140894, '2024-09-29', '2024-10-03', "PM", 'Rejected', ''),
-(6, 140004, 140894, '2024-07-09', '2024-12-01', "AM", 'Pending', ''),
-(7, 140004, 140894, '2024-09-10', '2025-01-01', "FULL", 'Approved', ''),
-(8, 140004, 140894, '2024-09-09', '2024-10-11', "PM", 'Approved', ''),
-(9, 140004, 140894, '2024-08-31', '2024-10-12', "PM", 'Rejected', ''),
-(10, 140004, 140894, '2024-08-30', '2024-10-15', "FULL", 'Pending', ''),
-(11, 140004, 140894, '2024-08-30', '2024-10-15', "PM", 'Pending', ''),
-(12, 130002, 130002, '2024-10-31', '2024-10-15', "FULL", 'Pending', ''),
-(13, 130002, 130002, '2024-11-01', '2024-10-15', "FULL", 'Pending', ''),
-(14, 140004, 140894, '2024-10-01', '2024-10-02', "FULL", 'Approved', ''),
-(15, 140004, 140894, '2024-10-02', '2024-10-04', "FULL", 'Approved', ''),
-(16, 140004, 140894, '2024-10-03', '2024-10-21', "FULL", 'Approved', ''),
-(16, 140002, 140894, '2024-10-28', '2024-11-01', "AM", 'Approved', ""),
-(17, 140002, 140894, '2024-10-28', '2024-11-01', "PM", 'Rejected', "");
+INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrangement_date, timeslot, status, reason, remark, recurring_day, start_date, end_date, is_recurring) VALUES
+(1, 140002, 140894, '2024-09-29', '2024-10-01', "AM", 'Approved', "Medical Appointment", "", "", "", "", False),
+(2, 140003, 140894, '2024-09-29', '2024-10-01', "PM", 'Approved', "Lazy", "", "", "", "", False),
+(3, 140004, 140894, '2024-09-19', '2024-10-01', "FULL", 'Approved', '', "", "", "", "", False),
+(4, 140004, 140894, '2024-08-09', '2024-10-02', "FULL", 'Pending', '', "", "", "", "", False),
+(5, 140004, 140894, '2024-09-29', '2024-10-03', "PM", 'Rejected', '', "", "", "", "", False),
+(6, 140004, 140894, '2024-07-09', '2024-12-01', "AM", 'Pending', '', "", "", "", "", False),
+(7, 140004, 140894, '2024-09-10', '2025-01-01', "FULL", 'Approved', '', "", "", "", "", False),
+(8, 140004, 140894, '2024-09-09', '2024-10-11', "PM", 'Approved', '', "", "", "", "", False),
+(9, 140004, 140894, '2024-08-31', '2024-10-12', "PM", 'Rejected', '', "", "", "", "", False),
+(10, 140004, 140894, '2024-08-30', '2024-10-15', "FULL", 'Pending', '', "", "", "", "", False),
+(11, 140004, 140894, '2024-08-30', '2024-10-15', "PM", 'Pending', '', "", "", "", "", False),
+(12, 130002, 130002, '2024-10-31', '2024-10-15', "FULL", 'Pending', '', "", "", "","", False),
+(13, 130002, 130002, '2024-11-01', '2024-10-15', "FULL", 'Pending', '', "", "", "", "", False),
+(14, 140004, 140894, '2024-10-01', '2024-10-02', "FULL", 'Approved', '', "", "", "", "", False),
+(15, 140004, 140894, '2024-10-02', '2024-10-04', "FULL", 'Approved', '', "", "", "", "", False),
+(16, 140004, 140894, '2024-10-03', '2024-10-21', "FULL", 'Approved', '', "", "", "", "", False),
+(17, 140002, 140894, '2024-10-28', '2024-11-01', "AM", 'Approved', '', "", "", "", "", False),
+(18, 140002, 140894, '2024-10-28', '2024-11-01', "PM", 'Rejected', '', "", "", "", "", False),
+(19, 140002, 140894, '2024-10-30', '', "FULL", 'Pending', "", "", "Monday", "2024-11-01", "2024-12-31", True);
+
 
 -- Arrangement values
 -- meaning approved requests
@@ -687,7 +692,11 @@ INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reaso
 (15, 140004, '2024-10-04', "FULL", ''),
 (16, 140004, '2024-10-21', "FULL", ''),
 (7, 140004, '2025-01-01', "FULL", ''),
-(8, 140004, '2024-10-11', "PM", '');
+(8, 140004, '2024-10-11', "PM", ''),
+(14, 140004, '2024-10-02', "FULL", ''),
+(15, 140004, '2024-10-04', "FULL", ''),
+(16, 140004, '2024-10-21', "FULL", ''),
+(17, 140002, '2024-11-01', "AM", '');
 
 -- RequestDates values
 INSERT INTO RequestDates (id, request_id, arrangement_date) VALUES
@@ -703,7 +712,21 @@ INSERT INTO RequestDates (id, request_id, arrangement_date) VALUES
 (10, 10, '2024-10-15'),
 (11, 11, '2024-10-15'),
 (12, 12, '2024-10-15'),
-(13, 13, '2024-10-15');
+(13, 13, '2024-10-15'),
+(14, 14, '2024-10-02'),
+(15, 15, '2024-10-04'),
+(16, 16, '2024-10-21'),
+(17, 17, '2024-11-01'),
+(18, 18, '2024-11-01'),
+(19, 19, "2024-11-04"),
+(20, 19, "2024-11-11"),
+(21, 19, "2024-11-18"),
+(22, 19, "2024-11-25"),
+(23, 19, "2024-12-02"),
+(24, 19, "2024-12-09"),
+(25, 19, "2024-12-16"),
+(26, 19, "2024-12-23"),
+(27, 19, "2024-12-30");
 
 -- Block_Out_Dates values (with description)
 INSERT INTO Block_Out_Dates (start_date, end_date, timeslot, title, blockout_description) VALUES

@@ -7,6 +7,7 @@ import Login from './component/Login/login';
 import RequestTable from './component/RequestPage/RequestTable';
 import NewRequest from './component/NewRequestPage/NewRequest';
 import TeamRequest from './component/TeamRequest/TeamRequest';
+import EditRequestPage from './component/EditRequestPage/EditRequest';
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
           <Route path="/requests" element={< RequestTable />} />
           <Route path="/new_request" element={< NewRequest />} />
           <Route path="/team_request" element={< TeamRequest />} />
+          <Route path="/edit_request/:uid" element={<EditRequestPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
