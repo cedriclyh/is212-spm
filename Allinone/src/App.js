@@ -2,7 +2,7 @@ import './App.css';
 import React from "react";
 import { BrowserRouter, Routes, Route  } from 'react-router-dom';
 import StaffView from './component/CalendarView/StaffView'
-import DirectorView from './component/CalendarView/DirectorView'
+import HRView from './component/CalendarView/HRView'
 import Login from './component/login'
 import RequestPage  from './component/RequestPage/RequestPage';
 import NewRequestPage from './component/NewRequestPage/NewRequestPage';
@@ -16,7 +16,7 @@ const App = () => {
     <BrowserRouter>
       <Navbar />
       <Routes>
-          <Route path="/" element={ <DirectorView /> } /> {/* Default path */} {/* role num = 3*/}
+          <Route path="/" element={ <HRView /> } /> {/* Default path */} {/* role num = 3*/}
           <Route path="/Staff" element={ <StaffView /> } /> {/* role num = 2*/}
           <Route path="/login" element={ <Login /> } />
           {/* <Route path="/manager-data" component={ Manager-Data } /> */}

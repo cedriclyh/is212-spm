@@ -15,13 +15,14 @@ export default function WFHcalendar() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(false);
+  const userID = 140001; // Hardcoded user ID for now
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const teamEvents = await getDirectorTeamEvents(); 
+      const teamEvents = await getDirectorTeamEvents(userID); 
       setTeamEvents(teamEvents); 
 
-      const personalEvents = await getPersonalEvents(); 
+      const personalEvents = await getPersonalEvents(userID); 
       setPersonalEvents(personalEvents);
     };
     fetchEvents();

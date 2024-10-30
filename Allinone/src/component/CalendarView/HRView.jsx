@@ -3,7 +3,7 @@ import './CalendarView.css'; // Import the CSS file
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getValidRange, getManagerTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { getValidRange, getHRTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
 import EventFilter from './EventFilter';
 
@@ -15,11 +15,11 @@ export default function WFHcalendar() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(false);
-  const userID = 140894; // Hardcoded for now
+  const userID = 130002; // Hardcoded user ID for now
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const teamEvents = await getManagerTeamEvents(userID); 
+      const teamEvents = await getHRTeamEvents(userID); 
       setTeamEvents(teamEvents); 
 
       const personalEvents = await getPersonalEvents(userID); 
