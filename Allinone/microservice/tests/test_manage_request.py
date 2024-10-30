@@ -8,6 +8,10 @@ from unittest.mock import patch, Mock
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 
+mock_scheduler = Mock()
+with patch.dict('sys.modules', {'apscheduler.schedulers.background': mock_scheduler}):
+    from manage_request import app, db, count_wfh, past_wfh
+
 @pytest.fixture
 def client():
     app.config['TESTING'] = True

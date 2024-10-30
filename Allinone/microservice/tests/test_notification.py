@@ -1,9 +1,12 @@
 import pytest
-from notification import app, engine
 from unittest.mock import patch, Mock
 import json
-import sib_api_v3_sdk
-from sqlalchemy import text
+import os
+
+# Mock the Sendinblue/Brevo SDK before importing the app
+mock_sib = Mock()
+with patch.dict('sys.modules', {'sib_api_v3_sdk': mock_sib}):
+    from notification import app, engine
 
 @pytest.fixture
 def client():
@@ -11,13 +14,16 @@ def client():
     return app.test_client()
 
 @pytest.fixture
-def mock_api_instance():
-    with patch('notification.api_instance') as mock:
-        yield mock
+def mock_sib_api():
+    """Mock Sendinblue/Brevo API configuration"""
+    with patch('notification.sib_api_v3_sdk.Configuration') as mock_config:
+        with patch('notification.sib_api_v3_sdk.TransactionalEmailsApi') as mock_api:
+            mock_instance = mock_api.return_value
+            mock_instance.send_transac_email.return_value = {"message_id": "test123"}
+            yield mock_instance
 
-def test_request_sent_success(client, mock_api_instance):
+def test_request_sent_success(client, mock_sib_api):
     """Test successful notification to manager for new request"""
-    # Data matching SQL schema
     data = {
         "manager_email": "wenhanchen22@gmail.com",
         "staff_id": 140002,
@@ -26,15 +32,13 @@ def test_request_sent_success(client, mock_api_instance):
         "timeslot": "AM",
         "reason": "Medical Appointment"
     }
-
-    mock_api_instance.send_transac_email.return_value = {"message_id": "test123"}
     
     response = client.post('/request_sent', json=data)
     assert response.status_code == 200
     assert b"Manager email sent successfully" in response.data
     
     # Verify email content
-    called_args = mock_api_instance.send_transac_email.call_args[0][0]
+    called_args = mock_sib_api.send_transac_email.call_args[0][0]
     assert called_args.to[0]['email'] == "wenhanchen22@gmail.com"
     assert "Susan Goh" in called_args.html_content
     assert "Medical Appointment" in called_args.html_content
