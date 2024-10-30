@@ -5,10 +5,10 @@ from flask_cors import CORS
 import requests
 import os
 import sys
-
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
-
+import json
+from amqp_setup import publish_to_queue
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
@@ -174,53 +174,66 @@ def revoke_arrangements():
     # manager_id = data.get("manager_id")
     staff_id = data.get("staff_id")
     revoke_dates = data.get("revoke_dates")
-    revoke_dates = [datetime.strptime(revoke_date, '%Y-%m-%d').date() for revoke_date in revoke_dates]
+    revoke_dates_check = [datetime.strptime(revoke_date, '%Y-%m-%d').date() for revoke_date in revoke_dates]
     
     try: 
         # 1. Check if arrangement is within 1 month ago and 3 months forward
-        checked_date_response, status_code = check_date(revoke_dates)
+        checked_date_response, status_code = check_date(revoke_dates_check)
         if status_code != 200:
             return checked_date_response
     
-         # 2. Delete arrangement from db
-        arrangements_to_delete = Arrangement.query.filter(
-            Arrangement.staff_id==staff_id,
-            Arrangement.arrangement_date.in_(revoke_dates)
-            ).all()   
+        # 2. Package data for async amqp processing
+        task_data = {
+            "staff_id": staff_id,
+            "revoke_dates": revoke_dates
+        }
+
+        # Publish to amqp queue to process deleting arrangement and updating request status
+        print("Publishing to queue...")
+        publish_to_queue(task_data)
+        print("Successfully published to queue.")
         
-        print(f"Arrangements to delete: {arrangements_to_delete}")
-
-        request_ids = [arrangement.request_id for arrangement in arrangements_to_delete]
-        print(f"Request IDs: {request_ids}")
-
-        print("Deleting arrangements...")
-        delete_response, delete_status_code = delete_arrangements(request_ids)
+        # # 2. Delete arrangement from db
+        # arrangements_to_delete = Arrangement.query.filter(
+        #     Arrangement.staff_id==staff_id,
+        #     Arrangement.arrangement_date.in_(revoke_dates)
+        #     ).all()   
         
-        if delete_status_code != 200:
-            return delete_response
+        # print(f"Arrangements to delete: {arrangements_to_delete}")
 
-        print("All arrangements succesfully deleted")
+        # request_ids = [arrangement.request_id for arrangement in arrangements_to_delete]
+        # print(f"Request IDs: {request_ids}")
 
-        #3. Update request_log list 
-        print("Updating request statuses...")
-        for request_id in request_ids:
-            print(f"Updating status for Request ID {request_id}")
-            update_request_data = {
-                "request_id": request_id,
-                "status": "Withdrawn",
-                "disable_notification": True
-            }
+        # print("Deleting arrangements...")
+        # delete_response, delete_status_code = delete_arrangements(request_ids)
+        
+        # if delete_status_code != 200:
+        #     return delete_response
 
-            update_request_response = requests.put(f"{MANAGE_REQUEST_URL}/manage_request", json=update_request_data)        
-            print(update_request_response.json())
-            if(update_request_response.status_code) != 200:
-                print(f"Failed to update request status for Request ID {request_id}")
-                return update_request_response
+        # print("All arrangements succesfully deleted")
+
+        # #3. Update request_log list 
+        # print("Updating request statuses...")
+        # for request_id in request_ids:
+        #     print(f"Updating status for Request ID {request_id}")
+        #     update_request_data = {
+        #         "request_id": request_id,
+        #         "status": "Withdrawn",
+        #         "disable_notification": True
+        #     }
+
+        #     update_request_response = requests.put(f"{MANAGE_REQUEST_URL}/manage_request", json=update_request_data)        
+        #     print(update_request_response.json())
+        #     if(update_request_response.status_code) != 200:
+        #         print(f"Failed to update request status for Request ID {request_id}")
+        #         return update_request_response
             
-        print("All request statuses successfully updated.")
+        # print("All request statuses successfully updated.")
             
-        return jsonify({"message": f"All arrangments revoked successfully", "code": 200}), 200
-    
+        # return jsonify({"message": f"All arrangments revoked successfully", "code": 200}), 200
+        
+        print("Revocation process started.")
+        return jsonify({"message": "Revocation process started. An email will be sent to you when the revocation process is completed.", "code": 200}), 200
 
     except Exception as e:
         app.logger.error(f"Error revoking arrangments: {e}")
