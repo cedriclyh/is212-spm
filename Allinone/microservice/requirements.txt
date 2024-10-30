@@ -3,6 +3,7 @@ Flask-SQLAlchemy
 mysql-connector-python
 Flask-Cors
 pytest
+pytest-cov
 pytest-flask
 pytest-mock
 requests
