@@ -12,7 +12,7 @@ REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 def get_employee_requests(employee_id):
     try:
         # Request data from employee microservice
-        employee_requests_response = requests.get(f'{REQUEST_LOG_MICROSERVICE_URL}/requests/staff/{employee_id}')
+        employee_requests_response = requests.get(f'{REQUEST_LOG_MICROSERVICE_URL}/get_requests/staff/{employee_id}')
         employee_requests_response.raise_for_status()
     except requests.exceptions.HTTPError as http_err:
         if employee_requests_response.status_code == 404:
@@ -76,6 +76,71 @@ def get_employee_requests(employee_id):
         'code': 200
     }), 200
 
+@app.route("/manager/<int:manager_id>/requests", methods=["GET"])
+def get_team_requests(manager_id):
+    try:
+         # Request data from employee microservice
+        team_requests_response = requests.get(f'{REQUEST_LOG_MICROSERVICE_URL}/get_requests/manager/{manager_id}')
+        team_requests_response.raise_for_status()
+    except requests.exceptions.HTTPError as http_err:
+        if team_requests_response.status_code == 404:
+            return jsonify({
+                "message": "Employee requests not found",
+                "request_data": [],
+                "code": 404
+            }), 404
+        elif team_requests_response.status_code == 500:
+            return jsonify({
+                "message": "Internal server error while fetching employee requests",
+                "request_data": [],
+                "code": 500
+            }), 500
+        else:
+            return jsonify({
+                "message": f"HTTP error occurred: {http_err}",
+                "request_data": [],
+                "code": team_requests_response.status_code
+            }), team_requests_response.status_code
+    except requests.exceptions.Timeout:
+        return jsonify({
+            "message": "Request to the employee microservice timed out",
+            "request_data": [],
+            "code": 504
+        }), 504
+    except requests.exceptions.RequestException as err:
+        return jsonify({
+            "message": f"Error occurred: {err}",
+            "request_data": [],
+            "code": 500
+        }), 500
+    
+    team_requests = team_requests_response.json().get('data', [])
+
+    staff_dict = {}
+
+    for request in team_requests:
+        staff_id = request.get('staff_id')
+        if staff_id not in staff_dict:
+            try:
+                # Fetch manager details for each request
+                staff_response = requests.get(f'{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}')
+                staff_response.raise_for_status()
+                staff_dict[staff_id] = staff_response.json().get('data', {})
+            except requests.exceptions.HTTPError as http_err:
+                # Log the error but continue processing other requests
+                app.logger.error(f"Manager {staff_id} fetch failed: {http_err}")
+                staff_dict[staff_id] = None  # Set as None to indicate failure
+            except requests.exceptions.RequestException as err:
+                app.logger.error(f"Error occurred while fetching manager {manager_id}: {err}")
+                staff_dict[staff_id] = None
+
+        request['staff_details'] = staff_dict.get(staff_id)
+
+    return jsonify({
+        'message': f'Requests from team manager {manager_id} found',
+        'data': team_requests,
+        'code': 200
+    }), 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5010, debug=True)
+    app.run(host="0.0.0.0", port=5011, debug=True)

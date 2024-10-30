@@ -1,0 +1,27 @@
+.layout {
+    display: flex;
+    height: 100vh; /* Full screen height */
+  }
+  
+  .sidebar {
+    width: auto; /* Set a width for the sidebar */
+    height: 100%; /* Ensure sidebar takes full height */
+  }
+  
+  .main-content {
+    flex: 1; /* Allows the content to take the rest of the width */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .navbar {
+    width: 100%; /* Ensures Navbar takes full width */
+    height: 60px; /* Set the height of Navbar */
+  }
+  
+  .page-content {
+    flex: 1;
+    padding: 20px; /* You can adjust or remove padding as needed */
+    overflow: auto; /* Ensures scrollability if content overflows */
+  }
+  

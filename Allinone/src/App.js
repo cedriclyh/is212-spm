@@ -1,29 +1,31 @@
 import './App.css';
-import React from "react";
-import { BrowserRouter, Routes, Route  } from 'react-router-dom';
-import CalenderView from './component/CalendarView/CalendarView'
-import Login from './component/login'
-import RequestPage  from './component/RequestPage/RequestPage';
-import NewRequestPage from './component/NewRequestPage/NewRequestPage';
-import TeamRequestPage from './component/TeamRequest/TeamRequestPage';
-import Navbar from './component/Navbar/Navbar'; 
-
-
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './Layout'; // Import Layout
+import CalenderView from './component/CalendarView/CalendarView';
+import Login from './component/Login/login';
+import RequestTable from './component/RequestPage/RequestTable';
+import NewRequest from './component/NewRequestPage/NewRequest';
+import TeamRequest from './component/TeamRequest/TeamRequest';
+import EditRequestPage from './component/EditRequestPage/EditRequest';
 
 const App = () => {
-  return(
+  return (
     <BrowserRouter>
-      <Navbar />
       <Routes>
-          <Route path="/" element={ <CalenderView /> } /> {/* Default path */}
-          <Route path="/login" element={ <Login /> } />
-          {/* <Route path="/manager-data" component={ Manager-Data } /> */}
-          <Route path="/requests" element={ <RequestPage /> } />
-          <Route path="/new_request" element={ <NewRequestPage /> } />
-          <Route path="/team_request" element={ < TeamRequestPage /> } />
+        <Route path="/login" element={<Login />} />
+        <Route 
+          element={<Layout />}
+        >
+          <Route path="/" element={< CalenderView />} />
+          <Route path="/requests" element={< RequestTable />} />
+          <Route path="/new_request" element={< NewRequest />} />
+          <Route path="/team_request" element={< TeamRequest />} />
+          <Route path="/edit_request/:uid" element={<EditRequestPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
-  )
-}
+  );
+};
 
 export default App;
