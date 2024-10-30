@@ -149,7 +149,7 @@ def get_manager_email(manager_id):
                         "error": str(e)}), 500
     
 # Get all employees reporting to a specific manager
-@app.route('/users/team/<manager_id>', methods=['GET'])
+@app.route('/users/team/<int:manager_id>', methods=['GET'])
 def get_team_by_manager(manager_id):
     try:
         # Fetch the employees reporting to the specific manager
@@ -178,6 +178,7 @@ def get_team_by_manager(manager_id):
             "team_count": count,
             "code": 500
         }), 500
+    
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)

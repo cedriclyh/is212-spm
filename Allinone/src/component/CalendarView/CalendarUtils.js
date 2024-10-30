@@ -40,6 +40,23 @@ function getBackgroundColor(status) {
   }
 }
 
+//Fetch Department Name
+export const getDeptName = async (userId) => {
+  const apiUrl = `http://127.0.0.1:5002/user/${userId}`;
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`Error fetching user data: ${response.status}`);
+      }
+      const userData = await response.json();
+      const staff_dept= userData.data.dept;
+      return staff_dept;
+    } catch (error) {
+      console.error("Failed to fetch department name:", error);
+      return null;
+    }
+}
+
 // Retrieve all relevant information of the employee
 async function getEmployeeInfo(userId) {
   const apiUrl = `http://127.0.0.1:5002/user/${userId}`;
@@ -63,6 +80,14 @@ async function getArrangementName(userId) {
 
   // const fullName = `${staff_fname} ${staff_lname} Team`;
   const arrangementName = `${staff_fname} ${staff_lname} WFH`;
+  return arrangementName;
+}
+
+async function getTeamName(userId) {
+  const {staff_lname} = await getEmployeeInfo(userId)
+  const {staff_fname}= await getEmployeeInfo(userId);
+
+  const arrangementName = `${staff_fname} ${staff_lname}'s Team`;
   return arrangementName;
 }
 
@@ -102,6 +127,8 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
       requests.map(async (req) => {
         const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
         const title = await getArrangementName(req.staff_id);
+        const teamName = await getTeamName(req.manager_id)
+        const {dept} = await getEmployeeInfo(req.staff_id);
         return {
           id: req.request_id + req.arrangement_date,
           title,  
@@ -109,6 +136,8 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
           end,
           allDay: false,
           backgroundColor: getBackgroundColor(req.status),
+          teamName: teamName,
+          dept: dept,
         };
       })
     );
@@ -142,6 +171,8 @@ export const getApprovedandPendingEvents = async (userId) => {
         }
         const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
         const title = await getArrangementName(req.staff_id);
+        const teamName = await getTeamName(req.manager_id)
+        const {dept} = await getEmployeeInfo(req.staff_id);
         return {
           id: req.request_id + req.arrangement_date,
           title,  
@@ -149,6 +180,8 @@ export const getApprovedandPendingEvents = async (userId) => {
           end,
           allDay: false,
           backgroundColor: getBackgroundColor(req.status),
+          teamName: teamName,
+          dept: dept,
         };
       })
     );
@@ -191,7 +224,9 @@ export const getApprovedEventsOnly = async (userId) => {
         return null; // Skip this request if data is missing
       }
       const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
-      const title = await getArrangementName(req.staff_id) || 'Team Event';
+      const title = await getArrangementName(req.staff_id) ;
+      const teamName = await getTeamName(req.manager_id)
+      const {dept} = await getEmployeeInfo(req.staff_id);
       return {
         id: req.request_id + req.arrangement_date,
         title,  
@@ -199,6 +234,8 @@ export const getApprovedEventsOnly = async (userId) => {
         end,
         allDay: false,
         backgroundColor: '#4caf50',
+        teamName: teamName,
+        dept: dept,
       };
     })
   );
@@ -314,14 +351,20 @@ export const getHRTeamEvents = async (userId) => {
         return null; // Skip this request if data is missing
       }
       const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
-      const title = await getArrangementName(req.staff_id) || 'Team Event';
+      const staffName = await getArrangementName(req.staff_id);
+      const teamName = await getTeamName(req.manager_id)
+      const title = `[${teamName}] ${staffName}`;
+      const {dept} = await getEmployeeInfo(req.staff_id);
+
       return {
-        id: req.request_id + req.arrangement_date,
+        id: req.request_id,
         title,  
         start,
         end,
         allDay: false,
         backgroundColor: getBackgroundColor(req.status),
+        teamName: teamName,
+        dept: dept,
       };
     })
   );
@@ -406,6 +449,9 @@ export const getBlockoutDates = async (currentView) => {
   }
 }
 
-
+export const checkRoleNum = async (userId) => {
+  const {roleNum} = await getEmployeeInfo(userId);
+  return roleNum;
+}
 
 
