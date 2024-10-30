@@ -37,18 +37,32 @@ const statusColorMap = {
   Blocked: "danger"
 };
 
-export default function NewRequest() {
-  const [inputDates, setInputDates] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTimeslot, setSelectedTimeslot] = useState("Choose a Timeslot");
-  const [SelectedDayOfTheWeek, setSelectedDayOfTheWeek] = useState("Choose a Week Day");
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+export default function NewRequest({ initialFormData }) {
+  const [inputDates, setInputDates] = useState(initialFormData?.arrangement_date ? [initialFormData.arrangement_date] : []);
+  const [selectedDate, setSelectedDate] = useState(initialFormData?.arrangement_date || null);
+  const [selectedTimeslot, setSelectedTimeslot] = useState(initialFormData?.timeslot || "Choose a Timeslot");
+  const [SelectedDayOfTheWeek, setSelectedDayOfTheWeek] = useState(initialFormData?.recurring_day || "Choose a Week Day");
+  const [isRecurring, setIsRecurring] = useState(initialFormData?.is_recurring || false);
+  const [startDate, setStartDate] = useState(initialFormData?.start_date || null);
+  const [endDate, setEndDate] = useState(initialFormData?.end_date || null);
+  const [reason, setReason] = useState(initialFormData?.reason || '');
+  const [blockOutDates, setBlockOutDates] = useState([]);
   const [extractedDates, setExtractedDates] = useState([]);
   const [availability, setAvailability] = useState({});
-  const [reason, setReason] = useState('');
-  const [blockOutDates, setBlockOutDates] = useState([]);
+
+  // Populate form data whenever `initialFormData` changes
+  useEffect(() => {
+    if (initialFormData) {
+      setInputDates(initialFormData.arrangement_date ? [initialFormData.arrangement_date] : []);
+      setSelectedDate(initialFormData.arrangement_date || null);
+      setSelectedTimeslot(initialFormData.timeslot || "Choose a Timeslot");
+      setSelectedDayOfTheWeek(initialFormData.recurring_day || "Choose a Week Day");
+      setIsRecurring(initialFormData.is_recurring || false);
+      setStartDate(initialFormData.start_date || null);
+      setEndDate(initialFormData.end_date || null);
+      setReason(initialFormData.reason || '');
+    }
+  }, [initialFormData]);
 
   // for modal
   const {isOpen, onOpen, onOpenChange} = useDisclosure();
@@ -57,7 +71,6 @@ export default function NewRequest() {
   const [buttonColor, setButtonColor] = useState('danger');
   const [showCountdown, setShowCountdown] = useState(false);
 
-  // const blockOutDates = React.useMemo(() => ["21-10-2024"], []);
   useEffect(() => {
     async function fetchBlockOutDates() {
       try {
@@ -118,9 +131,9 @@ export default function NewRequest() {
     setReason('');
   };
 
-  useEffect(() => {
-      console.log("isRecurring updated:", isRecurring);
-  }, [isRecurring]);
+  // useEffect(() => {
+  //     console.log("isRecurring updated:", isRecurring);
+  // }, [isRecurring]);
 
   // Update availability status when dates are extracted
   useEffect(() => {
@@ -137,9 +150,8 @@ export default function NewRequest() {
   // UseEffect to trigger extractWeekdays whenever the startDate, endDate, or SelectedDayOfTheWeek changes
   useEffect(() => {
     if (isRecurring && startDate && endDate && SelectedDayOfTheWeek) {
-      const formattedStartDate = formatDateFromPicker(startDate);
-      const formattedEndDate = formatDateFromPicker(endDate);
-      const dates = extractWeekdays(formattedStartDate, formattedEndDate, SelectedDayOfTheWeek);
+      console.log(startDate);
+      const dates = extractWeekdays(startDate, endDate, SelectedDayOfTheWeek);
       setExtractedDates(dates); 
     }
   }, [startDate, endDate, SelectedDayOfTheWeek, isRecurring]);
@@ -162,8 +174,8 @@ export default function NewRequest() {
           ...prevFormData,
           arrangement_date: isRecurring ? null : inputDates[0] || "",
           recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
-          start_date: isRecurring ? formatDateFromPicker(startDate) : null,
-          end_date: isRecurring ? formatDateFromPicker(endDate) : null,
+          start_date: isRecurring ? startDate : null,
+          end_date: isRecurring ? endDate: null,
           timeslot: selectedTimeslot,
           reason: reason,
           isRecurring: isRecurring,
@@ -296,7 +308,7 @@ export default function NewRequest() {
                   labelPlacement="outside"
                   variant="bordered"
                   showMonthAndYearPickers
-                  value={selectedDate}
+                  // value={selectedDate}
                   minValue={today(getLocalTimeZone()).subtract({months: 2})}
                   maxValue={today(getLocalTimeZone()).add({months: 3})}
                   onChange={(date) => {
@@ -368,8 +380,8 @@ export default function NewRequest() {
                     minValue={today(getLocalTimeZone()).subtract({months: 2})}
                     maxValue={today(getLocalTimeZone()).add({months: 3})}
                     onChange={({ start, end }) => {
-                      setStartDate(start);
-                      setEndDate(end);
+                      setStartDate(formatDateFromPicker(start));
+                      setEndDate(formatDateFromPicker(end));
                     }}
                   />
               </div>
