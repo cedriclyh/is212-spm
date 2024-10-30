@@ -6,15 +6,15 @@ from unittest.mock import patch
 
 @pytest.fixture
 def client():
-    app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['TESTING'] = True # make sure testing set to true to allow usage of sqlite
 
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
             yield client
-        with app.app_context():
+            db.session.remove()
             db.drop_all()
 
 @pytest.fixture

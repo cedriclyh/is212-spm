@@ -5,16 +5,43 @@ import json
 
 @pytest.fixture
 def client():
-    app.config['TESTING'] = True
+    # Override the database URI to use SQLite in memory, so that it doesnt reach for mysql without proper credentials. should be using sqlite's in-memory database instead
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['TESTING'] = True
 
     with app.test_client() as client:
         with app.app_context():
+            # Create all tables in the in-memory database
             db.create_all()
             yield client
-        with app.app_context():
+            db.session.remove()
             db.drop_all()
+
+# configure sqlite db to be able to have some sample blockout dates to test with
+@pytest.fixture
+def init_database(client):
+    # Create sample blockout dates
+    blockouts = [
+        BlockoutDates(
+            start_date=date(2024, 12, 25),
+            end_date=date(2024, 12, 25),
+            timeslot="FULL",
+            title="Christmas",
+            blockout_description="Public holiday"
+        ),
+        BlockoutDates(
+            start_date=date(2024, 11, 11),
+            end_date=date(2024, 11, 11),
+            timeslot="FULL",
+            title="Veterans Day",
+            blockout_description="Public holiday"
+        )
+    ]
+    with app.app_context():
+        for blockout in blockouts:
+            db.session.add(blockout)
+        db.session.commit()
 
 @pytest.fixture
 def sample_blockouts():

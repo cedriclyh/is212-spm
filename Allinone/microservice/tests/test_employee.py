@@ -4,17 +4,17 @@ import json
 
 @pytest.fixture
 def client():
-    app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['TESTING'] = True #testing set to true to allow use of sqlite
 
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
             yield client
-        with app.app_context():
+            db.session.remove()
             db.drop_all()
-
+            
 @pytest.fixture
 def sample_employees():
     with app.app_context():
