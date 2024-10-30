@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useCallback } from "react";
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableHeader,
@@ -35,6 +36,7 @@ const statusColorMap = {
 
 const INITIAL_VISIBLE_COLUMNS = [
   "arrangement_date",
+  "request_date",
   "timeslot",
   "manager",
   "status",
@@ -163,6 +165,11 @@ export default function RequestTable() {
     }
   };
 
+  const navigate = useNavigate();
+  const handleEditClick = useCallback((requestId) => {
+    navigate(`/edit_request/${requestId}`);
+  }, [navigate]);
+  
   const cancelRequest_approved = async (requestId, arrangementDate) => {
     if (!isWithinTwoWeeks(arrangementDate)) {
       alert("Cancellation can only be made within 2 weeks of the arrangement date.");
@@ -190,19 +197,29 @@ export default function RequestTable() {
       alert("An error occurred while cancelling the request.");
     }
   };
-  
+
   const renderCell = React.useCallback((request, columnKey) => {
     const cellValue = request[columnKey];
 
     switch (columnKey) {
         case "arrangement_date":
-          return (
-            <div>
-              <p className="text-bold text-small" >{formatDate(request.arrangement_date)[0]}</p>
-              <p className="text-bold text-tiny text-default-400">{formatDate(request.arrangement_date)[1]}</p>
+          if(request.is_recurring){
+            return (
+              <div>
+                <p className="text-bold text-small" >{request.recurring_day}</p>
+                <p className="text-bold text-tiny text-default-400">{formatDate(request.start_date)[1]} - {formatDate(request.end_date)[1]}</p>
               </div>
-          );
-        case "staff":
+            )
+          }
+          else{
+            return (
+              <div>
+                <p className="text-bold text-small" >{formatDate(request.arrangement_date)[0]}</p>
+                <p className="text-bold text-tiny text-default-400">{formatDate(request.arrangement_date)[1]}</p>
+                </div>
+            );
+          }
+        case "manager":
           return (
             <User
               avatarProps={{radius: "lg", src: profilePic}}
@@ -215,22 +232,10 @@ export default function RequestTable() {
         case "timeslot":
           return (
             <div>
-              <p>{formatTimeslot(request.timeslot)[1]}</p>
+              <p className="text-bold text-small capitalize">{formatTimeslot(request.timeslot)[0]}</p>
+              <p className="text-bold text-tiny capitalize text-default-400">{formatTimeslot(request.timeslot)[1]}</p>
             </div>
           )
-        case "manager":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">
-              {request.manager_details.staff_fname +
-                " " +
-                request.manager_details.staff_lname}
-            </p>
-            <p className="text-bold text-tiny capitalize text-default-400">
-              {request.manager_details.email}
-            </p>
-          </div>
-        );
       case "status":
         return (
           <Chip color={statusColorMap[request.status]} size="sm" variant="flat">
@@ -249,7 +254,11 @@ export default function RequestTable() {
               <DropdownMenu>
                 <DropdownItem>View</DropdownItem>
                 {request.status === "Pending" && (
-                  <DropdownItem>Edit</DropdownItem>
+                  <DropdownItem 
+                    onClick={() => handleEditClick(request.request_id)}
+                    >
+                      Edit
+                  </DropdownItem>
                 )}
                 {request.status === "Pending" && (
                   <DropdownItem
@@ -267,10 +276,21 @@ export default function RequestTable() {
             </Dropdown>
           </div>
         );
+        case "is_recurring":
+          if (request.is_recurring){
+            return (
+              <div><i>YES</i></div>
+            )
+          }
+          else{
+            return (
+              <div>NO</div>
+            )
+          }
       default:
         return cellValue;
     }
-  }, []);
+  }, [handleEditClick]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {

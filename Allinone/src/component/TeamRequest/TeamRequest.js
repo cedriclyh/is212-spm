@@ -21,7 +21,7 @@ import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
 import {SearchIcon} from "../Icons/SearchIcon";
 import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
 import {columns, statusOptions, pulled_data} from "./TeamRequestData";
-import {capitalize} from "../TeamRequest/TeamRequestUtils";
+import {capitalize, formatDate} from "../TeamRequest/TeamRequestUtils";
 import profilePic from "../Icons/profile_pic.png"
 
 const statusColorMap = {
@@ -113,12 +113,22 @@ export default function TeamRequest() {
         );
 
         case "arrangement_date":
-          return (
-            <div>
-              <p className="text-bold text-small" >{request.arrangement_dates[0]}</p>
-              {/* <p className="text-bold text-tiny text-default-400">{request.arrangement_dates[0]}</p> */}
+          if(request.is_recurring){
+            return (
+              <div>
+                <p className="text-bold text-small" >{request.recurring_day}</p>
+                <p className="text-bold text-tiny text-default-400">{formatDate(request.start_date)[1]} - {formatDate(request.end_date)[1]}</p>
               </div>
-          );
+            )
+          }
+          else{
+            return (
+              <div>
+                <p className="text-bold text-small" >{formatDate(request.arrangement_date)[0]}</p>
+                <p className="text-bold text-tiny text-default-400">{formatDate(request.arrangement_date)[1]}</p>
+                </div>
+            );
+          }
         case "timeslot":
           return (
             <div>
@@ -152,6 +162,17 @@ export default function TeamRequest() {
             </Dropdown>
           </div>
         );
+      case "is_recurring":
+        if (request.is_recurring){
+          return (
+            <div><i>YES</i></div>
+          )
+        }
+        else{
+          return (
+            <div>NO</div>
+          )
+        }
       default:
         return cellValue;
     }
@@ -196,7 +217,7 @@ export default function TeamRequest() {
           <Input
             isClearable
             className="w-full sm:max-w-[44%]"
-            placeholder="Search by Staff's Name..."
+            placeholder="Search by Staff's First or Last Name..."
             startContent={<SearchIcon />}
             value={filterValue}
             onClear={() => onClear()}
