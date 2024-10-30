@@ -110,9 +110,26 @@ export default function RequestTable() {
     });
   }, [sortDescriptor, items]);
 
-  const cancelRequest = async (requestId) => {
+  const isWithinTwoWeeks = (arrangementDate) => {
+    const now = new Date();
+    const arrangement = new Date(arrangementDate);
+    const twoWeeksBefore = new Date(arrangement);
+    twoWeeksBefore.setDate(arrangement.getDate() - 14);
+    const twoWeeksAfter = new Date(arrangement);
+    twoWeeksAfter.setDate(arrangement.getDate() + 14);
+  
+    return now >= twoWeeksBefore && now <= twoWeeksAfter;
+  };
+  
+  const cancelRequest_pending = async (requestId) => {
     if (!window.confirm("Are you sure you want to cancel this request?")) {
       return; // User withdraw the action
+    }
+
+    const reason = prompt("Please provide a reason for the cancellation:");
+    if (!reason) {
+      alert("Cancellation reason is required.");
+      return;
     }
     try {
       const response = await fetch(
@@ -146,6 +163,34 @@ export default function RequestTable() {
     }
   };
 
+  const cancelRequest_approved = async (requestId, arrangementDate) => {
+    if (!isWithinTwoWeeks(arrangementDate)) {
+      alert("Cancellation can only be made within 2 weeks of the arrangement date.");
+      return;
+    }
+  
+    const reason = prompt("Please provide a reason for the cancellation:");
+    if (!reason) {
+      alert("Cancellation reason is required.");
+      return;
+    }
+  
+    try {
+      const response = await fetch(
+        `http://localhost:5010/cancel_request/${requestId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Cancelled", reason }),
+        }
+      );
+      // Handle response as you did previously
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while cancelling the request.");
+    }
+  };
+  
   const renderCell = React.useCallback((request, columnKey) => {
     const cellValue = request[columnKey];
 
@@ -208,18 +253,16 @@ export default function RequestTable() {
                 )}
                 {request.status === "Pending" && (
                   <DropdownItem
-                    onClick={() => cancelRequest(request.request_id)}
-                  >
+                    onClick={() => cancelRequest_pending(request.request_id)}>
                     Cancel
                   </DropdownItem>
                 )}
-                {request.status === "Approved" && (
-                  <DropdownItem
-                    onClick={() => cancelRequest(request.request_id)}
-                  >
+                {request.status === "Approved" && isWithinTwoWeeks(request.arrangement_date) && (
+                  <DropdownItem onClick={() => cancelRequest_approved(request.request_id, request.arrangement_date)}>
                     Cancel
                   </DropdownItem>
                 )}
+
               </DropdownMenu>
             </Dropdown>
           </div>
