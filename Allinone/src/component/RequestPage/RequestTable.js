@@ -139,7 +139,7 @@ export default function RequestTable() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "Cancel" }),
+          body: JSON.stringify({ status: "Cancel", reason }),
         }
       );
 
