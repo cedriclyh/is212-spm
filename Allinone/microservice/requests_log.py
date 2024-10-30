@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.mysql import TINYINT
+from sqlalchemy import Boolean
 
 from os import environ
 from flask_cors import CORS
@@ -49,16 +50,26 @@ class Request(db.Model):
     timeslot = db.Column(db.String(50), nullable=False)  # Morning - 1, Afternoon - 2, Full Day - 3
     status = db.Column(db.String(20), nullable=False, default='Pending')  # Pending, Approved, Rejected
     reason = db.Column(db.String(255), nullable=False, default="") # Reason for WFH request
+    remark = db.Column(db.String(255), nullable=False, default="") # remarks for when manager approve/reject request
+    recurring_day = db.Column(db.String(20), nullable=False) 
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    is_recurring = db.Column(Boolean, nullable=False, default=False)
 
     employee = relationship("Employee", backref="requests")
 
-    def __init__(self, staff_id, manager_id, request_date, arrangement_date, timeslot, reason, status='Pending'):
+    def __init__(self, staff_id, manager_id, request_date, arrangement_date, timeslot, reason, remark, recurring_day, start_date, end_date, is_recurring, status):
         self.staff_id = staff_id
         self.manager_id = manager_id
         self.arrangement_date = arrangement_date
         self.request_date = request_date
         self.timeslot = timeslot
         self.reason = reason
+        self.remark = remark,
+        self.recurring_day = recurring_day
+        self.start_date = start_date
+        self.end_date = end_date
+        self.is_recurring = is_recurring
         self.status = status
 
     def json(self):
@@ -70,7 +81,12 @@ class Request(db.Model):
             'request_date': str(self.request_date),
             'timeslot': self.timeslot,
             'reason': self.reason,
-            'status': self.status
+            'remark': self.remark,
+            'status': self.status,
+            'recurring_day': self.recurring_day,
+            'start_date': self.start_date,
+            'end_date': self.end_date,
+            'is_recurring': self.is_recurring
         }
     
 class RequestDates(db.Model):
@@ -90,6 +106,8 @@ def create_request():
         if isinstance(arrangement_dates, str):
             arrangement_dates = [arrangement_dates]
 
+        is_recurring = data.get("is_recurring")
+
         new_request = Request(
             staff_id = data["staff_id"],
             manager_id = data["manager_id"],
@@ -97,18 +115,28 @@ def create_request():
             arrangement_date = arrangement_dates[0],
             timeslot = data["timeslot"],
             reason = data["reason"],
+            remark = data["remark"],
+            is_recurring=is_recurring
         )
         # print(new_request)
+
+        # set nullable fields if they are in the request data
+        if is_recurring:
+            new_request.recurring_day = data.get("recurring_day")
+            new_request.start_date = data.get("start_date")
+            new_request.end_date = data.get("end_date")
+
         db.session.add(new_request)
         db.session.commit()
 
         # If it's a recurring request, insert the additional dates into RequestDates
-        for date in arrangement_dates:
-            request_date_entry = RequestDates(
-                request_id=new_request.request_id,
-                arrangement_date=date
-            )
-            db.session.add(request_date_entry)
+        if is_recurring:
+            for date in arrangement_dates:
+                request_date_entry = RequestDates(
+                    request_id=new_request.request_id,
+                    arrangement_date=date
+                )
+                db.session.add(request_date_entry)
 
         db.session.commit()
 
