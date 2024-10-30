@@ -115,7 +115,7 @@ export default function RequestTable() {
     }
     try {
       const response = await fetch(
-        `http://localhost:5010/update_request/${requestId}`,
+        `http://localhost:5010/cancel_request/${requestId}`,
         {
           method: "PUT",
           headers: {

@@ -296,8 +296,8 @@ def cancel_request():
         staff_id = request_entry.get("staff_id")
         
         # Check if the request is currently approved
-        if current_status != "Approved" or "Pending":
-            return jsonify({"message": "Only approved requests can be cancel", "code": 403}), 403
+        if current_status not in ["Approved", "Pending"]:
+            return jsonify({"message": "Only approved requests can be cancelled", "code": 403}), 403
         
         # Update the status to 'cancelled' in the Request Log microservice
         update_data = {
@@ -309,20 +309,20 @@ def cancel_request():
         if update_response.status_code != 200:
             return jsonify({"message": "Failed to update request status", "code": 500}), 500
         
-        # #Notify the staff about the withdrawal
+        # #Send confirmation email to staff
         # notification_data = {
         #     "staff_email": staff_email,
-        #     "status": "Withdrawn",
+        #     "status": "Cancelled",
         #     "request_id": request_id,
-        #     "remarks": "Your approved request has been successfully withdrawn."
+        #     "remarks": "Your approved request has been successfully cancelled."
         # }
         # notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
         
         # if notification_response.status_code != 200:
-        #     return jsonify({"message": "Request withdrawn but failed to notify staff", "code": 500}), 500
+        #     return jsonify({"message": "Request cancelled but failed to notify staff", "code": 500}), 500
         
         return jsonify({
-            "message": f"Request successfully cancelled and staff notified",
+            "message": f"Request successfully cancelled and Staff notified",
             "code": 200
         }), 200
 
