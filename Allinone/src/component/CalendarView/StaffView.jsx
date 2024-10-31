@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { getValidRange, getStaffTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
-import EventFilter from './EventFilter';
+import BasicEventFilter from './BasicEventFilter';
 
 export default function WFHcalendar() {
   const [view, setView] = useState('dayGridMonth');
@@ -15,7 +15,6 @@ export default function WFHcalendar() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(false);
-  const [selectedDepartments, setSelectedDepartments] = useState([]);
   const userID = 140004; // Hardcoded for now
 
   useEffect(() => {
@@ -30,18 +29,12 @@ export default function WFHcalendar() {
   }, []); // Run once on mount
 
   useEffect(() => {
-    if (showPersonal || showTeam) {
-      const departmentFilteredEvents = teamEvents.filter((event) => selectedDepartments.includes(event.teamName))
-      console.log('Filtered by department:', selectedDepartments);
-  
-      // Combine with personal events if `showPersonal` is true
-      const combinedEvents = [
-        ...(showPersonal ? personalEvents : []),
-        ...(showTeam ? departmentFilteredEvents : []),
-      ];
-      setFilteredEvents(combinedEvents);
-    }
-  }, [showPersonal, showTeam, selectedDepartments,personalEvents, teamEvents]);
+    const combinedEvents = [
+      ...(showPersonal ? personalEvents : []),
+      ...(showTeam ? teamEvents : []),
+    ];
+    setFilteredEvents(combinedEvents);
+}, [showPersonal, showTeam,personalEvents, teamEvents]);
 
   // Get the current month
   const today = new Date();
@@ -60,28 +53,11 @@ export default function WFHcalendar() {
   };
 
  // Handler for checkbox change
- const handleCheckboxChange = (value) => {
-    
-  if (value.includes('personal')) {
-    setShowPersonal(true);
-  }else{
-    setShowPersonal(false);
-  } 
-  if (value.includes('team')) {
-    setShowTeam(true);
-  } 
-  console.log("Selected values: ", value);  // Add this line for debugging
+ const handleCheckboxChange = (values) => {
+  setShowPersonal(values.includes('personal'));
+  setShowTeam(values.includes('dept'));
 };
 
-// Handle department-specific checkbox changes
-const handleDepartmentChange = (dept) => {
-  setSelectedDepartments((prevSelected) =>
-    prevSelected.includes(dept)
-      ? prevSelected.filter((d) => d !== dept) // Remove if already selected
-      : [...prevSelected, dept]               // Add if not selected
-
-    );
-  };
 
   // Render the calendar
   return (
@@ -89,8 +65,7 @@ const handleDepartmentChange = (dept) => {
       <Header view={view} toggleView={toggleView} />
       <div className="calendar-box">
         <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>
-        <EventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} 
-          selectedDepartments={selectedDepartments} handleDepartmentChange={handleDepartmentChange}/>
+        <BasicEventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} />
         </div>
         <div style={{flex:'1', minHeight: '0' }}>
           <FullCalendar

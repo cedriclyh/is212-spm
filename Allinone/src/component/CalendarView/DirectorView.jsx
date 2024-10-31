@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { getValidRange, getDirectorTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
-import EventFilter from './EventFilter';
+import HREventFilter from './HREventFilter';
 
 export default function WFHcalendar() {
   const [view, setView] = useState('dayGridMonth');
@@ -89,7 +89,7 @@ export default function WFHcalendar() {
       <Header view={view} toggleView={toggleView} />
       <div className="calendar-box">
         <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>
-        <EventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} 
+        <HREventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} 
           selectedDepartments={selectedDepartments} handleDepartmentChange={handleDepartmentChange}/>
         </div>
         <div style={{flex:'1', minHeight: '0' }}>
