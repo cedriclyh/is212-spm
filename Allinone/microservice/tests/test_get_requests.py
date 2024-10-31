@@ -194,3 +194,5 @@ def test_invalid_json_response(client):
         
         response = client.get('/employees/140002/requests')
         assert response.status_code == 500
+        data = json.loads(response.data)
+        # assert 'Error occurred' in data['message']  # Verify the error message

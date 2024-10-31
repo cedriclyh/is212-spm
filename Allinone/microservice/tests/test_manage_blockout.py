@@ -1,4 +1,4 @@
-import pytest
+import pytest, os
 from manage_blockout import app, db, BlockoutDates, Arrangement, Employee
 from datetime import date
 import json
@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 @pytest.fixture
 def client():
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_URL', 'sqlite:///:memory:')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['TESTING'] = True # make sure testing set to true to allow usage of sqlite
 
