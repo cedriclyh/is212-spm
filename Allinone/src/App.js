@@ -24,16 +24,13 @@ const App = () => {
           <Route path="/new_request" element={< NewRequest />} />
           <Route path="/team_request" element={< TeamRequest />} />
           <Route path="/edit_request/:uid" element={<EditRequestPage />} />
-        </Route>
-          <Route path="/" element={ <HRView /> } /> {/* Default path */} {/* dept = 'HR' or 'CEO'*/}
+          {/* <Route path="/" element={ <HRView /> } /> Default path dept = 'HR' or 'CEO' */}
           <Route path="/director" element={ <DirectorView /> } /> {/* Default path */} {/* role num = 1*/}
           <Route path="/staff" element={ <StaffView /> } /> {/* role num = 2*/}
           <Route path="/manager" element={ <ManagerView /> } /> {/* role num = 3*/}
           <Route path="/login" element={ <Login /> } />
           {/* <Route path="/manager-data" component={ Manager-Data } /> */}
-          <Route path="/requests" element={ <RequestPage /> } />
-          <Route path="/new_request" element={ <NewRequestPage /> } />
-          <Route path="/team_request" element={ < TeamRequestPage /> } />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

@@ -37,8 +37,8 @@ export default function WFHcalendar() {
   
       // Combine with personal events if `showPersonal` is true
       const combinedEvents = [
-        ...(showPersonal ? personalEvents : []),
-        ...(showTeam ? departmentFilteredEvents : []),
+        ...(showPersonal && personalEvents ? personalEvents : []),
+        ...(showTeam && teamEvents ? departmentFilteredEvents : []),
       ];
       setFilteredEvents(combinedEvents);
     }

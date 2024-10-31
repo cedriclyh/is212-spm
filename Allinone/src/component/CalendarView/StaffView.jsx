@@ -30,8 +30,8 @@ export default function WFHcalendar() {
 
   useEffect(() => {
     const combinedEvents = [
-      ...(showPersonal ? personalEvents : []),
-      ...(showTeam ? teamEvents : []),
+      ...(showPersonal && personalEvents ? personalEvents : []),
+      ...(showTeam && teamEvents ? teamEvents : []),
     ];
     setFilteredEvents(combinedEvents);
 }, [showPersonal, showTeam,personalEvents, teamEvents]);
