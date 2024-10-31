@@ -179,6 +179,7 @@ def get_team_by_manager(manager_id):
             "team_count": count,
             "code": 500
         }), 500
+    
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)
