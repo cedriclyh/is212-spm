@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { getValidRange, getHRTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
-import EventFilter from './HREventFilter';
+import EventFilter from './AdvancedEventFilter';
 
 export default function WFHcalendar() {
   const [view, setView] = useState('dayGridMonth');

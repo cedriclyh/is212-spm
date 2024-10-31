@@ -1,12 +1,12 @@
 // EventFilter.jsx
 import React, { useEffect, useState }  from 'react';
 import {CheckboxGroup, Checkbox} from "@nextui-org/react";
-import { getDeptName, getHRTeamEvents } from './CalendarUtils';
+import { getDeptName, getDirectorTeamEvents } from './CalendarUtils';
 
 export default function EventFilter({ showPersonal, showTeam, handleCheckboxChange, selectedDepartments, handleDepartmentChange }) {
   const [deptName, setDeptName] = useState('');
   const [teamNamesByDept, setTeamNamesByDept] = useState([]);
-  const userID = 130002; // Hardcoded user ID for now
+  const userID = 140001; // Hardcoded user ID for now
 
   useEffect(() => {
     const fetchDeptName = async () => {
@@ -15,7 +15,7 @@ export default function EventFilter({ showPersonal, showTeam, handleCheckboxChan
     };
 
     const fetchTeamNameAndDept = async () => {
-      const retrieveAllEvents = await getHRTeamEvents(userID);
+      const retrieveAllEvents = await getDirectorTeamEvents(userID);
       const groupedByDept = retrieveAllEvents.reduce((acc, event) => {
         const { dept, teamName } = event;
         if (!acc[dept]) {
@@ -34,7 +34,6 @@ export default function EventFilter({ showPersonal, showTeam, handleCheckboxChan
     fetchTeamNameAndDept();
   });
   
-  console.log('teamNamesByDept:', teamNamesByDept);
   return (
     <div>
       <CheckboxGroup

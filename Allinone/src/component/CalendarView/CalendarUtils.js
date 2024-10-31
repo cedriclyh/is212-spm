@@ -10,7 +10,6 @@ export const getValidRange = (today) => {
 }
 
 // All functions from here are used for fetching events
-// const userId = 140004; // Hardcoded user ID for demo purposes
 
 // Calculate start and end times based on timeslot
 function getTimeRange(timeslot, startDate, endDate) {

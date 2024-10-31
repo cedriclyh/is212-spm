@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { getValidRange, getDirectorTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
-import HREventFilter from './HREventFilter';
+import HREventFilter from './AdvancedEventFilter';
 
 export default function WFHcalendar() {
   const [view, setView] = useState('dayGridMonth');
@@ -20,11 +20,11 @@ export default function WFHcalendar() {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const teamEvents = await getDirectorTeamEvents(userID); 
-      setTeamEvents(teamEvents); 
-
       const personalEvents = await getPersonalEvents(userID); 
       setPersonalEvents(personalEvents);
+
+      const teamEvents = await getDirectorTeamEvents(userID); 
+      setTeamEvents(teamEvents); 
     };
     fetchEvents();
   }, []); // Run once on mount
@@ -33,6 +33,7 @@ export default function WFHcalendar() {
     if (showPersonal || showTeam) {
       const departmentFilteredEvents = teamEvents.filter((event) => selectedDepartments.includes(event.teamName))
       console.log('Filtered by department:', selectedDepartments);
+      console.log('Filtered team events:', departmentFilteredEvents);
   
       // Combine with personal events if `showPersonal` is true
       const combinedEvents = [
