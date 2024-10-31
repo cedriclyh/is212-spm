@@ -38,7 +38,7 @@ jobs:
           uses: github/super-linter@v5
           env:
             VALIDATE_ALL_CODEBASE: true
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Add this line to provide the token
+            GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}  # Add this line to provide the token
             VALIDATE_PYTHON_PYLINT: true
             VALIDATE_JAVASCRIPT_ES: true
             DEFAULT_BRANCH: main  # Set the default branch for the linter
@@ -57,7 +57,7 @@ jobs:
         - name: Set up Node.js
           uses: actions/setup-node@v2
           with:
-            node-version: '14'
+            node-version: '16.x'
     
         # Step 4: Install dependencies for the frontend (React.js)
         - name: Install Node.js dependencies
@@ -103,4 +103,4 @@ jobs:
         # Step 12: Run JS/React unit tests (optional)
         - name: Run JS/React unit tests
           run: npm test
-          working-directory: ./Allinone/src
+          working-directory: ./Allinone/src/tests

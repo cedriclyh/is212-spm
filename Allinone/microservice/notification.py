@@ -13,9 +13,9 @@ from dotenv import load_dotenv
 load_dotenv() 
 
 # Setup database connection 
-DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db" # For Windows
+# DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db" # For Windows
 
-# DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db" # For Mac
+DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db" # For Mac
 engine = create_engine(DATABASE_URI)
 
 # Setup Sendinblue API configuration
@@ -135,8 +135,8 @@ def notify_status_update():
                     VALUES (:request_id, :recipient_email, :status)
                     """),
                     {"request_id": request_id, 
-                     "recipient_email": staff_email, 
-                     "status": request_status}
+                    "recipient_email": staff_email, 
+                    "status": request_status}
                 )
         except SQLAlchemyError as e:
             print(f"Failed to log notification in database: {e}")

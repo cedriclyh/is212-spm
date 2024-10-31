@@ -15,16 +15,10 @@ function formatDate(dateStr) {
       case 3: return 'rd';
       default: return 'th';
     }
-  };
+};
 
-  // Format the day of the week
-  // const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  // const formattedDate = new Intl.DateTimeFormat('en-GB', options).format(date);
-
-  // Extract the weekday
   const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(date);
 
-  // Format the day + month + year part
   const formattedDateWithoutWeekday = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' }).format(date);
   const dateWithSuffix = `${day}${daySuffix(day)} ${formattedDateWithoutWeekday}`;
 
@@ -33,13 +27,13 @@ function formatDate(dateStr) {
 }
 
 function formatTimeslot(timeslot_num) {
-  if (timeslot_num===1){
+  if (timeslot_num==="AM"){
     return ["Morning Shift", "9AM - 1PM"];
   }
-  if (timeslot_num===2){
+  if (timeslot_num==="PM"){
     return ["Afternoon Shift", "2PM - 6PM"];
   }
-  if (timeslot_num===3){
+  if (timeslot_num==="FULL"){
     return ["Full Day", "9AM - 6PM"];
   }
 }

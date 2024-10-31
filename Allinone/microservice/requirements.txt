@@ -5,3 +5,5 @@ Flask-Cors
 pytest
 pytest-flask
 pytest-mock
+requests
+python-dateutil
