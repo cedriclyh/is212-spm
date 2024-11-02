@@ -35,7 +35,6 @@ class Arrangement(db.Model):
     arrangement_date = db.Column(db.Date, nullable=False)
     timeslot = db.Column(db.String(50), nullable=False) 
     reason = db.Column(db.String(255), nullable=False)
-    manager_id = db.Column(db.String(50), nullable=False)
 
     def __init__(self, request_id, staff_id, manager_id, arrangement_date, timeslot, reason):
         self.request_id = request_id
@@ -43,7 +42,6 @@ class Arrangement(db.Model):
         self.arrangement_date = arrangement_date
         self.timeslot = timeslot
         self.reason = reason
-        self.manager_id =manager_id
 
     def json(self):
         return {
@@ -52,7 +50,6 @@ class Arrangement(db.Model):
             "arrangement_date": str(self.arrangement_date),
             "timeslot": self.timeslot,
             "reason": self.reason,
-            "manager_id": self.manager_id
         }
     
 # Create a new WFH request

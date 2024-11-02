@@ -64,7 +64,6 @@ CREATE TABLE IF NOT EXISTS Arrangement (
     arrangement_date DATE NOT NULL,
     timeslot VARCHAR(50) NOT NULL,  
     reason VARCHAR(255) NOT NULL,
-    manager_id INT NOT NULL,
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
 );
 
