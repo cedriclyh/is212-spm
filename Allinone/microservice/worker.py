@@ -2,7 +2,8 @@ import pika
 import json
 import requests
 from datetime import datetime
-from arrangement import Arrangement, delete_arrangements, app
+from arrangement import Arrangement, delete_arrangements, app, db
+from employee import Employee
 from dotenv import load_dotenv
 import os
 
@@ -20,7 +21,9 @@ def process_revoke_task(ch, method, properties, body):
     data = json.loads(body)
     staff_id = data['staff_id']
     revoke_dates = [datetime.strptime(date, '%Y-%m-%d').date() for date in data['revoke_dates']]
-    
+    staff_email = data['staff_email']
+    manager_email = data['manager_email']
+
     with app.app_context():
         # 2. Delete arrangements
         arrangements_to_delete = Arrangement.query.filter(
@@ -53,17 +56,37 @@ def process_revoke_task(ch, method, properties, body):
                 print(f"Failed to update request status for Request ID {request_id}")
                 return update_request_response
             
-    print("All request statuses successfully updated.")
+        print("All request statuses successfully updated.")
+
+        # Send notification email
+        print("Preparing to send emails...")
+
+        revoke_notification_data = { 
+            "staff_email": staff_email,
+            "manager_email": manager_email,
+            "request_ids": request_ids
+        }
+        
+        print("Sending emails...")
+        notification_response = requests.post(f"{os.getenv('NOTIFICATION_URL')}/notify_revoke_arrangements", json=revoke_notification_data)
+        print(notification_response.json())
+
+        if notification_response.status_code != 200:
+            print(f"Failed to send email.")
+            return notification_response
+
     print(f"Completed processing revocation task for staff_id {staff_id}")
     ch.basic_ack(delivery_tag=method.delivery_tag)
     
     print()
     print('Worker is waiting for messages...')
 
+def consume_message(ch, method, properties, body):
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+
 # Set up consumer
 channel.basic_consume(queue='revoke_queue', on_message_callback=process_revoke_task)
+# channel.basic_consume(queue='revoke_queue', on_message_callback=consume_message)
 
 print('Worker is waiting for messages...')
 channel.start_consuming()
-
-
