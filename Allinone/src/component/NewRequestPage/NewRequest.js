@@ -25,10 +25,9 @@ import {
   ModalFooter,
   useDisclosure
 } from "@nextui-org/react";
-import { extractWeekdays, checkAvailability } from "./NewRequestUtils";
+import { extractWeekdays, checkAvailability, getAllDates } from "./NewRequestUtils";
 import { getLocalTimeZone, today } from "@internationalized/date";
 
-const individualDates = [];
 
 var modalTitle = "Error Message";
 var modalMsg = "";
@@ -38,17 +37,32 @@ const statusColorMap = {
   Blocked: "danger"
 };
 
-export default function NewRequest() {
-  const [inputDates, setInputDates] = useState(individualDates);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTimeslot, setSelectedTimeslot] = useState("Choose a Timeslot");
-  const [SelectedDayOfTheWeek, setSelectedDayOfTheWeek] = useState("Choose a Week Day");
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+export default function NewRequest({ initialFormData }) {
+  const [inputDates, setInputDates] = useState(initialFormData?.arrangement_date ? [initialFormData.arrangement_date] : []);
+  const [selectedDate, setSelectedDate] = useState(initialFormData?.arrangement_date || null);
+  const [selectedTimeslot, setSelectedTimeslot] = useState(initialFormData?.timeslot || "Choose a Timeslot");
+  const [SelectedDayOfTheWeek, setSelectedDayOfTheWeek] = useState(initialFormData?.recurring_day || "Choose a Week Day");
+  const [isRecurring, setIsRecurring] = useState(initialFormData?.is_recurring || false);
+  const [startDate, setStartDate] = useState(initialFormData?.start_date || null);
+  const [endDate, setEndDate] = useState(initialFormData?.end_date || null);
+  const [reason, setReason] = useState(initialFormData?.reason || '');
+  const [blockOutDates, setBlockOutDates] = useState([]);
   const [extractedDates, setExtractedDates] = useState([]);
   const [availability, setAvailability] = useState({});
-  const [reason, setReason] = useState('')
+
+  // Populate form data whenever `initialFormData` changes
+  useEffect(() => {
+    if (initialFormData) {
+      setInputDates(initialFormData.arrangement_date ? [initialFormData.arrangement_date] : []);
+      setSelectedDate(initialFormData.arrangement_date || null);
+      setSelectedTimeslot(initialFormData.timeslot || "Choose a Timeslot");
+      setSelectedDayOfTheWeek(initialFormData.recurring_day || "Choose a Week Day");
+      setIsRecurring(initialFormData.is_recurring || false);
+      setStartDate(initialFormData.start_date || null);
+      setEndDate(initialFormData.end_date || null);
+      setReason(initialFormData.reason || '');
+    }
+  }, [initialFormData]);
 
   // for modal
   const {isOpen, onOpen, onOpenChange} = useDisclosure();
@@ -57,7 +71,24 @@ export default function NewRequest() {
   const [buttonColor, setButtonColor] = useState('danger');
   const [showCountdown, setShowCountdown] = useState(false);
 
-  const blockOutDates = React.useMemo(() => ["21-10-2024"], []);
+  useEffect(() => {
+    async function fetchBlockOutDates() {
+      try {
+        const response = await fetch('http://localhost:5014/blockout/get_blockouts');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const output = await response.json();
+        const dates = getAllDates(output.data);
+        setBlockOutDates(dates);
+      } catch (error) {
+        console.error('Error fetching blockOutDates:', error);
+        setBlockOutDates([]);
+      }
+    }
+
+    fetchBlockOutDates();
+  }, []);
 
   // Function to format the date from the object returned by DatePicker
   const formatDateFromPicker = (dateObject) => {
@@ -65,24 +96,17 @@ export default function NewRequest() {
       const day = String(dateObject.day).padStart(2, "0");
       const month = String(dateObject.month).padStart(2, "0");
       const year = dateObject.year;
-      return `${day}-${month}-${year}`;
+      return `${year}-${month}-${day}`;
     }
     return null;
   };
 
-  const addDateInputs = (inputDateToAdd) => {
+  const addDateInput = (inputDateToAdd) => {
     const formattedDate = formatDateFromPicker(inputDateToAdd);
-
-    // Only add if it's a valid date and not already in the list
-    if (formattedDate && !inputDates.includes(formattedDate)) {
-      setInputDates([...inputDates, formattedDate]);
+    if (formattedDate) {
+      setInputDates([formattedDate]);
       setSelectedDate(null);
     }
-  };
-
-  const handleClose = (inputDateToRemove) => {
-    const updatedDates = inputDates.filter((date) => date !== inputDateToRemove);
-    setInputDates(updatedDates);
   };
 
   const handleSelection = (key) => {
@@ -107,6 +131,10 @@ export default function NewRequest() {
     setReason('');
   };
 
+  // useEffect(() => {
+  //     console.log("isRecurring updated:", isRecurring);
+  // }, [isRecurring]);
+
   // Update availability status when dates are extracted
   useEffect(() => {
     if (inputDates.length > 0 && !isRecurring) {
@@ -122,15 +150,41 @@ export default function NewRequest() {
   // UseEffect to trigger extractWeekdays whenever the startDate, endDate, or SelectedDayOfTheWeek changes
   useEffect(() => {
     if (isRecurring && startDate && endDate && SelectedDayOfTheWeek) {
-      const formattedStartDate = formatDateFromPicker(startDate);
-      const formattedEndDate = formatDateFromPicker(endDate);
-      const dates = extractWeekdays(formattedStartDate, formattedEndDate, SelectedDayOfTheWeek);
+      console.log(startDate);
+      const dates = extractWeekdays(startDate, endDate, SelectedDayOfTheWeek);
       setExtractedDates(dates); 
     }
   }, [startDate, endDate, SelectedDayOfTheWeek, isRecurring]);
 
-  const handleSubmit = async (e) => {
+  const [formData, setFormData] = useState({
+    staff_id: 140004,  // Change to dynamic value if needed
+    manager_id: 140894,
+    request_date: new Date().toISOString().split('T')[0],
+    arrangement_date: "",
+    recurring_day: "",
+    start_date: "",
+    end_date: "",
+    timeslot: selectedTimeslot,
+    reason: reason,
+    isRecurring: isRecurring,
+});
 
+  useEffect(() => {
+      setFormData((prevFormData) => ({
+          ...prevFormData,
+          arrangement_date: isRecurring ? null : inputDates[0] || "",
+          recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
+          start_date: isRecurring ? startDate : null,
+          end_date: isRecurring ? endDate: null,
+          timeslot: selectedTimeslot,
+          reason: reason,
+          isRecurring: isRecurring,
+      }));
+  }, [isRecurring, inputDates, SelectedDayOfTheWeek, startDate, endDate, selectedTimeslot, reason]);
+
+
+  const handleSubmit = async (e) => {
+    console.log(formData);
     if (isRecurring) {
       const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
       
@@ -145,10 +199,16 @@ export default function NewRequest() {
         onOpen();
         return; 
       }
+
+      if (selectedTimeslot === "Choose a Timeslot") {
+        modalMsg = "Please select a timeslot.";
+        onOpen();
+        return; 
+      }
     } else {
 
-      if (inputDates.length === 0) {
-        modalMsg = "Please select at least one WFM date.";
+      if (formData.arrangement_date === "") {
+        modalMsg = "Please select one WFH date.";
         onOpen();
         return; 
       }
@@ -158,25 +218,16 @@ export default function NewRequest() {
         onOpen();
         return; 
       }
-    };
 
-    const today = new Date();
-    const formattedRequestDate = today.toISOString().split('T')[0];
-
-    const formData = { 
-      "staff_id" : 140944,  // change staff_id
-      "request_date" : formattedRequestDate, 
-      "arrangement_date" : inputDates, 
-      "recurring_day": SelectedDayOfTheWeek, 
-      "start_date": startDate, 
-      "end_date": endDate, 
-      "timeslot": selectedTimeslot, 
-      "reason": reason,
-      "isRecurring": isRecurring,
+      if (blockOutDates.includes(inputDates[0]) ) {
+        modalMsg = "Please select another WFH date.";
+        onOpen();
+        return;
+      }
     };
 
     try {
-      const response = await fetch("http://localhost:5004", {
+      const response = await fetch("http://localhost:5004/make_request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -257,23 +308,16 @@ export default function NewRequest() {
                   labelPlacement="outside"
                   variant="bordered"
                   showMonthAndYearPickers
-                  value={selectedDate}
+                  // value={selectedDate}
                   minValue={today(getLocalTimeZone()).subtract({months: 2})}
                   maxValue={today(getLocalTimeZone()).add({months: 3})}
                   onChange={(date) => {
                     if (date && date.year && date.month && date.day) {
                       setSelectedDate(date);
-                      addDateInputs(date);
+                      addDateInput(date);
                     }
                   }}
                 />
-                <div className="flex gap-2 mt-2">
-                  {inputDates.map((date, index) => (
-                    <Chip key={index} onClose={() => handleClose(date)} variant="flat">
-                      {date}
-                    </Chip>
-                  ))}
-                </div>
               </div>
 
               {/* Timeslot Selection */}
@@ -285,7 +329,10 @@ export default function NewRequest() {
                       {selectedTimeslot || "Choose a Timeslot"}
                     </Button>
                   </DropdownTrigger>
-                  <DropdownMenu onAction={handleSelection}>
+                  <DropdownMenu onAction={(key) => {
+                    setSelectedTimeslot(key);
+                    setFormData((prev) => ({ ...prev, timeslot: key }));
+                  }}>
                     <DropdownItem key="Whole Day" description="9AM - 6PM">Whole Day</DropdownItem>
                     <DropdownItem key="Morning" description="9AM - 1PM">Morning</DropdownItem>
                     <DropdownItem key="Afternoon" description="2PM - 6PM">Afternoon</DropdownItem>
@@ -333,8 +380,8 @@ export default function NewRequest() {
                     minValue={today(getLocalTimeZone()).subtract({months: 2})}
                     maxValue={today(getLocalTimeZone()).add({months: 3})}
                     onChange={({ start, end }) => {
-                      setStartDate(start);
-                      setEndDate(end);
+                      setStartDate(formatDateFromPicker(start));
+                      setEndDate(formatDateFromPicker(end));
                     }}
                   />
               </div>
@@ -410,7 +457,10 @@ export default function NewRequest() {
               placeholder="Enter your reason"
               className="mt-2 w-full"
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(e) => {
+                setReason(e.target.value);
+                setFormData((prev) => ({ ...prev, reason: e.target.value }));
+              }}
             />
           </div>
 

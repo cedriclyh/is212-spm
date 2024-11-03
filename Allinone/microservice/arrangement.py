@@ -36,7 +36,7 @@ class Arrangement(db.Model):
     timeslot = db.Column(db.String(50), nullable=False) 
     reason = db.Column(db.String(255), nullable=False)
 
-    def __init__(self, request_id, staff_id, arrangement_date, timeslot, reason):
+    def __init__(self, request_id, staff_id, manager_id, arrangement_date, timeslot, reason):
         self.request_id = request_id
         self.staff_id = staff_id
         self.arrangement_date = arrangement_date
@@ -49,7 +49,7 @@ class Arrangement(db.Model):
             "staff_id": self.staff_id,
             "arrangement_date": str(self.arrangement_date),
             "timeslot": self.timeslot,
-            "reason": self.reason
+            "reason": self.reason,
         }
     
 # Create a new WFH request

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useCallback } from "react";
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableHeader,
@@ -13,16 +14,17 @@ import {
   DropdownMenu,
   DropdownItem,
   Chip,
-  // User,
+  User,
   Pagination,
-  Spinner
+  Spinner,
 } from "@nextui-org/react";
-import {PlusIcon} from "../Icons/PlusIcon";
-import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
-import {SearchIcon} from "../Icons/SearchIcon";
-import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
-import {columns, statusOptions, pulled_data} from "./RequestData";
-import {capitalize, formatDate, formatTimeslot} from "./RequestPageUtils";
+import { PlusIcon } from "../Icons/PlusIcon";
+import { VerticalDotsIcon } from "../Icons/VerticalDotsIcon";
+import { SearchIcon } from "../Icons/SearchIcon";
+import { ChevronDownIcon } from "../Icons/ChevronDownIcon";
+import { columns, statusOptions, pulled_data } from "./RequestData";
+import { capitalize, formatDate, formatTimeslot } from "./RequestPageUtils";
+import profilePic from "../Icons/profile_pic.png"
 
 const statusColorMap = {
   Approved: "success",
@@ -32,12 +34,21 @@ const statusColorMap = {
   Withdrawn: "secondary",
 };
 
-const INITIAL_VISIBLE_COLUMNS = ["arrangement_date", "timeslot", "manager", "status", "actions"];
+const INITIAL_VISIBLE_COLUMNS = [
+  "arrangement_date",
+  "request_date",
+  "timeslot",
+  "manager",
+  "status",
+  "actions",
+];
 
 export default function RequestTable() {
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
-  const [visibleColumns, setVisibleColumns] = React.useState(new Set(INITIAL_VISIBLE_COLUMNS));
+  const [visibleColumns, setVisibleColumns] = React.useState(
+    new Set(INITIAL_VISIBLE_COLUMNS)
+  );
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [sortDescriptor, setSortDescriptor] = React.useState({
@@ -45,81 +56,186 @@ export default function RequestTable() {
     direction: "descending",
   });
   const [page, setPage] = React.useState(1);
+  const [requests, setRequests] = React.useState(pulled_data);
 
   const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
 
-    return columns.filter((column) => Array.from(visibleColumns).includes(column.uid));
+    return columns.filter((column) =>
+      Array.from(visibleColumns).includes(column.uid)
+    );
   }, [visibleColumns]);
 
   const filteredItems = React.useMemo(() => {
     let filteredRequests = [...pulled_data];
-  
+
     // Search by arrangement_date
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {
-        const formattedDate = formatDate(request.arrangement_date).join(' '); // Format the arrangement date
+        const formattedDate = formatDate(request.arrangement_date).join(" "); // Format the arrangement date
         return formattedDate.toLowerCase().includes(filterValue.toLowerCase()); // Search by formatted date
       });
     }
-  
-    if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
+
+    if (
+      statusFilter !== "all" &&
+      Array.from(statusFilter).length !== statusOptions.length
+    ) {
       filteredRequests = filteredRequests.filter((request) =>
         Array.from(statusFilter).includes(request.status)
       );
     }
-  
+
     return filteredRequests;
   }, [filterValue, statusFilter, hasSearchFilter]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
-  const pageNumber = Number(page); 
+  const pageNumber = Number(page);
   const rowsPerPageNumber = Number(rowsPerPage);
 
   const items = React.useMemo(() => {
     const start = (pageNumber - 1) * rowsPerPageNumber;
     const end = start + rowsPerPageNumber;
     return filteredItems.slice(start, end);
-
   }, [pageNumber, filteredItems, rowsPerPageNumber]);
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column] || '';
-      const second = b[sortDescriptor.column] || '';
+      const first = a[sortDescriptor.column] || "";
+      const second = b[sortDescriptor.column] || "";
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
 
+  const isWithinTwoWeeks = (arrangementDate) => {
+    const now = new Date();
+    const arrangement = new Date(arrangementDate);
+    const twoWeeksBefore = new Date(arrangement);
+    twoWeeksBefore.setDate(arrangement.getDate() - 14);
+    const twoWeeksAfter = new Date(arrangement);
+    twoWeeksAfter.setDate(arrangement.getDate() + 14);
+  
+    return now >= twoWeeksBefore && now <= twoWeeksAfter;
+  };
+  
+  const cancelRequest_pending = async (requestId) => {
+    if (!window.confirm("Are you sure you want to cancel this request?")) {
+      return; // User withdraw the action
+    }
+
+    const reason = prompt("Please provide a reason for the cancellation:");
+    if (!reason) {
+      alert("Cancellation reason is required.");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `http://localhost:5010/cancel_request/${requestId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: "Cancel", reason }),
+        }
+      );
+
+      if (response.ok) {
+        alert("Request successfully cancelled.");
+        // Refresh the request data to reflect the updated status
+        setRequests((prevRequests) =>
+          prevRequests.map((request) =>
+            request.request_id === requestId
+              ? { ...request, status: "Cancelled" }
+              : request
+          )
+        );
+      } else {
+        const result = await response.json();
+        alert(result.message || "Failed to cancel request.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while cancelling the request.");
+    }
+  };
+
+  const navigate = useNavigate();
+  const handleEditClick = useCallback((requestId) => {
+    navigate(`/edit_request/${requestId}`);
+  }, [navigate]);
+  
+  const cancelRequest_approved = async (requestId, arrangementDate) => {
+    if (!isWithinTwoWeeks(arrangementDate)) {
+      alert("Cancellation can only be made within 2 weeks of the arrangement date.");
+      return;
+    }
+  
+    const reason = prompt("Please provide a reason for the cancellation:");
+    if (!reason) {
+      alert("Cancellation reason is required.");
+      return;
+    }
+  
+    try {
+      const response = await fetch(
+        `http://localhost:5010/cancel_request/${requestId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Cancelled", reason }),
+        }
+      );
+      // Handle response as you did previously
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while cancelling the request.");
+    }
+  };
+
   const renderCell = React.useCallback((request, columnKey) => {
     const cellValue = request[columnKey];
 
     switch (columnKey) {
         case "arrangement_date":
-          return (
-            <div>
-              <p className="text-bold text-small" >{formatDate(request.arrangement_date)[0]}</p>
-              <p className="text-bold text-tiny text-default-400">{formatDate(request.arrangement_date)[1]}</p>
+          if(request.is_recurring){
+            return (
+              <div>
+                <p className="text-bold text-small" >{request.recurring_day}</p>
+                <p className="text-bold text-tiny text-default-400">{formatDate(request.start_date)[1]} - {formatDate(request.end_date)[1]}</p>
               </div>
+            )
+          }
+          else{
+            return (
+              <div>
+                <p className="text-bold text-small" >{formatDate(request.arrangement_date)[0]}</p>
+                <p className="text-bold text-tiny text-default-400">{formatDate(request.arrangement_date)[1]}</p>
+                </div>
+            );
+          }
+        case "manager":
+          return (
+            <User
+              avatarProps={{radius: "lg", src: profilePic}}
+              description={request.manager_details.email}
+              name={request.manager_details.staff_fname + " " + request.manager_details.staff_lname}
+            >
+              {request.email}
+            </User>
           );
         case "timeslot":
           return (
             <div>
-              <p>{formatTimeslot(request.timeslot)[1]}</p>
+              <p className="text-bold text-small capitalize">{formatTimeslot(request.timeslot)[0]}</p>
+              <p className="text-bold text-tiny capitalize text-default-400">{formatTimeslot(request.timeslot)[1]}</p>
             </div>
           )
-        case "manager":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{request.manager_details.staff_fname + " " + request.manager_details.staff_lname}</p>
-            <p className="text-bold text-tiny capitalize text-default-400">{request.manager_details.email}</p>
-          </div>
-        );
       case "status":
         return (
           <Chip color={statusColorMap[request.status]} size="sm" variant="flat">
@@ -137,17 +253,44 @@ export default function RequestTable() {
               </DropdownTrigger>
               <DropdownMenu>
                 <DropdownItem>View</DropdownItem>
-                {request.status === "Pending" && <DropdownItem>Edit</DropdownItem>}
-                {request.status === "Pending" && <DropdownItem>Cancel</DropdownItem>}
-                {request.status === "Approved" && <DropdownItem>Withdraw</DropdownItem>}
+                {request.status === "Pending" && (
+                  <DropdownItem 
+                    onClick={() => handleEditClick(request.request_id)}
+                    >
+                      Edit
+                  </DropdownItem>
+                )}
+                {request.status === "Pending" && (
+                  <DropdownItem
+                    onClick={() => cancelRequest_pending(request.request_id)}>
+                    Cancel
+                  </DropdownItem>
+                )}
+                {request.status === "Approved" && isWithinTwoWeeks(request.arrangement_date) && (
+                  <DropdownItem onClick={() => cancelRequest_approved(request.request_id, request.arrangement_date)}>
+                    Cancel
+                  </DropdownItem>
+                )}
+
               </DropdownMenu>
             </Dropdown>
           </div>
         );
+        case "is_recurring":
+          if (request.is_recurring){
+            return (
+              <div><i>YES</i></div>
+            )
+          }
+          else{
+            return (
+              <div>NO</div>
+            )
+          }
       default:
         return cellValue;
     }
-  }, []);
+  }, [handleEditClick]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {
@@ -175,10 +318,10 @@ export default function RequestTable() {
     }
   }, []);
 
-  const onClear = React.useCallback(()=>{
-    setFilterValue("")
-    setPage(1)
-  },[])
+  const onClear = React.useCallback(() => {
+    setFilterValue("");
+    setPage(1);
+  }, []);
 
   const topContent = React.useMemo(() => {
     return (
@@ -197,7 +340,10 @@ export default function RequestTable() {
           <div className="flex gap-3">
             <Dropdown>
               <DropdownTrigger className="sm:flex">
-                <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
+                <Button
+                  endContent={<ChevronDownIcon className="text-small" />}
+                  variant="flat"
+                >
                   Status
                 </Button>
               </DropdownTrigger>
@@ -218,7 +364,10 @@ export default function RequestTable() {
             </Dropdown>
             <Dropdown>
               <DropdownTrigger className="sm:flex">
-                <Button endContent={<ChevronDownIcon className="text-small" />} variant="flat">
+                <Button
+                  endContent={<ChevronDownIcon className="text-small" />}
+                  variant="flat"
+                >
                   Columns
                 </Button>
               </DropdownTrigger>
@@ -286,16 +435,33 @@ export default function RequestTable() {
           onChange={setPage}
         />
         <div className="hidden sm:flex w-[30%] justify-end gap-2">
-          <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onPreviousPage}>
+          <Button
+            isDisabled={pages === 1}
+            size="sm"
+            variant="flat"
+            onPress={onPreviousPage}
+          >
             Previous
           </Button>
-          <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onNextPage}>
+          <Button
+            isDisabled={pages === 1}
+            size="sm"
+            variant="flat"
+            onPress={onNextPage}
+          >
             Next
           </Button>
         </div>
       </div>
     );
-  }, [selectedKeys, page, pages, filteredItems.length, onNextPage, onPreviousPage]);
+  }, [
+    selectedKeys,
+    page,
+    pages,
+    filteredItems.length,
+    onNextPage,
+    onPreviousPage,
+  ]);
 
   return (
     <Table
@@ -325,14 +491,16 @@ export default function RequestTable() {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody 
-      emptyContent={"No Requests found"} 
-      items={sortedItems}
-      loadingContent={<Spinner label="Loading..." />}
+      <TableBody
+        emptyContent={"No Requests found"}
+        items={sortedItems}
+        loadingContent={<Spinner label="Loading..." />}
       >
         {(item, rowIndex) => (
           <TableRow key={item.request_id}>
-            {(columnKey) => <TableCell>{renderCell(item, columnKey, rowIndex)}</TableCell>}
+            {(columnKey) => (
+              <TableCell>{renderCell(item, columnKey, rowIndex)}</TableCell>
+            )}
           </TableRow>
         )}
       </TableBody>
