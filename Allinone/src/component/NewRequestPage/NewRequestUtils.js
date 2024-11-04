@@ -1,48 +1,35 @@
-function extractWeekdays(startDateStr, endDateStr, weekdayStr) {
-  const weekdaysMap = {
-    Sunday: 0,
-    Monday: 1,
-    Tuesday: 2,
-    Wednesday: 3,
-    Thursday: 4,
-    Friday: 5,
-    Saturday: 6,
-  };
+function extractWeekdays(startDateStr, endDateStr, dayOfWeek) {
+  // Log the input values to inspect them
+  console.log("Received startDateStr:", startDateStr);
+  console.log("Received endDateStr:", endDateStr);
 
-  const weekday = weekdaysMap[weekdayStr];
+  // Ensure startDateStr and endDateStr are valid date strings in "YYYY-MM-DD" format
+  const startDate = (typeof startDateStr === 'string' ? startDateStr 
+                   : startDateStr instanceof Date ? startDateStr.toISOString().split("T")[0] 
+                   : null);
+  
+  const endDate = (typeof endDateStr === 'string' ? endDateStr 
+                 : endDateStr instanceof Date ? endDateStr.toISOString().split("T")[0] 
+                 : null);
 
-  function formatDate(date) {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${year}-${month}-${day}`;
+  // Check if either startDate or endDate is invalid after conversion
+  if (!startDate || !endDate) {
+    console.error("Invalid start or end date.", { startDate, endDate });
+    return [];
   }
 
-  const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
-  const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number);
-
-  const startDate = new Date(startYear, startMonth - 1, startDay);
-  const endDate = new Date(endYear, endMonth - 1, endDay);
-
-  let dates = [];
-
-  let currentDate = startDate;
-
-  const currentWeekday = currentDate.getDay();
-  const targetWeekday = weekday % 7; 
-
-  if (currentWeekday !== targetWeekday) {
-    const daysUntilTarget = (targetWeekday - currentWeekday + 7) % 7;
-    currentDate.setDate(currentDate.getDate() + daysUntilTarget);
-  }
-
-  while (currentDate <= endDate) {
-    if (currentDate.getDay() === targetWeekday) {
-      dates.push(formatDate(currentDate));
+  // Continue with the date extraction logic if both dates are valid
+  const dates = [];
+  let current = new Date(startDate);
+  const end = new Date(endDate);
+  
+  // Iterate from start to end date and add matching weekdays to dates array
+  while (current <= end) {
+    if (current.toLocaleDateString('en-US', { weekday: 'long' }) === dayOfWeek) {
+      dates.push(current.toISOString().split('T')[0]);
     }
-    currentDate.setDate(currentDate.getDate() + 7);
+    current.setDate(current.getDate() + 1);
   }
-
   return dates;
 }
 

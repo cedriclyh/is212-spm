@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import {
   DatePicker,
   Chip,
@@ -23,29 +23,50 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
 } from "@nextui-org/react";
-import { extractWeekdays, checkAvailability, getAllDates } from "./NewRequestUtils";
+import {
+  extractWeekdays,
+  checkAvailability,
+  getAllDates,
+} from "./NewRequestUtils";
 import { getLocalTimeZone, today } from "@internationalized/date";
-
+import { parseISO } from "date-fns";
 
 var modalTitle = "Error Message";
 var modalMsg = "";
 
 const statusColorMap = {
   Available: "success",
-  Blocked: "danger"
+  Blocked: "danger",
 };
 
 export default function NewRequest({ initialFormData }) {
-  const [inputDates, setInputDates] = useState(initialFormData?.arrangement_date ? [initialFormData.arrangement_date] : []);
-  const [selectedDate, setSelectedDate] = useState(initialFormData?.arrangement_date || null);
-  const [selectedTimeslot, setSelectedTimeslot] = useState(initialFormData?.timeslot || "Choose a Timeslot");
-  const [SelectedDayOfTheWeek, setSelectedDayOfTheWeek] = useState(initialFormData?.recurring_day || "Choose a Week Day");
-  const [isRecurring, setIsRecurring] = useState(initialFormData?.is_recurring || false);
-  const [startDate, setStartDate] = useState(initialFormData?.start_date || null);
-  const [endDate, setEndDate] = useState(initialFormData?.end_date || null);
-  const [reason, setReason] = useState(initialFormData?.reason || '');
+  const [inputRequestID, setInputRequestID] = useState(
+    initialFormData?.request_id || null
+  );
+  const [inputDates, setInputDates] = useState(
+    initialFormData?.arrangement_date ? [initialFormData.arrangement_date] : []
+  );
+  const [selectedDate, setSelectedDate] = useState(
+    initialFormData?.arrangement_date || null
+  );
+  const [selectedTimeslot, setSelectedTimeslot] = useState(
+    initialFormData?.timeslot || "Choose a Timeslot"
+  );
+  const [SelectedDayOfTheWeek, setSelectedDayOfTheWeek] = useState(
+    initialFormData?.recurring_day || "Choose a Week Day"
+  );
+  const [isRecurring, setIsRecurring] = useState(
+    initialFormData?.is_recurring || false
+  );
+  const [startDate, setStartDate] = useState(
+    initialFormData?.start_date ? parseISO(initialFormData.start_date) : null
+  );
+  const [endDate, setEndDate] = useState(
+    initialFormData?.end_date ? parseISO(initialFormData.end_date) : null
+  );
+  const [reason, setReason] = useState(initialFormData?.reason || "");
   const [blockOutDates, setBlockOutDates] = useState([]);
   const [extractedDates, setExtractedDates] = useState([]);
   const [availability, setAvailability] = useState({});
@@ -53,28 +74,36 @@ export default function NewRequest({ initialFormData }) {
   // Populate form data whenever `initialFormData` changes
   useEffect(() => {
     if (initialFormData) {
-      setInputDates(initialFormData.arrangement_date ? [initialFormData.arrangement_date] : []);
+      setInputDates(
+        initialFormData.arrangement_date
+          ? [initialFormData.arrangement_date]
+          : []
+      );
       setSelectedDate(initialFormData.arrangement_date || null);
       setSelectedTimeslot(initialFormData.timeslot || "Choose a Timeslot");
-      setSelectedDayOfTheWeek(initialFormData.recurring_day || "Choose a Week Day");
+      setSelectedDayOfTheWeek(
+        initialFormData.recurring_day || "Choose a Week Day"
+      );
       setIsRecurring(initialFormData.is_recurring || false);
       setStartDate(initialFormData.start_date || null);
       setEndDate(initialFormData.end_date || null);
-      setReason(initialFormData.reason || '');
+      setReason(initialFormData.reason || "");
     }
   }, [initialFormData]);
 
   // for modal
-  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState(3);
-  const [buttonColor, setButtonColor] = useState('danger');
+  const [buttonColor, setButtonColor] = useState("danger");
   const [showCountdown, setShowCountdown] = useState(false);
 
   useEffect(() => {
     async function fetchBlockOutDates() {
       try {
-        const response = await fetch('http://localhost:5014/blockout/get_blockouts');
+        const response = await fetch(
+          "http://localhost:5014/blockout/get_blockouts"
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -82,7 +111,7 @@ export default function NewRequest({ initialFormData }) {
         const dates = getAllDates(output.data);
         setBlockOutDates(dates);
       } catch (error) {
-        console.error('Error fetching blockOutDates:', error);
+        console.error("Error fetching blockOutDates:", error);
         setBlockOutDates([]);
       }
     }
@@ -119,16 +148,16 @@ export default function NewRequest({ initialFormData }) {
 
   const handleRecurringChange = (value) => {
     setIsRecurring(value === "Yes");
-  
+
     // Clear all the related states
     setInputDates([]);
     setSelectedTimeslot("Choose a Timeslot");
     setSelectedDayOfTheWeek("Choose a Week Day");
-    setStartDate(null); 
-    setEndDate(null); 
-    setExtractedDates([]); 
-    setAvailability({}); 
-    setReason('');
+    setStartDate(null);
+    setEndDate(null);
+    setExtractedDates([]);
+    setAvailability({});
+    setReason("");
   };
 
   // useEffect(() => {
@@ -145,86 +174,101 @@ export default function NewRequest({ initialFormData }) {
       setAvailability(result);
     }
   }, [inputDates, extractedDates, blockOutDates, isRecurring]);
-  
 
   // UseEffect to trigger extractWeekdays whenever the startDate, endDate, or SelectedDayOfTheWeek changes
   useEffect(() => {
     if (isRecurring && startDate && endDate && SelectedDayOfTheWeek) {
       console.log(startDate);
-      const dates = extractWeekdays(startDate, endDate, SelectedDayOfTheWeek);
-      setExtractedDates(dates); 
+      const dates = extractWeekdays(
+        formatDateFromPicker(startDate),
+        formatDateFromPicker(endDate),
+        SelectedDayOfTheWeek
+      );
+      setExtractedDates(dates);
     }
   }, [startDate, endDate, SelectedDayOfTheWeek, isRecurring]);
 
   const [formData, setFormData] = useState({
-    staff_id: 140004,  // Change to dynamic value if needed
+    staff_id: 140004, // Change to dynamic value if needed
     manager_id: 140894,
-    request_date: new Date().toISOString().split('T')[0],
+    request_date: new Date().toISOString().split("T")[0],
     arrangement_date: "",
     recurring_day: "",
     start_date: "",
     end_date: "",
     timeslot: selectedTimeslot,
     reason: reason,
-    isRecurring: isRecurring,
-});
+    is_recurring: isRecurring,
+  });
 
   useEffect(() => {
-      setFormData((prevFormData) => ({
-          ...prevFormData,
-          arrangement_date: isRecurring ? null : inputDates[0] || "",
-          recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
-          start_date: isRecurring ? startDate : null,
-          end_date: isRecurring ? endDate: null,
-          timeslot: selectedTimeslot,
-          reason: reason,
-          isRecurring: isRecurring,
-      }));
-  }, [isRecurring, inputDates, SelectedDayOfTheWeek, startDate, endDate, selectedTimeslot, reason]);
-
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      arrangement_date: isRecurring ? null : inputDates[0] || "",
+      recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
+      start_date: isRecurring ? formatDateFromPicker(startDate) : null,
+      end_date: isRecurring ? formatDateFromPicker(endDate) : null,
+      timeslot: selectedTimeslot,
+      reason: reason,
+      is_recurring: isRecurring,
+    }));
+  }, [
+    isRecurring,
+    inputDates,
+    SelectedDayOfTheWeek,
+    startDate,
+    endDate,
+    selectedTimeslot,
+    reason,
+  ]);
 
   const handleSubmit = async (e) => {
     console.log(formData);
     if (isRecurring) {
-      const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-      
+      const validDays = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+      ];
+
       if (!validDays.includes(SelectedDayOfTheWeek)) {
-        modalMsg = "Please select a valid recurring day (Monday to Friday)." ;
+        modalMsg = "Please select a valid recurring day (Monday to Friday).";
         onOpen();
-        return; 
+        return;
       }
-  
+
       if (!startDate || !endDate) {
         modalMsg = "Please select both a start date and an end date.";
         onOpen();
-        return; 
+        return;
       }
 
       if (selectedTimeslot === "Choose a Timeslot") {
         modalMsg = "Please select a timeslot.";
         onOpen();
-        return; 
+        return;
       }
     } else {
-
       if (formData.arrangement_date === "") {
         modalMsg = "Please select one WFH date.";
         onOpen();
-        return; 
+        return;
       }
-  
+
       if (selectedTimeslot === "Choose a Timeslot") {
         modalMsg = "Please select a timeslot.";
         onOpen();
-        return; 
+        return;
       }
 
-      if (blockOutDates.includes(inputDates[0]) ) {
+      if (blockOutDates.includes(inputDates[0])) {
         modalMsg = "Please select another WFH date.";
         onOpen();
         return;
       }
-    };
+    }
 
     try {
       const response = await fetch("http://localhost:5004/make_request", {
@@ -241,7 +285,7 @@ export default function NewRequest({ initialFormData }) {
         modalTitle = "Success!";
         setButtonColor("success");
         setShowCountdown(true);
-        onOpen(); 
+        onOpen();
 
         // Start the countdown
         let countdownTimer = 3;
@@ -258,7 +302,6 @@ export default function NewRequest({ initialFormData }) {
         }, 1000);
 
         return () => clearInterval(timer);
-
       } else {
         modalMsg = "Error submitting form";
         onOpen();
@@ -269,28 +312,31 @@ export default function NewRequest({ initialFormData }) {
       onOpen();
     }
   };
-  
 
   return (
     <div>
       {/* Form Container with Border, Padding, and Rounded Corners */}
-      <div className="space-y-6 bg-white border border-gray-300 shadow-lg p-6" style={{ padding: "10px 20px", borderRadius: "10px" }}>
+      <div
+        className="space-y-6 bg-white border border-gray-300 shadow-lg p-6"
+        style={{ padding: "10px 20px", borderRadius: "10px" }}
+      >
         {/* Form Title */}
         <div className="my-2">
-          <h2 className="text-lg font-semibold text-gray-900">WFM Arrangement Form</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            WFM Arrangement Form
+          </h2>
         </div>
 
         {/* Form Fields */}
         <div className="space-y-6">
-          
           {/* Recurring Option */}
           <div className="my-2">
             <p style={{ marginTop: "24px" }}>Is this a recurring request?</p>
-            <RadioGroup 
-              orientation="horizontal" 
-              defaultValue="No" 
+            <RadioGroup
+              orientation="horizontal"
+              defaultValue="No"
               className="space-x-4 mt-2"
-              onValueChange={handleRecurringChange} 
+              onValueChange={handleRecurringChange}
             >
               <Radio value="Yes">Yes</Radio>
               <Radio value="No">No</Radio>
@@ -309,8 +355,8 @@ export default function NewRequest({ initialFormData }) {
                   variant="bordered"
                   showMonthAndYearPickers
                   // value={selectedDate}
-                  minValue={today(getLocalTimeZone()).subtract({months: 2})}
-                  maxValue={today(getLocalTimeZone()).add({months: 3})}
+                  minValue={today(getLocalTimeZone()).subtract({ months: 2 })}
+                  maxValue={today(getLocalTimeZone()).add({ months: 3 })}
                   onChange={(date) => {
                     if (date && date.year && date.month && date.day) {
                       setSelectedDate(date);
@@ -329,21 +375,34 @@ export default function NewRequest({ initialFormData }) {
                       {selectedTimeslot || "Choose a Timeslot"}
                     </Button>
                   </DropdownTrigger>
-                  <DropdownMenu onAction={(key) => {
-                    setSelectedTimeslot(key);
-                    setFormData((prev) => ({ ...prev, timeslot: key }));
-                  }}>
-                    <DropdownItem key="Whole Day" description="9AM - 6PM">Whole Day</DropdownItem>
-                    <DropdownItem key="Morning" description="9AM - 1PM">Morning</DropdownItem>
-                    <DropdownItem key="Afternoon" description="2PM - 6PM">Afternoon</DropdownItem>
+                  <DropdownMenu
+                    onAction={(key) => {
+                      setSelectedTimeslot(key);
+                      setFormData((prev) => ({ ...prev, timeslot: key }));
+                    }}
+                  >
+                    <DropdownItem key="Full" description="9AM - 6PM">
+                      Whole Day
+                    </DropdownItem>
+                    <DropdownItem key="AM" description="9AM - 1PM">
+                      Morning
+                    </DropdownItem>
+                    <DropdownItem key="PM" description="2PM - 6PM">
+                      Afternoon
+                    </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
               </div>
 
               <div className="mt-4" style={{ marginTop: "24px" }}>
                 <p>Requested Dates</p>
-                <p style={{ fontSize: "0.875rem", color: "gray" }}>Only Available Dates will be submitted</p>
-                <Table aria-label="Selected Dates with Availability" className="mt-2">
+                <p style={{ fontSize: "0.875rem", color: "gray" }}>
+                  Only Available Dates will be submitted
+                </p>
+                <Table
+                  aria-label="Selected Dates with Availability"
+                  className="mt-2"
+                >
                   <TableHeader>
                     <TableColumn>DATE</TableColumn>
                     <TableColumn>STATUS</TableColumn>
@@ -353,7 +412,13 @@ export default function NewRequest({ initialFormData }) {
                       <TableRow key={index}>
                         <TableCell>{date}</TableCell>
                         <TableCell>
-                          <Chip color={statusColorMap[availability[date] || "Available"]} size="sm" variant="flat">
+                          <Chip
+                            color={
+                              statusColorMap[availability[date] || "Available"]
+                            }
+                            size="sm"
+                            variant="flat"
+                          >
                             {availability[date] || "Available"}
                           </Chip>
                         </TableCell>
@@ -364,26 +429,26 @@ export default function NewRequest({ initialFormData }) {
               </div>
             </>
           )}
-          
+
           {/* Conditionally render recurring date range and days of the week selection */}
           {isRecurring && (
             <>
               {/* For recurring dates */}
               <div className="mt-4" style={{ marginTop: "24px" }}>
-                  <p>Select Date Range</p>
-                  <DateRangePicker
-                    aria-label="Select Date Range"
-                    visibleMonths={2}
-                    variant="bordered"
-                    className="mt-2"
-                    value={{ start: startDate, end: endDate }}
-                    minValue={today(getLocalTimeZone()).subtract({months: 2})}
-                    maxValue={today(getLocalTimeZone()).add({months: 3})}
-                    onChange={({ start, end }) => {
-                      setStartDate(formatDateFromPicker(start));
-                      setEndDate(formatDateFromPicker(end));
-                    }}
-                  />
+                <p>Select Date Range</p>
+                <DateRangePicker
+                  aria-label="Select Date Range"
+                  visibleMonths={2}
+                  variant="bordered"
+                  className="mt-2"
+                  value={{ start: startDate, end: endDate }}
+                  minValue={today(getLocalTimeZone()).subtract({ months: 2 })}
+                  maxValue={today(getLocalTimeZone()).add({ months: 3 })}
+                  onChange={({ start, end }) => {
+                    setStartDate(start);
+                    setEndDate(end);
+                  }}
+                />
               </div>
 
               {/* Timeslot Selection */}
@@ -396,17 +461,23 @@ export default function NewRequest({ initialFormData }) {
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu onAction={handleSelection}>
-                    <DropdownItem key="Whole Day" description="9AM - 6PM">Whole Day</DropdownItem>
-                    <DropdownItem key="Morning" description="9AM - 1PM">Morning</DropdownItem>
-                    <DropdownItem key="Afternoon" description="2PM - 6PM">Afternoon</DropdownItem>
+                    <DropdownItem key="Whole Day" description="9AM - 6PM">
+                      Whole Day
+                    </DropdownItem>
+                    <DropdownItem key="Morning" description="9AM - 1PM">
+                      Morning
+                    </DropdownItem>
+                    <DropdownItem key="Afternoon" description="2PM - 6PM">
+                      Afternoon
+                    </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
               </div>
 
               {/* Select which days of the week for recurring dates */}
               <div className="mt-4" style={{ marginTop: "24px" }}>
-                  <p>Select Recurring Week Day</p>
-                  <Dropdown aria-label="Select Recurring Week Day"> 
+                <p>Select Recurring Week Day</p>
+                <Dropdown aria-label="Select Recurring Week Day">
                   <DropdownTrigger>
                     <Button variant="bordered" className="mt-2">
                       {SelectedDayOfTheWeek || "Choose the Day of the Week"}
@@ -425,8 +496,13 @@ export default function NewRequest({ initialFormData }) {
               {/* Table to view extracted recurring dates with availability */}
               <div className="mt-4" style={{ marginTop: "24px" }}>
                 <p>Requested Dates</p>
-                <p style={{ fontSize: "0.875rem", color: "gray" }}>Only Available Dates will be submitted</p>
-                <Table aria-label="Extracted Recurring Dates with Availability" className="mt-2">
+                <p style={{ fontSize: "0.875rem", color: "gray" }}>
+                  Only Available Dates will be submitted
+                </p>
+                <Table
+                  aria-label="Extracted Recurring Dates with Availability"
+                  className="mt-2"
+                >
                   <TableHeader>
                     <TableColumn>DATE</TableColumn>
                     <TableColumn>STATUS</TableColumn>
@@ -436,7 +512,11 @@ export default function NewRequest({ initialFormData }) {
                       <TableRow key={index}>
                         <TableCell>{date}</TableCell>
                         <TableCell>
-                          <Chip color={statusColorMap[availability[date]]} size="sm" variant="flat">
+                          <Chip
+                            color={statusColorMap[availability[date]]}
+                            size="sm"
+                            variant="flat"
+                          >
                             {availability[date]}
                           </Chip>
                         </TableCell>
@@ -465,7 +545,7 @@ export default function NewRequest({ initialFormData }) {
           </div>
 
           {/* Submit Button */}
-          <div className="mt-4 flex gap-2"  style={{ marginTop: "24px" }}>
+          <div className="mt-4 flex gap-2" style={{ marginTop: "24px" }}>
             <Button
               aria-label="Reset Form"
               color="default"
@@ -481,20 +561,23 @@ export default function NewRequest({ initialFormData }) {
             >
               Reset
             </Button>
-            <Button color="primary" onPress={handleSubmit} aria-label="Submit Form">
+            <Button
+              color="primary"
+              onPress={handleSubmit}
+              aria-label="Submit Form"
+            >
               Submit
-            </Button>  
+            </Button>
           </div>
-
         </div>
-          
-        <Modal 
-          backdrop="opaque" 
-          isOpen={isOpen} 
+
+        <Modal
+          backdrop="opaque"
+          isOpen={isOpen}
           onOpenChange={(isOpen) => {
             onOpenChange(isOpen);
             if (!isOpen && buttonColor === "success") {
-              navigate("/requests");  // Navigate immediately if modal is closed after success
+              navigate("/requests"); // Navigate immediately if modal is closed after success
             }
           }}
           motionProps={{
@@ -515,32 +598,29 @@ export default function NewRequest({ initialFormData }) {
                   ease: "easeIn",
                 },
               },
-            }
+            },
           }}
         >
           <ModalContent>
             {(onClose) => (
               <>
-                <ModalHeader 
-                  className="flex flex-col gap-1"
-                  placement="top"
-                  >
-                    {modalTitle}
+                <ModalHeader className="flex flex-col gap-1" placement="top">
+                  {modalTitle}
                 </ModalHeader>
                 <ModalBody>
                   <p>{modalMsg}</p>
                 </ModalBody>
                 <ModalFooter>
-                  <Button 
-                      color={buttonColor}
-                      variant="light"
-                      onPress={() => {
-                        onClose();
-                        if (buttonColor === "success") {
-                          navigate("/requests");
-                        }
-                      }}
-                    >
+                  <Button
+                    color={buttonColor}
+                    variant="light"
+                    onPress={() => {
+                      onClose();
+                      if (buttonColor === "success") {
+                        navigate("/requests");
+                      }
+                    }}
+                  >
                     Close {showCountdown && `(${countdown})`}
                   </Button>
                 </ModalFooter>
@@ -548,7 +628,6 @@ export default function NewRequest({ initialFormData }) {
             )}
           </ModalContent>
         </Modal>
-
       </div>
     </div>
   );
