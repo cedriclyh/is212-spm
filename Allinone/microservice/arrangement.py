@@ -40,7 +40,7 @@ class Arrangement(db.Model):
     timeslot = db.Column(db.String(50), nullable=False) 
     reason = db.Column(db.String(255), nullable=False)
 
-    __table_args__ = (db.UniqueConstraint('staff_id', 'arrangement_date', 'timeslot', name='unique_arrangement_constraint'))
+    __table_args__ = (db.UniqueConstraint('staff_id', 'arrangement_date', 'timeslot', name='unique_arrangement_constraint'),)
     
     def __init__(self, request_id, arrangement_id, staff_id, arrangement_date, timeslot, reason):
         self.request_id = request_id
