@@ -25,7 +25,8 @@ const App = () => {
           <Route path="/requests" element={< RequestTable />} />
           <Route path="/new_request" element={< NewRequest />} />
           <Route path="/team_request" element={< TeamRequest />} />
-          <Route path="/edit_request/:uid" element={<EditRequestPage />} />
+          <Route path="/edit_request/:uid" element={ <EditRequestPage />} />
+          <Route path="/requests/:uid" element={ <ViewRequest />} />
           {/* <Route path="/" element={ <HRView /> } /> Default path dept = 'HR' or 'CEO' */}
           <Route path="/director" element={ <DirectorView /> } /> {/* Default path */} {/* role num = 1*/}
           <Route path="/staff" element={ <StaffView /> } /> {/* role num = 2*/}
