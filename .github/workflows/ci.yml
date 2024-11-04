@@ -13,16 +13,11 @@ jobs:
     build:
         runs-on: ubuntu-latest  # Use the latest Ubuntu environment
         
-        # Set up MySQL service
-        services:
-          mysql:
-            image: mysql:5.7  # MySQL service setup for integration tests
-            env:
-              MYSQL_ROOT_PASSWORD: root
-              MYSQL_DATABASE: spm_db
-            ports:
-              - 3306:3306
-            options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=5
+        # Set environment variables
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+          TESTING: "true"
+          SQLALCHEMY_DATABASE_URI: "sqlite:///:memory:"
 
         steps:
         # Step 1: Check out the repository code
@@ -83,24 +78,37 @@ jobs:
         - name: Install Python dependencies
           run: |
             python -m pip install --upgrade pip
+            python -m pip install pytest pytest-cov pytest-mock flask-sqlalchemy flask-cors mysqlclient mysql-connector-python
             pip install -r requirements.txt
           working-directory: ./Allinone/microservice
 
-        # Step 8: Set PYTHONPATH
-        - name: Set PYTHONPATH
-          run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
-          working-directory: ./Allinone/microservice
-
-        # Step 10: Set the database URL environment variable for tests
-        - name: Set environment for tests
-          run: echo "DB_URL=mysql+mysqlconnector://root:root@localhost:3306/spm_db" >> $GITHUB_ENV
-
-        # Step 11: Run Python unit tests
+        # Step 8: Create SQLite database directory
+        - name: Create SQLite directory
+          run: |
+            mkdir -p ${{ github.workspace }}/Allinone/microservice/instance
+            touch ${{ github.workspace }}/Allinone/microservice/instance/test.db
+          
+        # Step 9: Run Python unit tests with SQLite
         - name: Run Python unit tests
-          run: pytest tests
+          env:
+            DATABASE_URL: "sqlite:///:memory:"
+            TESTING: "true"
+            SQLALCHEMY_DATABASE_URI: "sqlite:///:memory:"
+          run: |
+            python -m pytest tests/ -v --cov=. --cov-report=term-missing
           working-directory: ./Allinone/microservice
 
-        # Step 12: Run JS/React unit tests (optional)
+        # Step 10: Run JS/React unit tests
         - name: Run JS/React unit tests
           run: npm test
           working-directory: ./Allinone/src/tests
+
+        # Step 11: Upload test coverage reports (optional)
+        # - name: Upload coverage reports
+        #   uses: codecov/codecov-action@v3
+        #   with:
+        #     token: ${{ secrets.CODECOV_TOKEN }}
+        #     files: ./Allinone/microservice/coverage.xml
+        #     flags: unittests
+        #     name: codecov-umbrella
+        #     fail_ci_if_error: true
