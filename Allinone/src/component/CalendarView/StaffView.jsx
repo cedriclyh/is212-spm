@@ -7,6 +7,7 @@ import { getValidRange, getStaffTeamEvents, getPersonalEvents } from './Calendar
 import Header from './Header';
 import BasicEventFilter from './BasicEventFilter';
 import Dashboard from './Dashboard';
+import { Padding } from '@mui/icons-material';
 
 export default function WFHcalendar() {
   const [view, setView] = useState('dayGridMonth');
@@ -63,7 +64,7 @@ export default function WFHcalendar() {
   // Render the calendar
   return (
     <div className="calendar-container">
-      <Dashboard events={filteredEvents} />
+      <Dashboard events={filteredEvents}/>
       <Header view={view} toggleView={toggleView} userID={userID}/>
       <div className="calendar-box">
         <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>

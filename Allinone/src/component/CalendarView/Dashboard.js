@@ -1,5 +1,5 @@
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, getKeyValue, DatePicker } from "@nextui-org/react";
-import React, { useState } from "react";
+import React, { Fragment, useState } from "react";
 
 const columns = [
   { key: "date", label: "DATE" },
@@ -8,9 +8,9 @@ const columns = [
   { key: "manpower", label: "MANPOWER AT OFFICE" },
 ];
 
-export const getTotalCount = async (userId) => {
+export const getTotalCount = async (managerId) => {
   try {
-    const response = await fetch(`http://localhost:5002/users/team/${userId}`, {
+    const response = await fetch(`http://localhost:5002/users/team/${managerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -30,11 +30,17 @@ export const getTotalCount = async (userId) => {
   }
 };    
 
+async function getManpowerCount(count, managerID) {
+  const totalCount = await getTotalCount(managerID);
+  const numOfOfficeSlaves = totalCount - count;
+  return `${numOfOfficeSlaves}/${totalCount}`;
+}
 
 export default function Dashboard(inputEvents) {
   const [state, setState] = useState(0);
   const events = inputEvents.events;
   console.log("Events inserted into DashBoard:", events);
+  
 
   const dashboardData = events.map(item => {
     const name = item.title.split(" ").slice(0, -1).join(" ");
@@ -44,36 +50,69 @@ export default function Dashboard(inputEvents) {
       date: item.start.substring(0, 10),
       name: name,
       key: item.id,
+      managerID: item.managerID,
     };
   });
 
   const groupedData = dashboardData.reduce((acc, item) => {
-    const { date } = item; // Get the date directly from item
+    const { date, dept, teamName } = item;
     if (!acc[date]) {
-      acc[date] = []; // Initialize the array if it doesn't exist
+      acc[date] = {};
     }
-    acc[date].push(item); // Push the entire item to the date array
+    if (!acc[date][dept]) {
+      acc[date][dept] = {};
+    }
+    if (!acc[date][dept][teamName]) {
+      acc[date][dept][teamName] = [];
+    }
+
+    acc[date][dept][teamName].push({
+      key: item.key,
+      name: item.name,
+      managerID: item.managerID,
+    });
     return acc;
   }, {});
   
+  // Transform groupedData to rows
+  const rows = Object.keys(groupedData).flatMap(date => {
+    return Object.keys(groupedData[date]).flatMap(dept => {
+      return Object.keys(groupedData[date][dept]).map(teamName => {
+        const entries = groupedData[date][dept][teamName];
+        const manpowerInOffice = getManpowerCount(entries.length, entries[0].managerID);
+        console.log("Manpower in Office:", manpowerInOffice);
+        return {
+          key: `${date}-${dept}-${teamName}}`, // Or generate a unique key if necessary
+          date: date,
+          department: dept,
+          team: teamName,
+          manpower: manpowerInOffice
+        };
+      });
+    });
+  });
+
+  // const IDEALROWS = [{key: 1, date:'2024-11-01', department: 'HR', team: 'Manager', entries: [{name: 'John Doe'}, {name: 'Jane Doe'}]}];
+
   // Logging the results
   console.log('Dashboard Data:', dashboardData);
   console.log('Grouped Data:', groupedData);
+  console.log('Rows:', rows);
 
-  // const handleClick = (index) => {
-  //   const updatedState = { ...rows[index] }; // Clone the row object
+  const handleClick = (index) => {
+    const updatedState = { ...rows[index] }; // Clone the row object
 
-  //   if (updatedState.other) {
-  //     delete updatedState.other; // Remove the additional information
-  //     setState((pre) => pre + 1);
-  //   } else {
-  //     updatedState.other = "Hello there" ;
-  //     setState((pre) => pre + 1);
-  //   }
+    if (updatedState.other) {
+      delete updatedState.other; // Remove the additional information
+      setState((pre) => pre + 1);
+    } else {
+      updatedState.other = "Hello there" ;
+      setState((pre) => pre + 1);
+    }
 
-  //   console.log("Updated row:", updatedState);
-  //   rows[index] = updatedState; // Update the row in the array directly
-  // };
+    console.log("Updated row:", updatedState);
+    rows[index] = updatedState; // Update the row in the array directly
+  };
 
   return (
     <>
@@ -82,48 +121,17 @@ export default function Dashboard(inputEvents) {
       <TableHeader columns={columns}>
         {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
       </TableHeader>
-      {/* <TableBody>
-        {rows.map((item) => (
-          <TableRow key={item.key} onClick={() => handleClick(item.key - 1)} style={{ cursor: "pointer" }}>
-            {columns.map((column) => {
-              const value = getKeyValue(item, column.key);
-              if (typeof value === "symbol") {
-                console.warn("Found a symbol value:", value);
-              }
-              return <TableCell key={column.key}>{value}</TableCell>;
-            })}
+
+      <TableBody items={rows}>
+        {(item) => (
+          <TableRow onclick={handleClick} key={item.key}>
+            <TableCell>{item.date}</TableCell>
+            <TableCell>{item.department}</TableCell>
+            <TableCell>{item.team}</TableCell>
+            <TableCell>{item.manpower}</TableCell>
           </TableRow>
-        ))}
-      </TableBody> */}
-       <TableBody>
-        {Object.entries(dashboardData).map(([date, entries]) => {
-          console.log(`Entries for ${date}:`, entries)
-          
-          if (!Array.isArray(entries)) {
-            console.error(`Entries for ${date} is not an array:`, entries);
-            return null;
-          }
-
-          return (
-            <>
-              <TableRow key={`header-${date}`}>
-                <TableCell colSpan={3} style={{ fontWeight: "bold", backgroundColor: "#f0f0f0" }}>
-                  {date}
-                </TableCell>
-              </TableRow>
-              {entries.map((item) => (
-                <TableRow key={item.key} onClick={() => handleClick(item.key)} style={{ cursor: "pointer" }}>
-                  {columns.map((column) => {
-                    const value = item[column.key];
-                    return <TableCell key={column.key}>{value}</TableCell>;
-                  })}
-                </TableRow>
-              ))}
-            </>
-          );
-        })}
+        )}
       </TableBody>
-
     </Table>
     </>
   );

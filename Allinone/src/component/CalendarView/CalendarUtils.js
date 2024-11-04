@@ -139,6 +139,7 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
           backgroundColor: getBackgroundColor(req.status),
           teamName: teamName,
           dept: dept,
+          managerID : req.manager_id,
         };
       })
     );
@@ -183,6 +184,7 @@ export const getApprovedandPendingEvents = async (userId) => {
           backgroundColor: getBackgroundColor(req.status),
           teamName: teamName,
           dept: dept,
+          managerID : req.manager_id,
         };
       })
     );
@@ -238,6 +240,7 @@ export const getApprovedEventsOnly = async (userId) => {
         backgroundColor: '#4caf50',
         teamName: teamName,
         dept: dept,
+        managerID : manager_id, 
       };
     })
   );
@@ -276,7 +279,7 @@ export const getListofStaffUnderManager = async (userId) => {
   
 // Retrieve employee's Personal Events
 export const getPersonalEvents = async (userId) => {
-  let events = await getApprovedandPendingandCancelledEvents(userId);
+  let events = await getApprovedandPendingEvents(userId);
   return events
 };  
 
