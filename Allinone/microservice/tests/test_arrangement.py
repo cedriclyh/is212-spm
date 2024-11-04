@@ -22,6 +22,7 @@ def mock_employee_request_response():
         'data': [
             {
                 'request_id': 1,
+                'arrangement_id': 1,
                 'staff_id': 140002,
                 'manager_id': 140894,
                 'request_date': '2024-09-29',
@@ -37,6 +38,7 @@ def mock_employee_request_response():
             },
             {
                 'request_id': 17,
+                'arrangement_id': 1,
                 'staff_id': 140002,
                 'manager_id': 140894,
                 'request_date': '2024-10-28',
@@ -166,12 +168,10 @@ def test_get_arrangements_by_staff_id(client):
     assert len(data) == 2
     assert all(arr['staff_id'] == 140002 for arr in data)
 
-def test_delete_arrangements(client, sample_arrangement):
+def test_delete_arrangements(client):
     """Test deleting arrangements"""
-    data = {
-        "arrangement_ids": [1]
-    }
-    response = client.delete('/delete_arrangements', json=data)
+    
+    response = client.delete('/withdraw_arrangement/17/1')
     assert response.status_code == 200
     assert response.json['message'] == 'Arrangements deleted successfully'
     
@@ -182,10 +182,8 @@ def test_delete_arrangements(client, sample_arrangement):
 
 def test_delete_arrangements_not_found(client):
     """Test deleting non-existent arrangements"""
-    data = {
-        "arrangement_ids": [999]  # Non-existent ID
-    }
-    response = client.delete('/delete_arrangements', json=data)
+    
+    response = client.delete('/withdraw_arrangement/999/999')
     assert response.status_code == 200
     assert response.json['message'] == 'No matching arrangements found to delete'
 

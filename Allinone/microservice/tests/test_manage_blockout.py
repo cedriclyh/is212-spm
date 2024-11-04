@@ -1,5 +1,5 @@
 import pytest
-from manage_blockout import app, db, BlockoutDates, Arrangement, Employee, RequestDates, RequestLog
+from manage_blockout import app, db, BlockoutDates, Arrangement, Employee
 from datetime import date
 import json
 from unittest.mock import patch
