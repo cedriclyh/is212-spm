@@ -1,11 +1,14 @@
-import {Navbar, NavbarBrand, NavbarContent, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar} from "@nextui-org/react";
+import { Navbar, NavbarBrand, NavbarContent, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar } from "@nextui-org/react";
 import profilePic from "../Icons/profile_pic.png"
 
 export default function App() {
   return (
     <Navbar maxWidth="full" isBordered>
       <NavbarBrand>
-        <p className="font-bold text-inherit">All-In-One</p>
+        <a href="/">
+          <p className="font-bold text-inherit">All-In-One</p>
+        </a>
+
       </NavbarBrand>
 
       <NavbarContent as="div" justify="end">
