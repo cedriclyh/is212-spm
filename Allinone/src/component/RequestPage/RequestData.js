@@ -7,6 +7,7 @@ const columns = [
   {name: "TIMESLOT", uid: "timeslot"},
   {name: "STATUS", uid: "status", sortable: true},
   {name: "MANAGER", uid: "manager"},
+  {name: "RECURRING", uid: "is_recurring"},
   {name: "ACTIONS", uid: "actions"},
 ];
 
@@ -45,6 +46,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-01"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -58,9 +61,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-09-19",
     "request_id": 3,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Approved",
     "timeslot": "FULL"
   },
@@ -69,6 +75,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-02"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -82,9 +90,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-08-09",
     "request_id": 4,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Pending",
     "timeslot": "FULL"
   },
@@ -93,6 +104,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-03"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -106,9 +119,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-09-29",
     "request_id": 5,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Rejected",
     "timeslot": "PM"
   },
@@ -117,6 +133,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-12-01"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -130,9 +148,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-07-09",
     "request_id": 6,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Pending",
     "timeslot": "AM"
   },
@@ -141,6 +162,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2025-01-01"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -154,9 +177,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-09-10",
     "request_id": 7,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Approved",
     "timeslot": "FULL"
   },
@@ -165,6 +191,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-11"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -178,9 +206,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-09-09",
     "request_id": 8,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Approved",
     "timeslot": "PM"
   },
@@ -189,6 +220,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-12"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -202,9 +235,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-08-31",
     "request_id": 9,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Rejected",
     "timeslot": "PM"
   },
@@ -213,6 +249,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-15"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -226,9 +264,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-08-30",
     "request_id": 10,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Pending",
     "timeslot": "FULL"
   },
@@ -237,6 +278,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-15"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -250,9 +293,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-08-30",
     "request_id": 11,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Pending",
     "timeslot": "PM"
   },
@@ -261,6 +307,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-02"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -274,9 +322,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-10-01",
     "request_id": 14,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Approved",
     "timeslot": "FULL"
   },
@@ -285,6 +336,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-04"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -298,9 +351,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-10-02",
     "request_id": 15,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Approved",
     "timeslot": "FULL"
   },
@@ -309,6 +365,8 @@ const pulled_data = [
     "arrangement_dates": [
       "2024-10-21"
     ],
+    "end_date": "",
+    "is_recurring": false,
     "manager_details": {
       "country": "Singapore",
       "dept": "Sales",
@@ -322,9 +380,12 @@ const pulled_data = [
     },
     "manager_id": 140894,
     "reason": "",
+    "recurring_day": "",
+    "remark": "",
     "request_date": "2024-10-03",
     "request_id": 16,
     "staff_id": 140004,
+    "start_date": "",
     "status": "Approved",
     "timeslot": "FULL"
   }

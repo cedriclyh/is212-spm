@@ -1,9 +1,22 @@
+# Flask and extensions
 Flask
-Flask-SQLAlchemy
+flask-sqlalchemy
+flask-cors
+flasgger
+
+# Database
+SQLAlchemy
 mysql-connector-python
-Flask-Cors
+
+# Testing
 pytest
-pytest-flask
 pytest-mock
+pytest-cov
+
+# Email and scheduling
+sib-api-v3-sdk
+APScheduler
+
+# Environment and utils
+python-dotenv
 requests
-python-dateutil
