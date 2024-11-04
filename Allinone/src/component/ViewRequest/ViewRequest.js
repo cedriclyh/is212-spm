@@ -8,16 +8,11 @@ import {
     TableRow,
     TableCell,
     Button,
-    DropdownTrigger,
-    Dropdown,
-    DropdownMenu,
-    DropdownItem,
     Chip,
     User,
     Spinner,
 } from "@nextui-org/react";
 import profilePic from "../Icons/profile_pic.png";
-import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
 import { formatTimeslot } from "../RequestPage/RequestPageUtils";
 
 const statusColorMap = {
