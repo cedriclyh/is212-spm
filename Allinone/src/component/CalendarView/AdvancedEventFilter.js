@@ -3,10 +3,10 @@ import React, { useEffect, useState }  from 'react';
 import {CheckboxGroup, Checkbox} from "@nextui-org/react";
 import { getDeptName, getDirectorTeamEvents } from './CalendarUtils';
 
-export default function EventFilter({ showPersonal, showTeam, handleCheckboxChange, selectedDepartments, handleDepartmentChange }) {
+export default function EventFilter({ showPersonal, showTeam, handleCheckboxChange, selectedDepartments, handleDepartmentChange, userID }) {
   const [deptName, setDeptName] = useState('');
   const [teamNamesByDept, setTeamNamesByDept] = useState([]);
-  const userID = 140001; // Hardcoded user ID for now
+  // const userID = 140001; // Hardcoded user ID for now
 
   useEffect(() => {
     const fetchDeptName = async () => {
