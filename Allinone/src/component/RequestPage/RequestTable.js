@@ -174,7 +174,7 @@ export default function RequestTable() {
     navigate(`/requests/${requestId}`);
   }, [navigate]);
   
-  const cancelRequest_approved = async (requestId, arrangementDate) => {
+  const withdrawRequest_approved = async (requestId, arrangementDate) => {
     if (!isWithinTwoWeeks(arrangementDate)) {
       alert("Cancellation can only be made within 2 weeks of the arrangement date.");
       return;
@@ -198,7 +198,7 @@ export default function RequestTable() {
       // Handle response as you did previously
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred while cancelling the request.");
+      alert("An error occurred while withdrawing the request.");
     }
   };
 
@@ -274,8 +274,8 @@ export default function RequestTable() {
                   </DropdownItem>
                 )}
                 {request.status === "Approved" && isWithinTwoWeeks(request.arrangement_date) && (
-                  <DropdownItem onClick={() => cancelRequest_approved(request.request_id, request.arrangement_date)}>
-                    Cancel
+                  <DropdownItem onClick={() => withdrawRequest_approved(request.request_id, request.arrangement_date)}>
+                    Withdraw
                   </DropdownItem>
                 )}
 
@@ -297,7 +297,7 @@ export default function RequestTable() {
       default:
         return cellValue;
     }
-  }, [handleEditClick, handleViewClick, cancelRequest_approved]);
+  }, [handleEditClick, handleViewClick, cancelRequest_pending]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {

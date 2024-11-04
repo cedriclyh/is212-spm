@@ -296,9 +296,9 @@ def cancel_request():
         staff_email = request_entry.get("staff_email")  # Assuming email is part of the data
         staff_id = request_entry.get("staff_id")
         
-        # Check if the request is currently approved
-        if current_status not in ["Approved", "Pending"]:
-            return jsonify({"message": "Only approved or pending requests can be cancelled", "code": 403}), 403
+        # Check if the request is currently pending
+        if current_status not in ["Pending"]:
+            return jsonify({"message": "Only pending requests can be cancelled", "code": 403}), 403
         
         # Update the status to 'cancelled' in the Request Log microservice
         update_data = {
