@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
     Table,
@@ -7,7 +7,6 @@ import {
     TableBody,
     TableRow,
     TableCell,
-    Input,
     Button,
     DropdownTrigger,
     Dropdown,
@@ -15,10 +14,10 @@ import {
     DropdownItem,
     Chip,
     User,
-    Pagination,
     Spinner,
 } from "@nextui-org/react";
-import profilePic from "../Icons/profile_pic.png"
+import profilePic from "../Icons/profile_pic.png";
+import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
 import { formatTimeslot } from "../RequestPage/RequestPageUtils";
 
 const statusColorMap = {
@@ -27,44 +26,105 @@ const statusColorMap = {
     Pending: "warning",
     Cancelled: "default",
     Withdrawn: "secondary",
-  };
+};
 
 export default function ViewRequest() {
     const { uid } = useParams();
     const [requestData, setRequestData] = useState(null);
-    console.log(uid);
+    const [dates, setDates] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [visibleColumns, setVisibleColumns] = useState(["arrangment_date"])
 
-    useEffect (() => {
+    // const isWithinTwoWeeks = useCallback((arrangementDate) => {
+    //     const now = new Date();
+    //     const arrangement = new Date(arrangementDate);
+    //     const twoWeeksBefore = new Date(arrangement);
+    //     twoWeeksBefore.setDate(arrangement.getDate() - 14);
+    //     const twoWeeksAfter = new Date(arrangement);
+    //     twoWeeksAfter.setDate(arrangement.getDate() + 14);
+    
+    //     return now >= twoWeeksBefore && now <= twoWeeksAfter;
+    // }, []);
+
+    useEffect(() => {
         const fetchRequestData = async () => {
             try {
-              const response = await fetch(`http://localhost:5011/view_request/${uid}`);
-              console.log(response);
-              if (response.ok) {
-                const data = await response.json();
-                setRequestData(data.data);
-                console.log(data.data)
-              } else {
-                console.error("Failed to fetch request data");
-              }
+                const response = await fetch(`http://localhost:5011/view_request/${uid}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setRequestData(data.data);
+                    
+                    if (data.data.is_recurring) {
+                        setDates(data.data.arrangement_dates || []);
+                    } else {
+                        setDates(data.data.arrangement_date ? [data.data.arrangement_date] : []);
+                    }
+                } else {
+                    console.error("Failed to fetch request data");
+                }
             } catch (error) {
-              console.error("Error fetching data:", error);
+                console.error("Error fetching data:", error);
+            } finally {
+                setIsLoading(false);
             }
-          };
-
+        };
         fetchRequestData();
     }, [uid]);
 
-    console.log(requestData);
+    // const renderCell = React.useCallback((visibleColumns, columnKey) => {
+    //     const cellValue = requestData[columnKey]
 
-    return requestData ? (
-        <>
-          <div className="space-y-6 bg-white border border-gray-300 shadow-lg p-6" style={{ padding: "10px 20px", borderRadius: "10px" }}>
-            <div className="my-2">
-              <h2 className="text-lg font-semibold text-gray-900">Request {uid}</h2>
+    //     switch (columnKey) {
+    //         case "actions":
+    //             return (
+    //                 <Dropdown>
+    //                     <DropdownTrigger>
+    //                         <Button isIconOnly size="sm" variant="light">
+    //                         <VerticalDotsIcon className="text-default-300" />
+    //                         </Button>
+    //                     </DropdownTrigger>
+    //                     <DropdownMenu>
+    //                         <DropdownItem>Cancel</DropdownItem>
+    //                     </DropdownMenu>
+    //                 </Dropdown>
+    //             );
+            
+    //         case "status": 
+    //             return (
+    //                 <Chip color={statusColorMap[requestData.status]} size="sm" variant="flat">
+    //                     {cellValue}
+    //                 </Chip>
+    //             )
+            
+    //     }
+    // })
+    
+    if (isLoading) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                textAlign: 'center'
+            }}>
+                <Spinner />
             </div>
-      
-            <div style={{ marginTop:"20px" }}>
-                <p style={{ marginBottom:"10px" }}>Reviewer:</p>
+        );
+    }
+
+    if (!requestData) {
+        return <div>No request data found</div>;
+    }
+
+    return (
+        <div className="space-y-6 bg-white border border-gray-300 shadow-lg p-6" style={{ padding: "10px 20px", borderRadius: "10px" }}>
+            <div className="my-2">
+                <h2 className="text-lg font-semibold text-gray-900">Request {uid}</h2>
+            </div>
+
+            <div style={{ marginTop: "20px" }}>
+                <p style={{ marginBottom: "10px" }}>Reviewer:</p>
                 <User
                     className="my-2"
                     avatarProps={{ radius: "lg", src: profilePic }}
@@ -75,8 +135,8 @@ export default function ViewRequest() {
                 </User>
             </div>
 
-            <div style={{ marginTop:"20px" }}>
-                <p style={{ marginBottom:"10px" }}>Requestee:</p>
+            <div style={{ marginTop: "20px" }}>
+                <p style={{ marginBottom: "10px" }}>Requestee:</p>
                 <User
                     className="my-2"
                     avatarProps={{ radius: "lg", src: profilePic }}
@@ -87,35 +147,73 @@ export default function ViewRequest() {
                 </User>
             </div>
 
-            <div style={{ marginTop:"20px" }}>
+            <div style={{ marginTop: "20px" }}>
                 <p>Requested On:</p>
-                <p>{requestData.request_date}</p>
+                <p className="text-bold text-small capitalize">{requestData.request_date}</p>
             </div>
 
-            <div style={{ marginTop:"20px"}}>
-                <p style={{ marginBottom:"10px" }}>Status:</p>
+            <div style={{ marginTop: "20px" }}>
+                <p style={{ marginBottom: "10px" }}>Status:</p>
                 <Chip color={statusColorMap[requestData.status]} size="sm" variant="flat">
                     {requestData.status}
                 </Chip>
             </div>
 
-            <div style={{ marginTop:"20px"}}>
+            <div style={{ marginTop: "20px" }}>
                 <p>Timeslot:</p>
                 <div>
-                   <div>
-                        <p className="text-bold text-small capitalize">{formatTimeslot(requestData.timeslot)[0]}</p>
-                        <p className="text-bold text-tiny capitalize text-default-400">{formatTimeslot(requestData.timeslot)[1]}</p>
-                    </div>                    
+                    <div>
+                        <p className="text-bold text-small capitalize">
+                            {formatTimeslot(requestData.timeslot)[0]}, {formatTimeslot(requestData.timeslot)[1]}
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <div>
-                
+            {requestData.is_recurring && (
+                <div style={{ marginTop: "20px" }}>
+                    <p style={{ marginBottom: "10px" }}>Recurring Weekday:</p>
+                    <div>
+                        <p className="text-bold text-small capitalize">
+                            {requestData.recurring_day || "N/A"}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            <div style={{ marginTop: "20px", marginBottom: "20px" }}>
+            <Table aria-label="Arrangement dates table" isCompact>
+                <TableHeader>
+                    <TableColumn>ARRANGEMENT DATES (YYYY-MM-DD)</TableColumn>
+                </TableHeader>
+                <TableBody>
+                        {dates.map((date, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{date}</TableCell>
+                            </TableRow>
+                        ))
+                        }
+                </TableBody>
+            </Table>
+
+            {requestData.status === "Approved" && (
+                <Table aria-label="Arrangement dates table" isCompact>
+                <TableHeader>
+                    <TableColumn>ARRANGEMENT DATES (YYYY-MM-DD)</TableColumn>
+                    <TableColumn>STATUS</TableColumn>
+                    <TableColumn>ACTIONS</TableColumn>
+                </TableHeader>
+                <TableBody>
+                        {dates.map((date, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{date}</TableCell>
+                            </TableRow>
+                        ))
+                        }
+                </TableBody>
+            </Table>
+            )}
             </div>
-            
-          </div>
-        </>
-      ) : (
-        <p>Loading...</p>
-      );
-};
+        </div>
+    );
+}

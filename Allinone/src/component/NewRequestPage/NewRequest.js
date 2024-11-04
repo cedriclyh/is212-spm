@@ -202,16 +202,32 @@ export default function NewRequest({ initialFormData }) {
 });
 
   useEffect(() => {
+    if (inputRequestID === null){
       setFormData((prevFormData) => ({
-          ...prevFormData,
-          arrangement_date: isRecurring ? null : inputDates[0] || "",
-          recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
-          start_date: isRecurring ? formatDateFromPicker(startDate) : null,
-          end_date: isRecurring ? formatDateFromPicker(endDate): null,
-          timeslot: selectedTimeslot,
-          reason: reason,
-          is_recurring: isRecurring,
-      }));
+        ...prevFormData,
+        arrangement_date: isRecurring ? null : inputDates[0] || "",
+        recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
+        start_date: isRecurring ? formatDateFromPicker(startDate) : null,
+        end_date: isRecurring ? formatDateFromPicker(endDate): null,
+        timeslot: selectedTimeslot,
+        reason: reason,
+        is_recurring: isRecurring,
+    }));
+    }
+    else{
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        arrangement_date: isRecurring ? null : inputDates[0] || "",
+        recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
+        start_date: isRecurring ? formatDateFromPicker(startDate) : null,
+        end_date: isRecurring ? formatDateFromPicker(endDate): null,
+        timeslot: selectedTimeslot,
+        reason: reason,
+        is_recurring: isRecurring,
+        request_id: inputRequestID,
+    }));
+    }
+      
   }, [isRecurring, inputDates, SelectedDayOfTheWeek, startDate, endDate, selectedTimeslot, reason]);
 
 
@@ -263,47 +279,93 @@ export default function NewRequest({ initialFormData }) {
       }
     }
 
-    try {
-      const response = await fetch("http://localhost:5004/make_request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        modalMsg = "Form processed successfully " + data.message;
-        modalTitle = "Success!";
-        setButtonColor("success");
-        setShowCountdown(true);
-        onOpen();
-
-        // Start the countdown
-        let countdownTimer = 3;
-        setCountdown(countdownTimer);
-
-        const timer = setInterval(() => {
-          countdownTimer--;
+    if (inputRequestID === null){
+      try {
+        const response = await fetch("http://localhost:5004/make_request", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          modalMsg = "Form processed successfully " + data.message;
+          modalTitle = "Success!";
+          setButtonColor("success");
+          setShowCountdown(true);
+          onOpen();
+  
+          // Start the countdown
+          let countdownTimer = 3;
           setCountdown(countdownTimer);
-
-          if (countdownTimer === 0) {
-            clearInterval(timer);
-            navigate("/requests");
-          }
-        }, 1000);
-
-        return () => clearInterval(timer);
-      } else {
-        modalMsg = "Error submitting form";
+  
+          const timer = setInterval(() => {
+            countdownTimer--;
+            setCountdown(countdownTimer);
+  
+            if (countdownTimer === 0) {
+              clearInterval(timer);
+              navigate("/requests");
+            }
+          }, 1000);
+  
+          return () => clearInterval(timer);
+        } else {
+          modalMsg = "Error submitting form";
+          onOpen();
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        modalMsg = "Error submitting form " + error.message;
         onOpen();
       }
-    } catch (error) {
-      console.error("Error:", error);
-      modalMsg = "Error submitting form " + error.message;
-      onOpen();
     }
+    else {
+      try {
+        const response = await fetch(`http://localhost:5004/edit_request/${inputRequestID} `, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          modalMsg = "Request Updated Successfully" + data.message;
+          modalTitle = "Success!";
+          setButtonColor("success");
+          setShowCountdown(true);
+          onOpen();
+  
+          // Start the countdown
+          let countdownTimer = 3;
+          setCountdown(countdownTimer);
+  
+          const timer = setInterval(() => {
+            countdownTimer--;
+            setCountdown(countdownTimer);
+  
+            if (countdownTimer === 0) {
+              clearInterval(timer);
+              navigate("/requests");
+            }
+          }, 1000);
+  
+          return () => clearInterval(timer);
+        } else {
+          modalMsg = "Error updatting request";
+          onOpen();
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        modalMsg = "Error updating request " + error.message;
+        onOpen();
+      }
+    }
+    
   };
 
   return (
