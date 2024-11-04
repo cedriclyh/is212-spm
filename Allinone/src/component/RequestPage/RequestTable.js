@@ -146,45 +146,88 @@ export default function RequestTable() {
     return now >= twoWeeksBefore && now <= twoWeeksAfter;
   };
   
+  // const cancelRequest_pending = async (requestId) => {
+  //   if (!window.confirm("Are you sure you want to cancel this request?")) {
+  //     return; // User withdraw the action
+  //   }
+
+  //   const reason = prompt("Please provide a reason for the cancellation:");
+  //   if (!reason) {
+  //     alert("Cancellation reason is required.");
+  //     return;
+  //   }
+  //   try {
+  //     const response = await fetch(
+  //       `http://localhost:5010/cancel_request/${requestId}`,
+  //       {
+  //         method: "PUT",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({ status: "Cancel", reason }),
+  //       }
+  //     );
+
+  //     if (response.ok) {
+  //       alert("Request successfully cancelled.");
+  //       // Refresh the request data to reflect the updated status
+  //       setRequests((prevRequests) =>
+  //         prevRequests.map((request) =>
+  //           request.request_id === requestId
+  //             ? { ...request, status: "Cancelled" }
+  //             : request
+  //         )
+  //       );
+  //     } else {
+  //       const result = await response.json();
+  //       alert(result.message || "Failed to cancel request.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //     alert("An error occurred while cancelling the request.");
+  //   }
+  // };
+
   const cancelRequest_pending = async (requestId) => {
     if (!window.confirm("Are you sure you want to cancel this request?")) {
-      return; // User withdraw the action
+        return;
     }
 
     const reason = prompt("Please provide a reason for the cancellation:");
     if (!reason) {
-      alert("Cancellation reason is required.");
-      return;
+        alert("Cancellation reason is required.");
+        return;
     }
-    try {
-      const response = await fetch(
-        `http://localhost:5010/cancel_request/${requestId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status: "Cancel", reason }),
-        }
-      );
 
-      if (response.ok) {
-        alert("Request successfully cancelled.");
-        // Refresh the request data to reflect the updated status
-        setRequests((prevRequests) =>
-          prevRequests.map((request) =>
-            request.request_id === requestId
-              ? { ...request, status: "Cancelled" }
-              : request
-          )
+    try {
+        const response = await fetch(
+            `http://localhost:5010/cancel_request/${requestId}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ reason }),
+            }
         );
-      } else {
+
         const result = await response.json();
-        alert(result.message || "Failed to cancel request.");
-      }
+
+        if (response.ok) {
+            alert(result.message || "Request successfully cancelled.");
+            setRequests((prevRequests) =>
+                prevRequests.map((request) =>
+                    request.request_id === requestId
+                        ? { ...request, status: "Cancelled" }
+                        : request
+                )
+            );
+        } else {
+            alert(result.message || "Failed to cancel request.");
+        }
     } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred while cancelling the request.");
+        console.error("Error:", error);
+        alert("An error occurred while cancelling the request.");
     }
   };
 
@@ -199,13 +242,13 @@ export default function RequestTable() {
   
   const withdrawRequest_approved = async (requestId, arrangementDate) => {
     if (!isWithinTwoWeeks(arrangementDate)) {
-      alert("Cancellation can only be made within 2 weeks of the arrangement date.");
+      alert("Withdrawals can only be made within 2 weeks of the arrangement date.");
       return;
     }
   
-    const reason = prompt("Please provide a reason for the cancellation:");
+    const reason = prompt("Please provide a reason for the withdrawal:");
     if (!reason) {
-      alert("Cancellation reason is required.");
+      alert("Withdrawal reason is required.");
       return;
     }
   

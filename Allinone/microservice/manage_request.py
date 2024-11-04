@@ -273,63 +273,90 @@ def manage_request():
                         "code": 500
         }), 500
     
-@app.route('/cancel_request', methods=['PUT'])
-def cancel_request():
+@app.route('/cancel_request/<int:request_id>', methods=['PUT'])
+def cancel_request(request_id):
     """
-    Cancel request by changing its status to 'Cancel'.
+    Cancel a pending request with a provided reason.
     """
     try:
         data = request.json
-        request_id = data.get("request_id")
+        reason = data.get("reason")
         
-        if not request_id:
-            return jsonify({"message": "Request ID is required", "code": 400}), 400
+        if not reason:
+            return jsonify({
+                "message": "Cancellation reason is required", 
+                "code": 400
+            }), 400
         
         # Fetch the request details from the Request Log microservice
         fetch_response = requests.get(f"{REQUEST_LOG_MICROSERVICE_URL}/get_request/{request_id}")
         
         if fetch_response.status_code != 200:
-            return jsonify({"message": "Request not found", "code": 404}), 404
+            return jsonify({
+                "message": "Request not found", 
+                "code": 404
+            }), 404
         
         request_entry = fetch_response.json().get("data")
         current_status = request_entry.get("status")
-        staff_email = request_entry.get("staff_email")  # Assuming email is part of the data
         staff_id = request_entry.get("staff_id")
         
         # Check if the request is currently pending
-        if current_status not in ["Pending"]:
-            return jsonify({"message": "Only pending requests can be cancelled", "code": 403}), 403
+        if current_status != "Pending":
+            return jsonify({
+                "message": "Only pending requests can be cancelled", 
+                "code": 403
+            }), 403
         
-        # Update the status to 'cancelled' in the Request Log microservice
+        # Update the status to 'Cancelled' in the Request Log microservice
         update_data = {
             "request_id": request_id,
-            "status": "Cancelled"
+            "status": "Cancelled",
+            "remarks": reason
         }
-        update_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json=update_data)
+        
+        update_response = requests.put(
+            f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", 
+            json=update_data
+        )
         
         if update_response.status_code != 200:
-            return jsonify({"message": "Failed to update request status", "code": 500}), 500
+            return jsonify({
+                "message": "Failed to update request status", 
+                "code": 500
+            }), 500
         
-        # #Send confirmation email to staff
-        # notification_data = {
-        #     "staff_email": staff_email,
-        #     "status": "Cancelled",
-        #     "request_id": request_id,
-        #     "remarks": "Your approved request has been successfully cancelled."
-        # }
-        # notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
+        # Fetch employee email for notification
+        # employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
         
-        # if notification_response.status_code != 200:
-        #     return jsonify({"message": "Request cancelled but failed to notify staff", "code": 500}), 500
+        # if employee_response.status_code == 200:
+        #     employee_data = employee_response.json().get("data")
+        #     staff_email = employee_data.get("email")
+            
+        #     # Send notification email to staff
+        #     notification_data = {
+        #         "staff_email": staff_email,
+        #         "status": "Cancelled",
+        #         "request_id": request_id,
+        #         "remarks": reason
+        #     }
+            
+        #     requests.post(
+        #         f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", 
+        #         json=notification_data
+        #     )
         
         return jsonify({
-            "message": f"Request successfully cancelled and Staff notified",
+            "message": "Request successfully cancelled",
             "code": 200
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Failed to withdraw request: {e}")
-        return jsonify({"message": "Internal server error", "code": 500}), 500
+        app.logger.error(f"Failed to cancel request: {e}")
+        return jsonify({
+            "message": "Internal server error", 
+            "code": 500
+        }), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5010, debug=True)  
