@@ -169,6 +169,10 @@ export default function RequestTable() {
   const handleEditClick = useCallback((requestId) => {
     navigate(`/edit_request/${requestId}`);
   }, [navigate]);
+
+  const handleViewClick = useCallback((requestId) => {
+    navigate(`/requests/${requestId}`);
+  }, [navigate]);
   
   const cancelRequest_approved = async (requestId, arrangementDate) => {
     if (!isWithinTwoWeeks(arrangementDate)) {
@@ -252,7 +256,10 @@ export default function RequestTable() {
                 </Button>
               </DropdownTrigger>
               <DropdownMenu>
-                <DropdownItem>View</DropdownItem>
+                <DropdownItem
+                  onClick={() => handleViewClick(request.request_id)}>
+                    View
+                </DropdownItem>
                 {request.status === "Pending" && (
                   <DropdownItem 
                     onClick={() => handleEditClick(request.request_id)}
@@ -290,7 +297,7 @@ export default function RequestTable() {
       default:
         return cellValue;
     }
-  }, [handleEditClick]);
+  }, [handleEditClick, handleViewClick, cancelRequest_approved]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {

@@ -27,6 +27,7 @@ import {
 } from "@nextui-org/react";
 import { extractWeekdays, checkAvailability, getAllDates } from "./NewRequestUtils";
 import { getLocalTimeZone, today } from "@internationalized/date";
+import { parseISO } from 'date-fns';
 
 
 var modalTitle = "Error Message";
@@ -38,13 +39,14 @@ const statusColorMap = {
 };
 
 export default function NewRequest({ initialFormData }) {
+  const [inputRequestID, setInputRequestID] = useState(initialFormData?. request_id || null)
   const [inputDates, setInputDates] = useState(initialFormData?.arrangement_date ? [initialFormData.arrangement_date] : []);
   const [selectedDate, setSelectedDate] = useState(initialFormData?.arrangement_date || null);
   const [selectedTimeslot, setSelectedTimeslot] = useState(initialFormData?.timeslot || "Choose a Timeslot");
   const [SelectedDayOfTheWeek, setSelectedDayOfTheWeek] = useState(initialFormData?.recurring_day || "Choose a Week Day");
   const [isRecurring, setIsRecurring] = useState(initialFormData?.is_recurring || false);
-  const [startDate, setStartDate] = useState(initialFormData?.start_date || null);
-  const [endDate, setEndDate] = useState(initialFormData?.end_date || null);
+  const [startDate, setStartDate] = useState(initialFormData?.start_date ? parseISO(initialFormData.start_date) : null);
+  const [endDate, setEndDate] = useState(initialFormData?.end_date ? parseISO(initialFormData.end_date) : null);
   const [reason, setReason] = useState(initialFormData?.reason || '');
   const [blockOutDates, setBlockOutDates] = useState([]);
   const [extractedDates, setExtractedDates] = useState([]);
@@ -151,7 +153,7 @@ export default function NewRequest({ initialFormData }) {
   useEffect(() => {
     if (isRecurring && startDate && endDate && SelectedDayOfTheWeek) {
       console.log(startDate);
-      const dates = extractWeekdays(startDate, endDate, SelectedDayOfTheWeek);
+      const dates = extractWeekdays(formatDateFromPicker(startDate), formatDateFromPicker(endDate), SelectedDayOfTheWeek);
       setExtractedDates(dates); 
     }
   }, [startDate, endDate, SelectedDayOfTheWeek, isRecurring]);
@@ -174,8 +176,8 @@ export default function NewRequest({ initialFormData }) {
           ...prevFormData,
           arrangement_date: isRecurring ? null : inputDates[0] || "",
           recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
-          start_date: isRecurring ? startDate : null,
-          end_date: isRecurring ? endDate: null,
+          start_date: isRecurring ? formatDateFromPicker(startDate) : null,
+          end_date: isRecurring ? formatDateFromPicker(endDate): null,
           timeslot: selectedTimeslot,
           reason: reason,
           isRecurring: isRecurring,
@@ -377,11 +379,11 @@ export default function NewRequest({ initialFormData }) {
                     variant="bordered"
                     className="mt-2"
                     value={{ start: startDate, end: endDate }}
-                    minValue={today(getLocalTimeZone()).subtract({months: 2})}
-                    maxValue={today(getLocalTimeZone()).add({months: 3})}
+                    minValue={today(getLocalTimeZone()).subtract({ months: 2 })}
+                    maxValue={today(getLocalTimeZone()).add({ months: 3 })}
                     onChange={({ start, end }) => {
-                      setStartDate(formatDateFromPicker(start));
-                      setEndDate(formatDateFromPicker(end));
+                      setStartDate(start);
+                      setEndDate(end);
                     }}
                   />
               </div>
