@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import './Sidebar'
+import './Sidebar.css'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import NoteAddOutlinedIcon from '@mui/icons-material/NoteAddOutlined';
 import TaskOutlinedIcon from '@mui/icons-material/TaskOutlined';
@@ -12,6 +13,10 @@ export default function Sidebar() {
   // Function to toggle sidebar expansion
   const toggleSidebar = () => {
     setIsExpanded(!isExpanded);
+  };
+
+  const isCurrentPath = (path) => {
+    return window.location.pathname === path;
   };
 
   return (
@@ -28,25 +33,34 @@ export default function Sidebar() {
       <div className="flex flex-col justify-between flex-1 mt-2">
         <nav className="-mx-3 space-y-3">
           {/* Calendar Link */}
-          <a href="/" className="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700" title="Calendar">
+          <a href="/"
+            className={`nav-item flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700 ${isCurrentPath('/') ? 'shadow bg-gray' : ''}`}
+            title="Calendar"
+          >
             <CalendarMonthOutlinedIcon />
             {isExpanded && <span className="mx-2 ml-1 text-xxs font-medium"> Calendar</span>}
           </a>
 
           {/* New Request Link */}
-          <a href="/new_request" className="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700 mt-1" title="New Request">
+          <a href="/new_request"
+          className={`nav-item flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700 ${isCurrentPath('/new_request') ? 'shadow' : ''}`} 
+          title="New Request">
             <NoteAddOutlinedIcon />
             {isExpanded && <span className="mx-2 ml-1 text-xxs font-medium"> New Request</span>}
           </a>
 
           {/* My Requests Link */}
-          <a href="/requests" className="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700 mt-1" title="My Requests">
+          <a href="/requests"
+          className={`flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700 nav-item ${isCurrentPath('/requests') ? 'shadow' : ''}`}
+          title="My Requests">
             <TaskOutlinedIcon />
             {isExpanded && <span className="mx-2 ml-1 text-xxs font-medium"> My Requests</span>}
           </a>
 
           {/* Team Requests Link */}
-          <a href="/team_request" className="flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700 mt-1" title="Team Requests">
+          <a href="/team_request"
+          className={`nav-item flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700 ${isCurrentPath('/team_request') ? 'shadow' : ''}`}
+          title="Team Requests">
             <PeopleAltOutlinedIcon />
             {isExpanded && <span className="mx-2 ml-1 text-xxs font-medium"> Team Requests</span>}
           </a>
