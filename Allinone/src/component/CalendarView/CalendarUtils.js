@@ -210,6 +210,7 @@ export const getApprovedEventsOnly = async (userId) => {
     const data = await response.json();
     const requests = data.data;
     const {manager_id} = await getEmployeeInfo(userId);
+    const listofStaffs = await getListofStaffUnderManager(manager_id);
 
     // Map the requests into event categories 
     const staffTeamEvents = await Promise.all(
@@ -217,7 +218,7 @@ export const getApprovedEventsOnly = async (userId) => {
       if (req.staff_id === userId) {
         return null; // Skip this request if staff_id is the same as the staff in personal events
       }
-      if (req.manager_id !== manager_id) {
+      if (!listofStaffs.includes(req.staff_id)) {
         return null; // Skip this request if manager_id doesn't match
       }
       if (!req.timeslot || !req.arrangement_date) {
@@ -226,7 +227,7 @@ export const getApprovedEventsOnly = async (userId) => {
       }
       const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
       const title = await getArrangementName(req.staff_id) ;
-      const teamName = await getTeamName(req.manager_id)
+      const teamName = await getTeamName(manager_id)
       const {dept} = await getEmployeeInfo(req.staff_id);
       return {
         id: `${req.staff_id}-${req.arrangement_date}`, // Create a unique ID per date to show all 

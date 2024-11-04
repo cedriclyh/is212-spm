@@ -72,10 +72,10 @@ export default function WFHcalendar() {
         <LoadingSpinner /> // Show loading spinner while data is loading
       ) : (
         <>
-        <Header view={view} toggleView={toggleView} />
+        <Header view={view} toggleView={toggleView} userID={userID}/>
         <div className="calendar-box">
           <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>
-          <BasicEventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} />
+          <BasicEventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} userID={userID}/>
           </div>
           <div style={{flex:'1', minHeight: '0' }}>
             <FullCalendar

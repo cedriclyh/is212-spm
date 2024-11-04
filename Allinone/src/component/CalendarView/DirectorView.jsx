@@ -87,11 +87,11 @@ export default function WFHcalendar() {
   // Render the calendar
   return (
     <div className="calendar-container">
-      <Header view={view} toggleView={toggleView} />
+      <Header view={view} toggleView={toggleView} userID={userID}/>
       <div className="calendar-box">
         <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>
         <HREventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} 
-          selectedDepartments={selectedDepartments} handleDepartmentChange={handleDepartmentChange}/>
+          selectedDepartments={selectedDepartments} handleDepartmentChange={handleDepartmentChange} userID={userID}/>
         </div>
         <div style={{flex:'1', minHeight: '0' }}>
           <FullCalendar

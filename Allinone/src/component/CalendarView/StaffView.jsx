@@ -6,6 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { getValidRange, getStaffTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
 import BasicEventFilter from './BasicEventFilter';
+import Dashboard from './Dashboard';
 
 export default function WFHcalendar() {
   const [view, setView] = useState('dayGridMonth');
@@ -62,10 +63,11 @@ export default function WFHcalendar() {
   // Render the calendar
   return (
     <div className="calendar-container">
-      <Header view={view} toggleView={toggleView} />
+      <Dashboard events={filteredEvents} />
+      <Header view={view} toggleView={toggleView} userID={userID}/>
       <div className="calendar-box">
         <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>
-        <BasicEventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} />
+        <BasicEventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} userID={userID} />
         </div>
         <div style={{flex:'1', minHeight: '0' }}>
           <FullCalendar
