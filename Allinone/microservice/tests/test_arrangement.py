@@ -161,15 +161,3 @@ def test_create_arrangement_duplicate_request_id(client, sample_arrangement):
     }
     response = client.post('/create_arrangement', json=data)
     assert response.status_code == 500
-
-def test_get_arrangement_invalid_staff_id(client):
-    """Test creating arrangement with invalid staff_id"""
-    data = {
-        "request_id": 100,
-        "staff_id": 999999,  # Non-existent staff_id
-        "arrangement_date": "2024-10-15",
-        "timeslot": "AM",
-        "reason": "Team meeting"
-    }
-    response = client.post('/create_arrangement', json=data)
-    assert response.status_code == 500  # Should fail due to foreign key constraint

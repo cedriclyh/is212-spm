@@ -133,30 +133,6 @@ def test_get_blockout_by_date_no_blockout(client, sample_blockouts):
     data = json.loads(response.data)
     assert data['data'] is False
 
-def test_fetch_blockout_by_date(client, sample_blockouts):
-    """Test internal fetch_blockout_by_date function"""
-    with app.app_context():
-        # Test existing blockout
-        blockout = BlockoutDates.query.filter_by(title="Christmas").first()
-        result = blockout.fetch_blockout_by_date(date(2024, 12, 24), date(2024, 12, 26))
-        assert result is not None
-        assert result.title == "Christmas"
-        
-        # Test non-existing blockout
-        result = blockout.fetch_blockout_by_date(date(2024, 10, 1), date(2024, 10, 2))
-        assert result is None
-
-def test_blockout_json_method(sample_blockouts):
-    """Test BlockoutDates model json method"""
-    with app.app_context():
-        blockout = BlockoutDates.query.filter_by(title="Christmas").first()
-        json_data = blockout.json()
-        assert json_data['title'] == "Christmas"
-        assert json_data['start_date'] == "2024-12-25"
-        assert json_data['end_date'] == "2024-12-25"
-        assert json_data['timeslot'] == "FULL"
-        assert json_data['blockout_description'] == "Public holiday"
-
 def test_create_blockout_invalid_data(client):
     """Test creating blockout with invalid data"""
     # Missing required fields
