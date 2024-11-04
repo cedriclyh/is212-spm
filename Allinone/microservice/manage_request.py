@@ -29,21 +29,15 @@ from requests_log import Request
 
 def count_wfh(manager_id, arrangement_date):
     try:
-        # count the number of WFH arrangements for AM, PM, and FULL shifts
-        am_count = db.session.query(Arrangement) \
-            .join(Employee, Employee.staff_id == Arrangement.staff_id) \
-            .filter(Employee.reporting_manager == manager_id, Arrangement.arrangement_date == arrangement_date, Arrangement.timeslot == 'AM') \
-            .count()
-        
-        pm_count = db.session.query(Arrangement) \
-            .join(Employee, Employee.staff_id == Arrangement.staff_id) \
-            .filter(Employee.reporting_manager == manager_id, Arrangement.arrangement_date == arrangement_date, Arrangement.timeslot == 'PM') \
-            .count()
-        
-        full_count = db.session.query(Arrangement) \
-            .join(Employee, Employee.staff_id == Arrangement.staff_id) \
-            .filter(Employee.reporting_manager == manager_id, Arrangement.arrangement_date == arrangement_date, Arrangement.timeslot == 'FULL') \
-            .count()
+        # base query to join Arrangement with Employee
+        base_query = db.session.query(Arrangement)\
+            .join(Employee, Employee.staff_id == Arrangement.staff_id)\
+            .filter(Employee.reporting_manager == manager_id,
+                    Arrangement.arrangement_date == arrangement_date)
+
+        am_count = base_query.filter(Arrangement.timeslot == 'AM').count()
+        pm_count = base_query.filter(Arrangement.timeslot == 'PM').count()
+        full_count = base_query.filter(Arrangement.timeslot == 'FULL').count()
         
         # full_count counts towards both AM and PM shifts
         am_count += full_count
@@ -52,8 +46,8 @@ def count_wfh(manager_id, arrangement_date):
         return am_count, pm_count
     except Exception as e:
         app.logger.error(
-            f"Failed to count WFH for maanger {manager_id} on {arrangement_date}: {e}")
-        return 0
+            f"Failed to count WFH: {e}")
+        return 0, 0
     
 def past_wfh(staff_id, arrangement_date):
     try:
@@ -65,17 +59,52 @@ def past_wfh(staff_id, arrangement_date):
         app.logger.error(f"Failed to check if staff {staff_id} already worked from home on {arrangement_date}: {e}")
         return False
 
+def check_duplicate_dates(staff_id, new_dates):
+    try:
+        new_dates_set = set(new_dates) # converting to a set removes duplicates automatically
+        
+        # check for duplicates within new dates themselves
+        if len(new_dates_set) != len(new_dates):
+            duplicate_dates = [date for date in new_dates if new_dates.count(date) > 1]
+            return list(set(duplicate_dates))  
+        
+        # check for existing arrangements
+        existing_arrangements = db.session.query(Arrangement.arrangement_date)\
+            .filter(Arrangement.staff_id == staff_id)\
+            .all()
+        
+        existing_dates = {str(date[0]) for date in existing_arrangements}
+        duplicate_dates = new_dates_set.intersection(existing_dates)
+        
+        return list(duplicate_dates)
+        
+    except Exception as e:
+        app.logger.error(f"Failed to check duplicate dates: {e}")
+        return []
+
 # Function to check and reject overdue requests
 def auto_reject_pending_requests():
-    two_months_ago = datetime.now(tz=timezone.utc) - relativedelta(months=2)
+    try:
+        two_months_ago = datetime.now(tz=timezone.utc) - relativedelta(months=2)
+        overdue_requests = Request.query.filter(
+            Request.status == 'Pending',
+            Request.request_date <= two_months_ago
+        ).all()
 
-    overdue_requests = db.session.query(Request) \
-        .filter(Request.status == 'Pending', Request.request_date <= two_months_ago).all()
-
-    for request in overdue_requests:
-        request.status = 'Rejected'
-        db.session.commit()
-        print(f"Request {request.request_id} automatically rejected as it has been 'pending' for more than 2 months")
+        for request in overdue_requests:
+            # Update status
+            update_status(request.request_id, 'Rejected', 'Auto-rejected due to timeout')
+            
+            # Fetch employee email and notify
+            employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{request.staff_id}")
+            if employee_response.status_code == 200:
+                staff_email = employee_response.json().get("data", {}).get("email")
+                if staff_email:
+                    notify_staff(staff_email, 'Rejected', request.request_id, 'Auto-rejected due to timeout')
+            
+            print(f"Request {request.request_id} automatically rejected")
+    except Exception as e:
+        app.logger.error(f"Auto-rejection failed: {e}")
 
 # Initialize and configure APScheduler
 def start_scheduler():
@@ -105,7 +134,7 @@ def manage_request():
                             "code": 400
             }), 400
 
-        # 1: fetch request from database via arrangement.py
+        # 1: fetch request from database via request_log.py
         fetch_response = requests.get(f"{REQUEST_LOG_MICROSERVICE_URL}/get_request/{request_id}")
         
         if fetch_response.status_code != 200:
@@ -114,9 +143,8 @@ def manage_request():
             }), 404
         
         request_entry = fetch_response.json().get("data")
-        request_id = request_entry.get("request_id")
         staff_id = request_entry.get("staff_id")
-        arrangement_date = request_entry.get("arrangement_date")
+        arrangement_dates = request_entry.get("arrangement_dates")
         timeslot = request_entry.get("timeslot")
         reason = request_entry.get("reason")
 
@@ -138,198 +166,195 @@ def manage_request():
                             "code": 404
             }), 404
         
+        # 3: if request is rejected, update the status and notify staff of rejection
         if status == "Rejected":
-            # directly update the request status
-            arrangement_update_data = {
-                "request_id": request_id,
-                "status": status,
-                "remarks": remarks
-            }
-
-            update_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json=arrangement_update_data)
-            
-            if update_response.status_code != 200:
-                return jsonify({"message": "Failed to update request status", 
-                                "code": 500
-                }), 500
-
-            # send notification to the staff about the rejection
-            notification_data = {
-                "staff_email": staff_email,  
-                "status": status,
-                "request_id": request_id,
-                "remarks": remarks
-            }
-
-            notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
-
-            if notification_response.status_code != 200:
-                return jsonify({"message": "Request status updated but failed to notify staff", 
-                                "code": 500
-                }), 500
-
+            update_status(request_id, status, remarks)
+            notify_staff(staff_email, status, request_id, remarks)
             return jsonify({
                 "message": f"Request {status} successfully and staff notified",
                 "code": 200
             }), 200
         
-        # 3: check if the employee has already worked from home on the arrangement date
-        if past_wfh(staff_id, arrangement_date):
-            # if they already worked from home, skip the threshold check
-            app.logger.info(f"Staff {staff_id} already worked from home on {arrangement_date}, skipping threshold check.")
-        else:
-            # fetch team members under this manager 
-            if status == "Approved":
-                team_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/users/team/{reporting_manager}")
-
-                if team_response.status_code != 200:
-                    return jsonify({"message": "Failed to fetch team members", 
-                                    "code": 404
-                    }), 404
-
-                team_data = team_response.json().get("data")
-                total_team_size = len(team_data)
-                # print(total_team_size)
-
-                # 4: check WFH threshold before approving (only if not CEO)
-                if dept != "CEO":
-                    am_count, pm_count = count_wfh(reporting_manager, arrangement_date)
-                    print(am_count)
-                    print(pm_count)
-                    if timeslot == "AM":
-                        if (am_count + 1)/ total_team_size > 0.5:
-                            return jsonify({"message": "Approval would exceed the 50% WFH threshold for AM shift!",
-                                            "code": 403}), 403
-                        
-                    elif timeslot == "PM":
-                        if (pm_count + 1)/ total_team_size > 0.5:
-                            return jsonify({"message": "Approval would exceed the 50% WFH threshold for PM shift!",
-                                            "code": 403}), 403
-                    elif timeslot == "FULL":
-                        if (am_count + 1)/ total_team_size > 0.5 or (pm_count + 1)/ total_team_size > 0.5:
-                            return jsonify({"message": "Approval would exceed the 50% WFH threshold for FULL shift!",
-                                            "code": 403}), 403
-            
-        # 5: update the request status
-        arrangement_update_data = {
-            "request_id": request_id,
-            "status": status,
-            "remarks": remarks
-        }
-
-        update_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json=arrangement_update_data)
+        # 4: check for duplicate dates 
+        duplicate_dates = check_duplicate_dates(staff_id, arrangement_dates)
+        if duplicate_dates:
+            return jsonify({
+                "message": "Duplicate dates found in request",
+                "duplicate_dates": duplicate_dates,
+                "code": 400
+            }), 400
         
-        if update_response.status_code != 200:
-            return jsonify({"message": "Failed to update request status", 
-                            "code": 500
+        # 5: fetch employee's team size 
+        team_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/users/team/{reporting_manager}")
+        if team_response.status_code != 200:
+            return jsonify({"message": "Failed to fetch team details", 
+                            "code": 404
+            }), 404
+
+        team_data = team_response.json().get("data")
+        team_size = len(team_data)
+
+        failed_dates = [] # to be showed to staff, which dates caused the request to be rejected
+
+        if dept != "CEO": # do not need to check threshold for CEO
+        # 6: loop through arrangement_dates to process each date
+            for arrangement_date in arrangement_dates:
+            # check if the employee has already worked from home on the arrangement date
+                if past_wfh(staff_id, arrangement_date):
+                    continue
+
+            # 7: check WFH threshold before approving (only if not CEO)
+                am_count, pm_count = count_wfh(reporting_manager, arrangement_date)
+                if timeslot == "AM" and (am_count + 1)/ team_size > 0.5:
+                    failed_dates.append({
+                        'date': arrangement_date,
+                        'reason': "Exceeds 50% threshold for AM shift"
+                    })
+                elif timeslot == "PM" and (pm_count + 1)/ team_size > 0.5:
+                    failed_dates.append({
+                        'date': arrangement_date,
+                        'reason': "Exceeds 50% threshold for PM shift"
+                    })
+                elif timeslot == "FULL":
+                    if (am_count + 1)/ team_size > 0.5 or (pm_count + 1)/ team_size > 0.5:
+                        failed_dates.append({
+                            'date': arrangement_date,
+                            'reason': "Exceeds 50% threshold for FULL shift"
+                        })
+
+        # 8: show staff the dates that caused the request to rejected        
+        if failed_dates:
+            return jsonify({
+                "message": "Request rejected because some dates exceed team WFH threshold",
+                "failed_dates": failed_dates,
+                "code": 403
+            }), 403
+        
+        # 9: if all dates pass, create individual arrangements
+        try: 
+            for index, date in enumerate(arrangement_dates, 1):
+                arrangement_data = {
+                    "request_id": request_id,
+                    "staff_id": staff_id,
+                    "arrangement_date": date,
+                    "timeslot": timeslot,
+                    "reason": reason
+                }
+                arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_arrangement", json=arrangement_data)
+            
+                if arrangement_response.status_code != 201:
+                    return jsonify({"message": f"Failed to create arrangement entry for date {date}", 
+                                    "code": 500
+                    }), 500
+            
+        except Exception as e:
+            # if any arrangement creation fails, reject the entire request
+            update_status(request_id, "Rejected", f"Failed to create arrangements: {str(e)}")
+            notify_staff(staff_email, "Rejected", request_id, str(e))
+            return jsonify({
+                "message": "Failed to create arrangements",
+                "error": str(e),
+                "code": 500
             }), 500
 
-        # 6: if status is Approved, insert the request into the arrangement table
-        if status == "Approved":
-            arrangement_data = {
-                "request_id": request_id,
-                "staff_id": staff_id,
-                "arrangement_date": arrangement_date,
-                "timeslot": timeslot,
-                "reason": reason
-            }
-            arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_arrangement", json=arrangement_data)
-            
-            if arrangement_response.status_code != 201:
-                return jsonify({"message": "Failed to create arrangement entry", 
-                                "code": 500
-                }), 500
-            
-        # 7: call notification.py to notify the staff of the updated status (if notification is not disabled)
+        # 10: update the request status and notify staff
+        update_status(request_id, status, remarks)
         if not disable_notification:
-            notification_data = {
-                "staff_email": staff_email,  
-                "status": status,
-                "request_id": request_id,
-                "remarks": remarks
-            }
-
-            notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
-
-            if notification_response.status_code != 200:
-                return jsonify({"message": "Request status updated but failed to notify staff", 
-                                "code": 500
-            }), 500
-
-            return jsonify({
-                "message": f"Request {status} successfully and staff notified",
-                "code": 200
-            }), 200
-        
-        else:
-            return jsonify({
-                "message": f"Request {status} successfully.",
-                "code": 200
-            }), 200
+            notify_staff(staff_email, status, request_id, remarks)
+        return jsonify({
+            "message": f"Request {status} successfully and staff notified",
+            "code": 200
+        }), 200
 
     except Exception as e:
         app.logger.error(f"Failed to manage request: {e}")
         return jsonify({"message": "Internal server error", 
                         "code": 500
         }), 500
-    
-@app.route('/cancel_request', methods=['PUT'])
-def cancel_request():
-    """
-    Cancel request by changing its status to 'Cancel'.
-    """
+
+@app.route('/withdraw_wfh_arrangement/<int:request_id>/<int:arrangement_id>', methods=['DELETE'])
+def withdraw_wfh_arrangement(request_id, arrangement_id):
     try:
-        data = request.json
-        request_id = data.get("request_id")
+        # 1. get arrangement details first before deletion
+        arrangement_response = requests.get(
+            f"{ARRANGEMENT_MICROSERVICE_URL}/get_arrangement/{request_id}/{arrangement_id}"
+        )
         
-        if not request_id:
-            return jsonify({"message": "Request ID is required", "code": 400}), 400
+        if arrangement_response.status_code != 200:
+            return jsonify({
+                "message": "Failed to fetch arrangement details",
+                "code": 404
+            }), 404
+            
+        arrangement_data = arrangement_response.json().get("data")
+        staff_id = arrangement_data.get("staff_id")
+
+        # 2. get employee details for notification
+        employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
+        if employee_response.status_code != 200:
+            return jsonify({
+                "message": "Failed to fetch employee details",
+                "code": 404
+            }), 404
+
+        staff_email = employee_response.json().get("data", {}).get("email")
+
+        # 3. delete the arrangement
+        withdraw_response = requests.delete(
+            f"{ARRANGEMENT_MICROSERVICE_URL}/withdraw_arrangement/{request_id}/{arrangement_id}"
+        )
         
-        # Fetch the request details from the Request Log microservice
-        fetch_response = requests.get(f"{REQUEST_LOG_MICROSERVICE_URL}/get_request/{request_id}")
-        
-        if fetch_response.status_code != 200:
-            return jsonify({"message": "Request not found", "code": 404}), 404
-        
-        request_entry = fetch_response.json().get("data")
-        current_status = request_entry.get("status")
-        staff_email = request_entry.get("staff_email")  # Assuming email is part of the data
-        staff_id = request_entry.get("staff_id")
-        
-        # Check if the request is currently approved
-        if current_status not in ["Approved", "Pending"]:
-            return jsonify({"message": "Only approved or pending requests can be cancelled", "code": 403}), 403
-        
-        # Update the status to 'cancelled' in the Request Log microservice
-        update_data = {
-            "request_id": request_id,
-            "status": "Cancelled"
-        }
-        update_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json=update_data)
-        
-        if update_response.status_code != 200:
-            return jsonify({"message": "Failed to update request status", "code": 500}), 500
-        
-        # #Send confirmation email to staff
-        # notification_data = {
-        #     "staff_email": staff_email,
-        #     "status": "Cancelled",
-        #     "request_id": request_id,
-        #     "remarks": "Your approved request has been successfully cancelled."
-        # }
-        # notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
-        
-        # if notification_response.status_code != 200:
-        #     return jsonify({"message": "Request cancelled but failed to notify staff", "code": 500}), 500
-        
+        if withdraw_response.status_code != 200:
+            return jsonify({
+                "message": "Failed to withdraw arrangement",
+                "code": 500
+            }), 500
+
+        # 4. update request_log status and notify staff
+        remarks = f"Arrangement {arrangement_id} withdrawn"
+        update_status(request_id, "Withdrawn", remarks)
+        if staff_email:
+            notify_staff(
+                staff_email=staff_email,
+                status="Withdrawn",
+                request_id=request_id,
+                remarks=remarks
+            )
+
         return jsonify({
-            "message": f"Request successfully cancelled and Staff notified",
+            "message": "Arrangement withdrawn successfully and staff notified",
+            "data": arrangement_data,
             "code": 200
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Failed to withdraw request: {e}")
-        return jsonify({"message": "Internal server error", "code": 500}), 500
+        app.logger.error(f"Failed to process arrangement withdrawal: {e}")
+        return jsonify({
+            "message": "Failed to process arrangement withdrawal",
+            "code": 500
+        }), 500
+    
+def update_status(request_id, status, remarks):
+    arrangement_update_data = {
+        "request_id": request_id,
+        "status": status,
+        "remarks": remarks
+    }
+    update_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json=arrangement_update_data)
+    if update_response.status_code != 200:
+        raise Exception("Failed to update request status")
+
+def notify_staff(staff_email, status, request_id, remarks):
+    notification_data = {
+        "staff_email": staff_email,  
+        "status": status,
+        "request_id": request_id,
+        "remarks": remarks
+    }
+    notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
+    if notification_response.status_code != 200:
+        raise Exception("Failed to notify staff")
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5010, debug=True)  
