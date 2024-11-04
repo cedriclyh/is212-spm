@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import {
   Table,
@@ -17,6 +17,12 @@ import {
   User,
   Pagination,
   Spinner,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from "@nextui-org/react";
 import { PlusIcon } from "../Icons/PlusIcon";
 import { VerticalDotsIcon } from "../Icons/VerticalDotsIcon";
@@ -43,9 +49,16 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
+var modalTitle = "Error Message";
+var modalMsg = "";
+
 export default function RequestTable() {
-  const [requests, setRequests] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+  const [countdown, setCountdown] = useState(3);
+  const [buttonColor, setButtonColor] = useState("danger");
+  const [showCountdown, setShowCountdown] = useState(false);
 
   const fetchRequests = async () => {
     try {
@@ -146,47 +159,6 @@ export default function RequestTable() {
     return now >= twoWeeksBefore && now <= twoWeeksAfter;
   };
   
-  // const cancelRequest_pending = async (requestId) => {
-  //   if (!window.confirm("Are you sure you want to cancel this request?")) {
-  //     return; // User withdraw the action
-  //   }
-
-  //   const reason = prompt("Please provide a reason for the cancellation:");
-  //   if (!reason) {
-  //     alert("Cancellation reason is required.");
-  //     return;
-  //   }
-  //   try {
-  //     const response = await fetch(
-  //       `http://localhost:5010/cancel_request/${requestId}`,
-  //       {
-  //         method: "PUT",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({ status: "Cancel", reason }),
-  //       }
-  //     );
-
-  //     if (response.ok) {
-  //       alert("Request successfully cancelled.");
-  //       // Refresh the request data to reflect the updated status
-  //       setRequests((prevRequests) =>
-  //         prevRequests.map((request) =>
-  //           request.request_id === requestId
-  //             ? { ...request, status: "Cancelled" }
-  //             : request
-  //         )
-  //       );
-  //     } else {
-  //       const result = await response.json();
-  //       alert(result.message || "Failed to cancel request.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error:", error);
-  //     alert("An error occurred while cancelling the request.");
-  //   }
-  // };
 
   const cancelRequest_pending = async (requestId) => {
     if (!window.confirm("Are you sure you want to cancel this request?")) {
@@ -195,7 +167,10 @@ export default function RequestTable() {
 
     const reason = prompt("Please provide a reason for the cancellation:");
     if (!reason) {
-        alert("Cancellation reason is required.");
+        modalMsg = "Cancellation reason is required."
+        modalTitle = "Error Message";
+        setButtonColor("danger");
+        onOpen();
         return;
     }
 
@@ -214,7 +189,10 @@ export default function RequestTable() {
         const result = await response.json();
 
         if (response.ok) {
-            alert(result.message || "Request successfully cancelled.");
+            modalMsg = "Form processed successfully ";
+            modalTitle = "Success!";
+            setButtonColor("success");
+            onOpen();
             setRequests((prevRequests) =>
                 prevRequests.map((request) =>
                     request.request_id === requestId
@@ -223,11 +201,17 @@ export default function RequestTable() {
                 )
             );
         } else {
-            alert(result.message || "Failed to cancel request.");
+            modalMsg = "Failed to cancel request.";
+            modalTitle = "Error Message";
+            setButtonColor("danger");
+            onOpen();
         }
     } catch (error) {
         console.error("Error:", error);
-        alert("An error occurred while cancelling the request.");
+        modalMsg = "An error occurred while cancelling the request.";
+        modalTitle = "Error Message";
+        setButtonColor("danger");
+        onOpen();
     }
   };
 
@@ -242,16 +226,22 @@ export default function RequestTable() {
   
   const withdrawRequest_approved = async (requestId, arrangementDate) => {
     if (!isWithinTwoWeeks(arrangementDate)) {
-      alert("Withdrawals can only be made within 2 weeks of the arrangement date.");
+      modalMsg = "Withdrawals can only be made within 2 weeks of the arrangement date."
+      modalTitle = "Error Message";
+      setButtonColor("danger");
+      onOpen();
       return;
     }
   
     const reason = prompt("Please provide a reason for the withdrawal:");
     if (!reason) {
-      alert("Withdrawal reason is required.");
+      modalMsg = "Withdrawal reason is required."
+      modalTitle = "Error Message";
+      setButtonColor("danger");
+      onOpen();
       return;
     }
-  
+
     try {
       const response = await fetch(
         `http://localhost:5010/cancel_request/${requestId}`,
@@ -261,10 +251,27 @@ export default function RequestTable() {
           body: JSON.stringify({ status: "Cancelled", reason }),
         }
       );
+      const result = await response.json();
+
+      if (response.ok) {
+          modalMsg = "Form processed successfully ";
+          modalTitle = "Success!";
+          setButtonColor("success");
+          onOpen();
+      } else {
+          modalMsg = "Failed to cancel request.";
+          modalTitle = "Error Message";
+          setButtonColor("danger");
+          onOpen();
+      }
       // Handle response as you did previously
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred while withdrawing the request.");
+      modalMsg = "An error occurred while withdrawing the request."
+      modalTitle = "Error Message";
+      setButtonColor("danger");
+      onOpen();
+      return;
     }
   };
 
@@ -525,7 +532,38 @@ export default function RequestTable() {
             Next
           </Button>
         </div>
+        <Button onPress={onOpen}>Open Modal</Button>
+        <Modal
+          backdrop="opaque"
+          isOpen={isOpen}
+          onOpenChange={(isOpen) => {
+            onOpenChange(isOpen);
+          }}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1" placement="top">
+                  {modalTitle}
+                </ModalHeader>
+                <ModalBody>
+                  <p>{modalMsg}</p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button
+                    color={buttonColor}
+                    variant="light"
+                    onPress={onClose}
+                  >
+                    Close
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
       </div>
+      
     );
   }, [
     selectedKeys,
@@ -534,6 +572,10 @@ export default function RequestTable() {
     filteredItems.length,
     onNextPage,
     onPreviousPage,
+    isOpen,
+    onOpen,
+    onOpenChange,
+  
   ]);
 
   return (
@@ -579,5 +621,7 @@ export default function RequestTable() {
         )}
       </TableBody>
     </Table>
+
+
   );
 }
