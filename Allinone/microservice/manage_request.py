@@ -275,7 +275,7 @@ def manage_request():
 @app.route('/cancel_request', methods=['PUT'])
 def cancel_request():
     """
-    Withdraw an approved request by changing its status to 'Cancel'.
+    Cancel request by changing its status to 'Cancel'.
     """
     try:
         data = request.json
@@ -297,7 +297,7 @@ def cancel_request():
         
         # Check if the request is currently approved
         if current_status not in ["Approved", "Pending"]:
-            return jsonify({"message": "Only approved requests can be cancelled", "code": 403}), 403
+            return jsonify({"message": "Only approved or pending requests can be cancelled", "code": 403}), 403
         
         # Update the status to 'cancelled' in the Request Log microservice
         update_data = {
