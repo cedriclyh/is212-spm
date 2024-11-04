@@ -246,7 +246,7 @@ def update_request(request_id):
                         'code': 500
         }), 500
     
-# Edit pending request
+# Edit request
 @app.route('/edit_request/<int:request_id>', methods=['PUT'])
 def edit_request(request_id):
     try:
@@ -258,6 +258,7 @@ def edit_request(request_id):
                 'message': 'Request not found',
                 'code': 404
             }), 404
+
 
         # update the fields that can be edited
         request_to_edit.request_date = data.get('request_date', request_to_edit.request_date)

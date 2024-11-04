@@ -26,4 +26,16 @@ function formatDate(dateStr) {
   return [weekday, dateWithSuffix];
 }
 
-export {capitalize, formatDate};
+function formatTimeslot(timeslot_num) {
+  if (timeslot_num==="AM"){
+    return ["Morning Shift", "9AM - 1PM"];
+  }
+  if (timeslot_num==="PM"){
+    return ["Afternoon Shift", "2PM - 6PM"];
+  }
+  if (timeslot_num==="FULL"){
+    return ["Full Day", "9AM - 6PM"];
+  }
+}
+
+export {capitalize, formatDate, formatTimeslot};

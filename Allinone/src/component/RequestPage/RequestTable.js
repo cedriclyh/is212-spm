@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import {
   Table,
@@ -22,7 +22,7 @@ import { PlusIcon } from "../Icons/PlusIcon";
 import { VerticalDotsIcon } from "../Icons/VerticalDotsIcon";
 import { SearchIcon } from "../Icons/SearchIcon";
 import { ChevronDownIcon } from "../Icons/ChevronDownIcon";
-import { columns, statusOptions, pulled_data } from "./RequestData";
+import { columns, statusOptions } from "./RequestData";
 import { capitalize, formatDate, formatTimeslot } from "./RequestPageUtils";
 import profilePic from "../Icons/profile_pic.png"
 
@@ -44,6 +44,34 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 
 export default function RequestTable() {
+  const [requests, setRequests] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  const fetchRequests = async () => {
+    try {
+      const response = await fetch('http://localhost:5011/employees/140004/requests');
+  
+      if (response.ok) {
+        const data = await response.json();
+        setRequests(data.data);
+      } else if (response.status === 404) {
+        setRequests([]);
+      } else {
+        console.error("An error occurred:", response.statusText);
+        setRequests([]);
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+      setRequests([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(
@@ -56,7 +84,6 @@ export default function RequestTable() {
     direction: "descending",
   });
   const [page, setPage] = React.useState(1);
-  const [requests, setRequests] = React.useState(pulled_data);
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -69,13 +96,12 @@ export default function RequestTable() {
   }, [visibleColumns]);
 
   const filteredItems = React.useMemo(() => {
-    let filteredRequests = [...pulled_data];
+    let filteredRequests = [...requests];
 
-    // Search by arrangement_date
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {
-        const formattedDate = formatDate(request.arrangement_date).join(" "); // Format the arrangement date
-        return formattedDate.toLowerCase().includes(filterValue.toLowerCase()); // Search by formatted date
+        const formattedDate = formatDate(request.arrangement_date).join(" ");
+        return formattedDate.toLowerCase().includes(filterValue.toLowerCase());
       });
     }
 
@@ -88,29 +114,26 @@ export default function RequestTable() {
       );
     }
 
-    return filteredRequests;
-  }, [filterValue, statusFilter, hasSearchFilter]);
-
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
-
-  const pageNumber = Number(page);
-  const rowsPerPageNumber = Number(rowsPerPage);
-
-  const items = React.useMemo(() => {
-    const start = (pageNumber - 1) * rowsPerPageNumber;
-    const end = start + rowsPerPageNumber;
-    return filteredItems.slice(start, end);
-  }, [pageNumber, filteredItems, rowsPerPageNumber]);
-
-  const sortedItems = React.useMemo(() => {
-    return [...items].sort((a, b) => {
+    // Sort the filtered items
+    return filteredRequests.sort((a, b) => {
       const first = a[sortDescriptor.column] || "";
       const second = b[sortDescriptor.column] || "";
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [sortDescriptor, items]);
+  }, [requests, filterValue, statusFilter, hasSearchFilter, sortDescriptor]);
+
+  // Calculate pages based on filtered items
+  const pages = Math.ceil(filteredItems.length / rowsPerPage);
+
+  // Get paginated items
+  const paginatedItems = React.useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    return filteredItems.slice(start, end);
+  }, [page, rowsPerPage, filteredItems]);
 
   const isWithinTwoWeeks = (arrangementDate) => {
     const now = new Date();
@@ -500,13 +523,14 @@ export default function RequestTable() {
       </TableHeader>
       <TableBody
         emptyContent={"No Requests found"}
-        items={sortedItems}
+        items={paginatedItems}
         loadingContent={<Spinner label="Loading..." />}
+        isLoading={isLoading}
       >
-        {(item, rowIndex) => (
+        {(item) => (
           <TableRow key={item.request_id}>
             {(columnKey) => (
-              <TableCell>{renderCell(item, columnKey, rowIndex)}</TableCell>
+              <TableCell>{renderCell(item, columnKey)}</TableCell>
             )}
           </TableRow>
         )}

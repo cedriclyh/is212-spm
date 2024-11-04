@@ -59,12 +59,15 @@ CREATE TABLE IF NOT EXISTS Request_Log (
 
 -- Arrangement Table
 CREATE TABLE IF NOT EXISTS Arrangement (
-    request_id INT PRIMARY KEY,
+    request_id INT,
+    arrangement_id INT,
     staff_id INT NOT NULL,    
     arrangement_date DATE NOT NULL,
     timeslot VARCHAR(50) NOT NULL,  
     reason VARCHAR(255) NOT NULL,
-    FOREIGN KEY (staff_id) REFERENCES Employee(staff_id)
+    PRIMARY KEY (request_id, arrangement_id),
+    FOREIGN KEY (staff_id) REFERENCES Employee(staff_id),
+    UNIQUE KEY unique_arrangement_constraint (staff_id, arrangement_date, timeslot)
 );
 
 -- Block Out Dates Table
@@ -683,16 +686,16 @@ INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrange
 
 -- Arrangement values
 -- meaning approved requests
-INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reason) VALUES
-(1, 140002, '2024-10-01', "AM", "Medical Appointment"),
-(2, 140003, '2024-10-01', "PM", "Lazy"),
-(3, 140004, '2024-10-01', "FULL", ''),
-(7, 140004, '2025-01-01', "FULL", ''),
-(8, 140004, '2024-10-11', "PM", ''),
-(14, 140004, '2024-10-02', "FULL", ''),
-(15, 140004, '2024-10-04', "FULL", ''),
-(16, 140004, '2024-10-21', "FULL", ''),
-(17, 140002, '2024-11-01', "AM", '');
+INSERT INTO Arrangement (request_id, arrangement_id, staff_id, arrangement_date, timeslot, reason) VALUES
+(1, 1, 140002, '2024-10-01', "AM", "Medical Appointment"),
+(2, 1, 140003, '2024-10-01', "PM", "Lazy"),
+(3, 1, 140004, '2024-10-01', "FULL", ''),
+(7, 1, 140004, '2025-01-01', "FULL", ''),
+(8, 1, 140004, '2024-10-11', "PM", ''),
+(14, 1, 140004, '2024-10-02', "FULL", ''),
+(15, 1, 140004, '2024-10-04', "FULL", ''),
+(16, 1, 140004, '2024-10-21', "FULL", ''),
+(17, 1, 140002, '2024-11-01', "AM", '');
 
 -- RequestDates values
 INSERT INTO RequestDates (id, request_id, arrangement_date) VALUES
