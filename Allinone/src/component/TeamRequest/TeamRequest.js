@@ -21,7 +21,7 @@ import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
 import {SearchIcon} from "../Icons/SearchIcon";
 import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
 import {columns, statusOptions, pulled_data} from "./TeamRequestData";
-import {capitalize, formatDate} from "../TeamRequest/TeamRequestUtils";
+import {capitalize, formatDate, formatTimeslot} from "../TeamRequest/TeamRequestUtils";
 import profilePic from "../Icons/profile_pic.png"
 
 const statusColorMap = {
@@ -129,15 +129,13 @@ export default function TeamRequest() {
                 </div>
             );
           }
-        case "timeslot":
-          return (
-            <div>
-              <p className="text-bold text-small" >{request.timeslot}</p>
-              {request.timeslot === "AM" && <p className="text-bold text-tiny text-default-400">9AM - 1PM</p>}
-              {request.timeslot === "PM" && <p className="text-bold text-tiny text-default-400">2PM - 6PM</p>}
-              {request.timeslot === "FULL" && <p className="text-bold text-tiny text-default-400">9AM - 6PM</p>}
-            </div>
-          )
+          case "timeslot":
+            return (
+              <div>
+                <p className="text-bold text-small capitalize">{formatTimeslot(request.timeslot)[0]}</p>
+                <p className="text-bold text-tiny capitalize text-default-400">{formatTimeslot(request.timeslot)[1]}</p>
+              </div>
+            )
       case "status":
         return (
           <Chip color={statusColorMap[request.status]} size="sm" variant="flat">
