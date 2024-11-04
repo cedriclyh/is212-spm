@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
 from dateutil.relativedelta import relativedelta
+from flask_cors import CORS
 
 
 app = Flask(__name__)
