@@ -6,9 +6,19 @@ import json
 @pytest.fixture
 def client():
     # Override the database URI to use SQLite in memory, so that it doesnt reach for mysql without proper credentials. should be using sqlite's in-memory database instead
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_URL', 'sqlite:///:memory:')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['TESTING'] = True
+    # app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_URL', 'SQLALCHEMY_DATABASE_URI')
+
+    # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # app.config['TESTING'] = True
+
+    original_db_uri = app.config['SQLALCHEMY_DATABASE_URI']
+    
+    # Override with SQLite for testing
+    app.config.update({
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'TESTING': True
+    })
 
     with app.test_client() as client:
         with app.app_context():
@@ -17,6 +27,8 @@ def client():
             yield client
             db.session.remove()
             db.drop_all()
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = original_db_uri
 
 # configure sqlite db to be able to have some sample blockout dates to test with
 @pytest.fixture
