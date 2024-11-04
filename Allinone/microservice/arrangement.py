@@ -20,7 +20,7 @@ else:
         # environ.get("dbURL") or
         # os.environ.get('DB_URL', 'mysql+mysqlconnector://root@localhost:3306/spm_db')
         # or os.environ.get("dbURL") or 
-        "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+        "mysql+mysqlconnector://root@localhost:3306/spm_db" #this is for mac users
     )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
