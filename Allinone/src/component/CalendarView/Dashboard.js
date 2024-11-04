@@ -112,7 +112,7 @@ export default function Dashboard(inputEvents) {
                 </TableCell>
               </TableRow>
               {entries.map((item) => (
-                <TableRow key={item.key} onClick={() => handleClick(item.key)} style={{ cursor: "pointer" }}>
+                <TableRow key={item.key} style={{ cursor: "pointer" }}>
                   {columns.map((column) => {
                     const value = item[column.key];
                     return <TableCell key={column.key}>{value}</TableCell>;

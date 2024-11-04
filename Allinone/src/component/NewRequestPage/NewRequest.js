@@ -199,28 +199,21 @@ export default function NewRequest({ initialFormData }) {
     timeslot: selectedTimeslot,
     reason: reason,
     is_recurring: isRecurring,
-  });
+});
 
   useEffect(() => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      arrangement_date: isRecurring ? null : inputDates[0] || "",
-      recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
-      start_date: isRecurring ? formatDateFromPicker(startDate) : null,
-      end_date: isRecurring ? formatDateFromPicker(endDate) : null,
-      timeslot: selectedTimeslot,
-      reason: reason,
-      is_recurring: isRecurring,
-    }));
-  }, [
-    isRecurring,
-    inputDates,
-    SelectedDayOfTheWeek,
-    startDate,
-    endDate,
-    selectedTimeslot,
-    reason,
-  ]);
+      setFormData((prevFormData) => ({
+          ...prevFormData,
+          arrangement_date: isRecurring ? null : inputDates[0] || "",
+          recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
+          start_date: isRecurring ? formatDateFromPicker(startDate) : null,
+          end_date: isRecurring ? formatDateFromPicker(endDate): null,
+          timeslot: selectedTimeslot,
+          reason: reason,
+          is_recurring: isRecurring,
+      }));
+  }, [isRecurring, inputDates, SelectedDayOfTheWeek, startDate, endDate, selectedTimeslot, reason]);
+
 
   const handleSubmit = async (e) => {
     console.log(formData);
@@ -461,15 +454,9 @@ export default function NewRequest({ initialFormData }) {
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu onAction={handleSelection}>
-                    <DropdownItem key="Whole Day" description="9AM - 6PM">
-                      Whole Day
-                    </DropdownItem>
-                    <DropdownItem key="Morning" description="9AM - 1PM">
-                      Morning
-                    </DropdownItem>
-                    <DropdownItem key="Afternoon" description="2PM - 6PM">
-                      Afternoon
-                    </DropdownItem>
+                    <DropdownItem key="FULL" description="9AM - 6PM">Whole Day</DropdownItem>
+                    <DropdownItem key="AM" description="9AM - 1PM">Morning</DropdownItem>
+                    <DropdownItem key="PM" description="2PM - 6PM">Afternoon</DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
               </div>
