@@ -4,12 +4,13 @@ import { Button } from '@mui/material';
 import { CalendarToday, ViewAgenda } from '@mui/icons-material';
 import BlockoutPopup from './BlockoutPopup';
 
-export default function CalendarHeader({ view, toggleView }) {
+export default function CalendarHeader({ view, toggleView, userID }) {
   const [roleNum, setRoleNum] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  // const userID = 140001; // Replace with dynamic user ID
 
-  const checkRoleNum = async () => {
-    const apiUrl = `http://127.0.0.1:5002/user/140004`; // Replace with ${userID}
+  const checkRoleNum = async (userID) => {
+    const apiUrl = `http://127.0.0.1:5002/user/${userID}`; // Replace with ${userID}
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {
@@ -25,7 +26,7 @@ export default function CalendarHeader({ view, toggleView }) {
 
   useEffect(() => {
     const fetchRole = async () => {
-      const role = await checkRoleNum();
+      const role = await checkRoleNum(userID);
       setRoleNum(role);
       
       // Show BlockoutPopup if role_num is 1 or 3

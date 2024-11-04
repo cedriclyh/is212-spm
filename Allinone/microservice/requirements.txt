@@ -20,3 +20,6 @@ APScheduler
 # Environment and utils
 python-dotenv
 requests
+
+# Messaging
+pika

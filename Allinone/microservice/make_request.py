@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
@@ -6,12 +7,12 @@ from os import environ
 from dateutil.relativedelta import relativedelta
 from flask_cors import CORS
 
+
 app = Flask(__name__)
 CORS(app)
-
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" or
-    environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
