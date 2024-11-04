@@ -14,7 +14,8 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" or "mysql+mysqlconnector://root:root@localhost:3306/spm_db"
+    or 'sqlite:///:memory:'  # fallback for testing
     # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -178,6 +179,7 @@ def get_team_by_manager(manager_id):
             "team_count": count,
             "code": 500
         }), 500
+    
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)

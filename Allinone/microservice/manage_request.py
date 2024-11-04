@@ -11,6 +11,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
     # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
     environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    or 'sqlite:///:memory:'  # fallback for testing
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -275,7 +276,7 @@ def manage_request():
 @app.route('/cancel_request', methods=['PUT'])
 def cancel_request():
     """
-    Withdraw an approved request by changing its status to 'Cancel'.
+    Cancel request by changing its status to 'Cancel'.
     """
     try:
         data = request.json
@@ -296,8 +297,8 @@ def cancel_request():
         staff_id = request_entry.get("staff_id")
         
         # Check if the request is currently approved
-        if current_status != "Approved" or "Pending":
-            return jsonify({"message": "Only approved requests can be cancel", "code": 403}), 403
+        if current_status not in ["Approved", "Pending"]:
+            return jsonify({"message": "Only approved or pending requests can be cancelled", "code": 403}), 403
         
         # Update the status to 'cancelled' in the Request Log microservice
         update_data = {
@@ -309,20 +310,20 @@ def cancel_request():
         if update_response.status_code != 200:
             return jsonify({"message": "Failed to update request status", "code": 500}), 500
         
-        # #Notify the staff about the withdrawal
+        # #Send confirmation email to staff
         # notification_data = {
         #     "staff_email": staff_email,
-        #     "status": "Withdrawn",
+        #     "status": "Cancelled",
         #     "request_id": request_id,
-        #     "remarks": "Your approved request has been successfully withdrawn."
+        #     "remarks": "Your approved request has been successfully cancelled."
         # }
         # notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", json=notification_data)
         
         # if notification_response.status_code != 200:
-        #     return jsonify({"message": "Request withdrawn but failed to notify staff", "code": 500}), 500
+        #     return jsonify({"message": "Request cancelled but failed to notify staff", "code": 500}), 500
         
         return jsonify({
-            "message": f"Request successfully cancelled and staff notified",
+            "message": f"Request successfully cancelled and Staff notified",
             "code": 200
         }), 200
 

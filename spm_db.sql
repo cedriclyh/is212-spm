@@ -684,22 +684,18 @@ INSERT INTO Request_Log (request_id, staff_id, manager_id, request_date, arrange
 (18, 140002, 140894, '2024-10-28', '2024-11-01', "PM", 'Rejected', '', "", NULL, NULL, NULL, False),
 (19, 140002, 140894, '2024-10-30', NULL, "FULL", 'Pending', "", "", "Monday", "2024-11-01", "2024-12-31", True);
 
-
 -- Arrangement values
 -- meaning approved requests
-INSERT INTO Arrangement (request_id, staff_id, arrangement_date, timeslot, reason) VALUES
-(1, 140002, '2024-10-01', "AM", "Medical Appointment"),
-(2, 140003, '2024-10-01', "PM", "Lazy"),
-(3, 140004, '2024-10-01', "FULL", ''),
-(14, 140004, '2024-10-02', "FULL", ''),
-(15, 140004, '2024-10-04', "FULL", ''),
-(16, 140004, '2024-10-21', "FULL", ''),
-(7, 140004, '2025-01-01', "FULL", ''),
-(8, 140004, '2024-10-11', "PM", ''),
-(14, 140004, '2024-10-02', "FULL", ''),
-(15, 140004, '2024-10-04', "FULL", ''),
-(16, 140004, '2024-10-21', "FULL", ''),
-(17, 140002, '2024-11-01', "AM", '');
+INSERT INTO Arrangement (request_id, arrangement_id, staff_id, arrangement_date, timeslot, reason) VALUES
+(1, 1, 140002, '2024-10-01', "AM", "Medical Appointment"),
+(2, 1, 140003, '2024-10-01', "PM", "Lazy"),
+(3, 1, 140004, '2024-10-01', "FULL", ''),
+(7, 1, 140004, '2025-01-01', "FULL", ''),
+(8, 1, 140004, '2024-10-11', "PM", ''),
+(14, 1, 140004, '2024-10-02', "FULL", ''),
+(15, 1, 140004, '2024-10-04', "FULL", ''),
+(16, 1, 140004, '2024-10-21', "FULL", ''),
+(17, 1, 140002, '2024-11-01', "AM", '');
 
 -- RequestDates values
 INSERT INTO RequestDates (id, request_id, arrangement_date) VALUES

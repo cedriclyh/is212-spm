@@ -7,6 +7,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
     environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    or 'sqlite:///:memory:'  # fallback for testing
     # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

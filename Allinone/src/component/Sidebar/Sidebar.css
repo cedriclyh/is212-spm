@@ -1,0 +1,10 @@
+
+
+.shadow {
+    background-color: rgb(212 212 216); 
+    border-radius: 3px
+}
+.nav-item:hover {
+    background-color: rgb(244 244 245); 
+    border-radius: 3px
+}

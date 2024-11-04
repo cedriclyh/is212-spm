@@ -15,7 +15,7 @@ load_dotenv()
 # Setup database connection 
 # DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db" # For Windows
 
-DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db" # For Mac
+DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db" or 'sqlite:///:memory:'  or  "mysql+mysqlconnector://root@localhost:3306/spm_db"# fallback for testing # For Mac
 engine = create_engine(DATABASE_URI)
 
 # Setup Sendinblue API configuration
@@ -145,6 +145,85 @@ def notify_status_update():
 
     except ApiException as e:
         print(f"Exception when sending status update email: {e}")
+        return jsonify({"error": "Failed to send email"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/notify_revoke_arrangements", methods=["POST"])
+def notify_revoke_arranagements():
+    try:
+        # Extract request data
+        data = request.json
+        staff_email = data.get("staff_email")
+        manager_email = data.get("manager_email")
+        request_ids = data.get("request_ids")
+        request_id_str = ""
+        for i in range(0, len(request_ids)):
+            request_id_str += str(request_ids[i])
+            if(i <= len(request_ids)):
+                request_ids += ", "
+
+        # Validate presence of staff_email and manager_email
+        if not staff_email or not manager_email:
+            return jsonify({"error": "Staff email or manager email is missing"}), 400
+        
+        # Email content to notify the staff of the request status
+        print("Preparing email details...")
+        sender = {"name": "Allinone", "email": "no-reply@yourcompany.com"}
+        to_staff = [{"email": staff_email}]
+        to_manager = [{"email": manager_email}]
+        subject_staff = f"Your Work From Home Request has been Revoked"
+        subject_manager = f"Work From Home Request Successfuly Revoked"
+        html_content_staff = f"""
+        <html>
+        <body>
+            <h3>Your WFH Request Has Been revoked.</h3>
+            <p>Your WFH request(s) with request ID {request_id_str} has been revoked.</p>
+        </body>
+        </html>
+        """
+
+        html_content_manager = f"""
+        <html>
+        <body>
+            <h3>WFH Request for {staff_email} Has Been revoked.</h3>
+            <p>Your WFH request(s) with request ID {request_id_str} has been revoked.</p>
+        </body>
+        </html>
+        """
+
+        # Send the emails
+        # Staff email
+        print("Sending staff email...")
+        send_smtp_email_staff = sib_api_v3_sdk.SendSmtpEmail(to=to_staff, html_content=html_content_staff, sender=sender, subject=subject_staff)
+        api_response_staff = api_instance.send_transac_email(send_smtp_email_staff)
+        print("Revocation email sent to staff successfully. API response:", api_response_staff)
+
+        # Manager email
+        print("Sending manager email...")
+        send_smtp_email_manager = sib_api_v3_sdk.SendSmtpEmail(to=to_manager, html_content=html_content_manager, sender=sender, subject=subject_manager)
+        api_response_manager = api_instance.send_transac_email(send_smtp_email_manager)
+        print("Revocation email sent to manager successfully. API response:", api_response_manager)
+
+        # Log the notification in the database
+        # try:
+        #     with engine.connect() as connection:
+        #         connection.execute(
+        #             text("""
+        #             INSERT INTO notifications_log (request_id, recipient_email, status)
+        #             VALUES (:request_id, :recipient_email, :status)
+        #             """),
+        #             {"request_id": request_id, 
+        #              "recipient_email": staff_email, 
+        #              "status": request_status}
+        #         )
+        # except SQLAlchemyError as e:
+        #     print(f"Failed to log notification in database: {e}")
+
+        return jsonify({"message": "Revocation emais sent successfully"}), 200
+
+    except ApiException as e:
+        print(f"Exception when sending revocation emails: {e}")
         return jsonify({"error": "Failed to send email"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500

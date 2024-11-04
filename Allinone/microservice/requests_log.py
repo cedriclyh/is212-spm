@@ -223,34 +223,6 @@ def get_requests_by_staff_id(staff_id):
                         'code': 500
         }), 500
     
-#Retrieve all WFH request by team members of the same team
-@app.route('/get_requests/manager/<int:manager_id>', methods=['GET'])
-def get_requests_by_manager_id(manager_id):
-    try:
-        requests = Request.query.filter_by(manager_id=manager_id).all()
-        if requests:
-            request_with_dates = []
-            for request in requests:
-                request_data = request.json()
-                related_dates = db.session.query(RequestDates.arrangement_date).filter_by(request_id=request.request_id).all()
-                request_data["arrangement_dates"] = [str(date.arrangement_date) for date in related_dates]
-                request_with_dates.append(request_data)
-            return jsonify({
-                'message': f'Requests from manager {manager_id} found', 
-                'data': request_with_dates, 
-                'code': 200
-            }), 200
-        else:
-            return jsonify({'message': f'No requests from manager {manager_id}', 
-                            'code': 404
-            }), 404
-    except Exception as e:
-        app.logger.error(f"Failed to retrieve requests by manager ID: {e}")
-        return jsonify({'message': 'Failed to retrieve requests by manager ID', 
-                        'code': 500
-        }), 500
-
-    
 # Update request status
 @app.route('/update_request/<int:request_id>', methods=['PUT'])
 def update_request(request_id):
@@ -286,6 +258,7 @@ def edit_request(request_id):
                 'message': 'Request not found',
                 'code': 404
             }), 404
+
 
         # update the fields that can be edited
         request_to_edit.request_date = data.get('request_date', request_to_edit.request_date)

@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
+CORS(app)
 
 # URL endpoints for the existing microservices
 EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
@@ -139,6 +141,59 @@ def get_team_requests(manager_id):
     return jsonify({
         'message': f'Requests from team manager {manager_id} found',
         'data': team_requests,
+        'code': 200
+    }), 200
+
+@app.route("/view_request/<int:request_id>")
+def view_request(request_id):
+    try:
+        request_response = requests.get(f'{REQUEST_LOG_MICROSERVICE_URL}/get_request/{request_id}')
+        request_response.raise_for_status()
+    except requests.exceptions.HTTPError as http_err:
+        if request_response.status_code == 404:
+            return jsonify({
+                "message": "Employee requests not found",
+                "request_data": [],
+                "code": 404
+            }), 404
+        elif request_response.status_code == 500:
+            return jsonify({
+                "message": "Internal server error while fetching employee requests",
+                "request_data": [],
+                "code": 500
+            }), 500
+        else:
+            return jsonify({
+                "message": f"HTTP error occurred: {http_err}",
+                "request_data": [],
+                "code": request_response.status_code
+            }), request_response.status_code
+    
+    request_data = request_response.json().get('data')
+
+    staff_id = request_data['staff_id']
+    try:
+        staff_response = requests.get(f'{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}')
+        staff_response.raise_for_status()
+        request_data['staff_details'] = staff_response.json().get('data', {})
+    except requests.exceptions.HTTPError as http_err:
+        app.logger.error(f"Staff {staff_id} fetch failed: {http_err}")
+    except requests.exceptions.RequestException as err:
+        app.logger.error(f"Error occurred while fetching staff {staff_id}: {err}")
+
+    manager_id = request_data['manager_id']
+    try:
+        staff_response = requests.get(f'{EMPLOYEE_MICROSERVICE_URL}/user/{manager_id}')
+        staff_response.raise_for_status()
+        request_data['manager_details'] = staff_response.json().get('data', {})
+    except requests.exceptions.HTTPError as http_err:
+        app.logger.error(f"Manager {staff_id} fetch failed: {http_err}")
+    except requests.exceptions.RequestException as err:
+        app.logger.error(f"Error occurred while fetching manager {manager_id}: {err}")
+
+    return jsonify({
+        'message': f'Request found.',
+        'data': request_data,
         'code': 200
     }), 200
 
