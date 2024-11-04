@@ -15,6 +15,45 @@ def client():
             db.drop_all()
 
 @pytest.fixture
+@pytest.fixture
+def mock_employee_request_response():
+    """Mock response for employee requests matching SQL data"""
+    return {
+        'data': [
+            {
+                'request_id': 1,
+                'staff_id': 140002,
+                'manager_id': 140894,
+                'request_date': '2024-09-29',
+                'arrangement_date': '2024-10-01',
+                'timeslot': 'AM',
+                'status': 'Approved',
+                'reason': 'Medical Appointment',
+                'remark': '',
+                'recurring_day': None,
+                'start_date': None,
+                'end_date': None,
+                'is_recurring': False
+            },
+            {
+                'request_id': 17,
+                'staff_id': 140002,
+                'manager_id': 140894,
+                'request_date': '2024-10-28',
+                'arrangement_date': '2024-11-01',
+                'timeslot': 'AM',
+                'status': 'Approved',
+                'reason': '',
+                'remark': '',
+                'recurring_day': None,
+                'start_date': None,
+                'end_date': None,
+                'is_recurring': False
+            }
+        ],
+        'message': 'Requests found'
+    }
+
 def sample_arrangement():
     """Create sample arrangement matching SQL data"""
     with app.app_context():

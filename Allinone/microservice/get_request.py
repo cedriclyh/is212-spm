@@ -1,8 +1,22 @@
 from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+import os
+from os import environ
 from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
+if app.config['TESTING']:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        environ.get("dbURL") or
+        os.environ.get('DB_URL', 'mysql+mysqlconnector://root@localhost:3306/spm_db')
+        or os.environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    )
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
 CORS(app)
 
 # URL endpoints for the existing microservices
