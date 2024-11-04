@@ -168,7 +168,7 @@ export default function NewRequest({ initialFormData }) {
     end_date: "",
     timeslot: selectedTimeslot,
     reason: reason,
-    isRecurring: isRecurring,
+    is_recurring: isRecurring,
 });
 
   useEffect(() => {
@@ -180,7 +180,7 @@ export default function NewRequest({ initialFormData }) {
           end_date: isRecurring ? formatDateFromPicker(endDate): null,
           timeslot: selectedTimeslot,
           reason: reason,
-          isRecurring: isRecurring,
+          is_recurring: isRecurring,
       }));
   }, [isRecurring, inputDates, SelectedDayOfTheWeek, startDate, endDate, selectedTimeslot, reason]);
 
@@ -398,9 +398,9 @@ export default function NewRequest({ initialFormData }) {
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu onAction={handleSelection}>
-                    <DropdownItem key="Whole Day" description="9AM - 6PM">Whole Day</DropdownItem>
-                    <DropdownItem key="Morning" description="9AM - 1PM">Morning</DropdownItem>
-                    <DropdownItem key="Afternoon" description="2PM - 6PM">Afternoon</DropdownItem>
+                    <DropdownItem key="FULL" description="9AM - 6PM">Whole Day</DropdownItem>
+                    <DropdownItem key="AM" description="9AM - 1PM">Morning</DropdownItem>
+                    <DropdownItem key="PM" description="2PM - 6PM">Afternoon</DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
               </div>
