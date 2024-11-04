@@ -33,18 +33,7 @@ export default function ViewRequest() {
     const [requestData, setRequestData] = useState(null);
     const [dates, setDates] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [visibleColumns, setVisibleColumns] = useState(["arrangment_date"])
-
-    // const isWithinTwoWeeks = useCallback((arrangementDate) => {
-    //     const now = new Date();
-    //     const arrangement = new Date(arrangementDate);
-    //     const twoWeeksBefore = new Date(arrangement);
-    //     twoWeeksBefore.setDate(arrangement.getDate() - 14);
-    //     const twoWeeksAfter = new Date(arrangement);
-    //     twoWeeksAfter.setDate(arrangement.getDate() + 14);
-    
-    //     return now >= twoWeeksBefore && now <= twoWeeksAfter;
-    // }, []);
+    const [arrangements, setArrangements] = useState([]);
 
     useEffect(() => {
         const fetchRequestData = async () => {
@@ -71,33 +60,34 @@ export default function ViewRequest() {
         fetchRequestData();
     }, [uid]);
 
-    // const renderCell = React.useCallback((visibleColumns, columnKey) => {
-    //     const cellValue = requestData[columnKey]
+    useEffect(() => {
+        async function fetchArrangementDates() {
+            try {
+                const response = await fetch(
+                    `http://localhost:5005/get_arrangements/request/${uid}`
+                );
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const output = await response.json();
+                console.log("API Response:", output.data);
+    
+                // Fix: Properly map through the array and extract arrangement_date
+                const list_of_dates = output.data.map(item => item.arrangement_date);
+                console.log("Extracted dates:", list_of_dates);
+                
+                setArrangements(list_of_dates);
+            } catch (error) {
+                console.error("Error fetching arrangement dates:", error);
+                setArrangements([]); // Set empty array on error
+            }
+        }
+    
+        if (requestData?.status === "Approved") {
+            fetchArrangementDates();
+        }
+    }, [requestData?.status, uid]);
 
-    //     switch (columnKey) {
-    //         case "actions":
-    //             return (
-    //                 <Dropdown>
-    //                     <DropdownTrigger>
-    //                         <Button isIconOnly size="sm" variant="light">
-    //                         <VerticalDotsIcon className="text-default-300" />
-    //                         </Button>
-    //                     </DropdownTrigger>
-    //                     <DropdownMenu>
-    //                         <DropdownItem>Cancel</DropdownItem>
-    //                     </DropdownMenu>
-    //                 </Dropdown>
-    //             );
-            
-    //         case "status": 
-    //             return (
-    //                 <Chip color={statusColorMap[requestData.status]} size="sm" variant="flat">
-    //                     {cellValue}
-    //                 </Chip>
-    //             )
-            
-    //     }
-    // })
     
     if (isLoading) {
         return (
@@ -182,19 +172,22 @@ export default function ViewRequest() {
             )}
 
             <div style={{ marginTop: "20px", marginBottom: "20px" }}>
-            <Table aria-label="Arrangement dates table" isCompact>
-                <TableHeader>
-                    <TableColumn>ARRANGEMENT DATES (YYYY-MM-DD)</TableColumn>
-                </TableHeader>
-                <TableBody>
-                        {dates.map((date, index) => (
-                            <TableRow key={index}>
-                                <TableCell>{date}</TableCell>
-                            </TableRow>
-                        ))
-                        }
-                </TableBody>
-            </Table>
+                {requestData.status !== "Approved" && (
+                    <Table aria-label="Arrangement dates table" isCompact>
+                        <TableHeader>
+                            <TableColumn>ARRANGEMENT DATES (YYYY-MM-DD)</TableColumn>
+                        </TableHeader>
+                        <TableBody>
+                                {dates.map((date, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{date}</TableCell>
+                                    </TableRow>
+                                ))
+                                }
+                        </TableBody>
+                    </Table>
+                )}
+            
 
             {requestData.status === "Approved" && (
                 <Table aria-label="Arrangement dates table" isCompact>
@@ -204,12 +197,25 @@ export default function ViewRequest() {
                     <TableColumn>ACTIONS</TableColumn>
                 </TableHeader>
                 <TableBody>
-                        {dates.map((date, index) => (
-                            <TableRow key={index}>
-                                <TableCell>{date}</TableCell>
-                            </TableRow>
-                        ))
-                        }
+                    {dates.map((date, index) => (
+                        <TableRow key={index}>
+                            <TableCell>{date}</TableCell>
+                            <TableCell>
+                                {arrangements.includes(date) ? (
+                                    <Chip color="success" size="sm" variant="flat">Approved</Chip>
+                                ) : (
+                                    <Chip color="default" size="sm" variant="flat">Cancelled</Chip>
+                                )}
+                            </TableCell>
+                            <TableCell>
+                                {arrangements.includes(date) ? (
+                                    <Button color="danger" size="sm" variant="flat">Withdraw</Button>
+                                ) : (
+                                    <Button color="danger" isDisabled size="sm" variant="flat">Withdraw</Button>
+                                )}
+                            </TableCell>
+                        </TableRow>
+                    ))}
                 </TableBody>
             </Table>
             )}
