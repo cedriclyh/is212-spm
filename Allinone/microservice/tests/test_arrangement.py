@@ -15,7 +15,6 @@ def client():
             db.drop_all()
 
 @pytest.fixture
-@pytest.fixture
 def mock_employee_request_response():
     """Mock response for employee requests matching SQL data"""
     return {
@@ -61,6 +60,7 @@ def sample_arrangement():
     with app.app_context():
         arrangement = Arrangement(
             request_id=1,
+            arrangement_id=1,  # Added missing parameter
             staff_id=140002,
             arrangement_date="2024-10-01",
             timeslot="AM",
@@ -74,6 +74,7 @@ def test_create_arrangement_success(client):
     """Test creating arrangement with data matching SQL schema"""
     data = {
         "request_id": 20,  # New unique ID
+        "arrangement_id": 1,  # Added required field
         "staff_id": 140002,  # Existing staff ID from Employee table
         "arrangement_date": "2024-10-15",
         "timeslot": "AM",  # One of: "AM", "PM", "FULL"
@@ -88,6 +89,7 @@ def test_create_arrangement_missing_fields(client):
     """Test creating arrangement with missing required fields"""
     data = {
         "request_id": 21,
+        "arrangement_id": 1,
         "arrangement_date": "2024-10-15",
         "timeslot": "PM",
         "reason": "Team meeting"
@@ -99,10 +101,11 @@ def test_create_arrangement_missing_fields(client):
 
 def test_get_arrangement(client, sample_arrangement):
     """Test retrieving arrangement matching SQL data"""
-    response = client.get('/get_arrangement/1')
+    response = client.get('/get_arrangement/1/1')  # Added arrangement_id parameter
     assert response.status_code == 200
     data = response.json['data']
     assert data['request_id'] == 1
+    assert data['arrangement_id'] == 1
     assert data['staff_id'] == 140002
     assert data['arrangement_date'] == "2024-10-01"
     assert data['timeslot'] == "AM"
@@ -114,6 +117,7 @@ def test_get_all_arrangements(client):
         arrangements = [
             Arrangement(
                 request_id=1,
+                arrangement_id=1,  # Added missing parameter
                 staff_id=140002,
                 arrangement_date="2024-10-01",
                 timeslot="AM",
@@ -121,6 +125,7 @@ def test_get_all_arrangements(client):
             ),
             Arrangement(
                 request_id=2,
+                arrangement_id=1,  # Added missing parameter
                 staff_id=140003,
                 arrangement_date="2024-10-01",
                 timeslot="PM",
@@ -145,6 +150,7 @@ def test_get_arrangements_by_staff_id(client):
         arrangements = [
             Arrangement(
                 request_id=1,
+                arrangement_id=1,  # Added missing parameter
                 staff_id=140002,
                 arrangement_date="2024-10-01",
                 timeslot="AM",
@@ -152,6 +158,7 @@ def test_get_arrangements_by_staff_id(client):
             ),
             Arrangement(
                 request_id=17,
+                arrangement_id=1,  # Added missing parameter
                 staff_id=140002,
                 arrangement_date="2024-11-01",
                 timeslot="AM",
@@ -171,13 +178,13 @@ def test_get_arrangements_by_staff_id(client):
 def test_delete_arrangements(client):
     """Test deleting arrangements"""
     
-    response = client.delete('/withdraw_arrangement/17/1')
+    response = client.delete('/withdraw_arrangement/17/1')  # Updated to include arrangement_id
     assert response.status_code == 200
     assert response.json['message'] == 'Arrangements deleted successfully'
     
     # Verify arrangement was deleted
     with app.app_context():
-        arrangement = Arrangement.query.get(1)
+        arrangement = Arrangement.query.get((17, 1))  # Updated to check composite primary key
         assert arrangement is None
 
 def test_delete_arrangements_not_found(client):
@@ -188,9 +195,10 @@ def test_delete_arrangements_not_found(client):
     assert response.json['message'] == 'No matching arrangements found to delete'
 
 def test_create_arrangement_duplicate_request_id(client, sample_arrangement):
-    """Test creating arrangement with duplicate request_id"""
+    """Test creating arrangement with duplicate request_id and arrangement_id"""
     data = {
         "request_id": 1,  # Already exists
+        "arrangement_id": 1,  # Already exists
         "staff_id": 140002,
         "arrangement_date": "2024-10-15",
         "timeslot": "AM",

@@ -2,7 +2,7 @@ import pika
 import json
 import requests
 from datetime import datetime
-from arrangement import Arrangement, delete_arrangements, app, db
+from arrangement import Arrangement, withdraw_arrangement, app, db
 from employee import Employee
 from dotenv import load_dotenv
 import os
@@ -35,7 +35,7 @@ def process_revoke_task(ch, method, properties, body):
 
         print("All arrangements successfully deleted")
         # Delete arrangements in the database
-        delete_response, delete_status_code = delete_arrangements(request_ids)
+        delete_response, delete_status_code = withdraw_arrangement(request_ids, 1) #hard coded 1, think needa change
         if delete_status_code != 200:
             print(f"Failed to delete arrangements for staff_id {staff_id}")
             return delete_response
