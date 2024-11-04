@@ -326,7 +326,7 @@ def cancel_request(request_id):
                 "code": 500
             }), 500
         
-        # Fetch employee email for notification
+        # Fetch employee email for notification commented out for testing
         # employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
         
         # if employee_response.status_code == 200:
