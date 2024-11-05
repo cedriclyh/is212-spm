@@ -1,5 +1,5 @@
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, getKeyValue, DatePicker } from "@nextui-org/react";
-import React, { Fragment, useState } from "react";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, DatePicker } from "@nextui-org/react";
+import React, { useState, useEffect } from "react";
 
 const columns = [
   { key: "date", label: "DATE" },
@@ -7,6 +7,148 @@ const columns = [
   { key: "team", label: "TEAM" },
   { key: "manpower", label: "MANPOWER AT OFFICE" },
 ];
+
+// const IDEALROWS = [{key: 1, date:'2024-11-01', department: 'HR', team: 'Manager', entries: [{name: 'John Doe'}, {name: 'Jane Doe'}]}];
+
+export default function Dashboard(inputEvents) {
+  // const [state, setState] = useState(0);
+  const events = inputEvents.events;
+  console.log("Events inserted into DashBoard:", events);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  useEffect(() =>{
+    const processData = async () => {
+      const dashboardData = events.map(item => {
+        const name = item.title.split(" ").slice(0, -1).join(" ");
+        return {
+          dept: item.dept,
+          teamName: item.teamName,
+          date: item.start.substring(0, 10),
+          name: name,
+          key: item.id,
+          managerID: item.managerID,
+        };
+      });
+    
+      const groupedData = dashboardData.reduce((acc, item) => {
+        const { date, dept, teamName } = item;
+        if (!acc[date]) {
+          acc[date] = {};
+        }
+        if (!acc[date][dept]) {
+          acc[date][dept] = {};
+        }
+        if (!acc[date][dept][teamName]) {
+          acc[date][dept][teamName] = [];
+        }
+    
+        acc[date][dept][teamName].push({
+          key: item.key,
+          name: item.name,
+          managerID: item.managerID,
+        });
+        return acc;
+      }, {});
+
+      // Pre-fetch manpower counts for each unique managerID
+      const uniqueManagerIDs = [...new Set(dashboardData.map(item => item.managerID))];
+      const totalCounts = {};
+
+      await Promise.all(
+        uniqueManagerIDs.map(async (managerID) => {
+          const count = await getTotalCount(managerID);
+          totalCounts[managerID] = count;
+        })
+      );
+      
+      const generatedRows = (
+        Object.keys(groupedData).flatMap(date => {
+          return Object.keys(groupedData[date]).flatMap(dept => {
+            return Object.keys(groupedData[date][dept]).map(teamName => {
+              const entries = groupedData[date][dept][teamName];
+              const totalCount = totalCounts[entries[0].managerID];
+              const manpowerInOffice = `${totalCount - entries.length}/${totalCount}`;
+              return {
+                key: `${date}-${dept}-${teamName}}`, // Or generate a unique key if necessary
+                date: date,
+                department: dept,
+                team: teamName,
+                entries: entries,
+                manpower: manpowerInOffice
+              };
+            });
+          });
+        })
+      )
+        setRows(generatedRows.flat());
+        setLoading(false); 
+        // Logging 
+        console.log('Dashboard Data:', dashboardData);
+        console.log('Grouped Data:', groupedData);
+        console.log('Rows:', generatedRows);
+      };
+      processData();
+    }, [events]);
+
+    if (loading) return <div>Loading...</div>;  
+
+    // Handle date change
+    const handleDateChange = (date) => {
+      const formattedDate = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+      setSelectedDate(formattedDate);
+      console.log("Selected Date:", formattedDate);
+    };
+
+    // Filter rows based on selected date
+    const filteredRows = selectedDate 
+      ? rows.filter(item => item.date === selectedDate) 
+      : rows;
+
+  // const handleClick = (index) => {
+  //   const updatedState = { ...rows[index] }; // Clone the row object
+
+  //   if (updatedState.other) {
+  //     delete updatedState.other; // Remove the additional information
+  //     setState((pre) => pre + 1);
+  //   } else {
+  //     updatedState.other = "Hello there" ;
+  //     setState((pre) => pre + 1);
+  //   }
+
+  //   console.log("Updated row:", updatedState);
+  //   rows[index] = updatedState; // Update the row in the array directly
+  // };
+
+  return (
+    <div className="card-container shadow-lg rounded-lg p-4 bg-white">
+      <div style={{ display: 'flex', justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+        <h1>Dashboard</h1>
+        <DatePicker label="Select Date" style={{ maxWidth: '284px', width: 'auto' }} onChange={handleDateChange}/>
+      </div>
+
+      <Table aria-label="Example table with dynamic content">
+        <TableHeader columns={columns}>
+          {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
+        </TableHeader>
+
+        <TableBody items={filteredRows}>
+          {(item) => (
+            <TableRow key={item.key}>
+              <TableCell>{item.date}</TableCell>
+              <TableCell>{item.department}</TableCell>
+              <TableCell>{item.team}</TableCell>
+              <TableCell>{item.manpower}</TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+
 
 export const getTotalCount = async (managerId) => {
   try {
@@ -34,105 +176,4 @@ async function getManpowerCount(count, managerID) {
   const totalCount = await getTotalCount(managerID);
   const numOfOfficeSlaves = totalCount - count;
   return `${numOfOfficeSlaves}/${totalCount}`;
-}
-
-export default function Dashboard(inputEvents) {
-  const [state, setState] = useState(0);
-  const events = inputEvents.events;
-  console.log("Events inserted into DashBoard:", events);
-  
-
-  const dashboardData = events.map(item => {
-    const name = item.title.split(" ").slice(0, -1).join(" ");
-    return {
-      dept: item.dept,
-      teamName: item.teamName,
-      date: item.start.substring(0, 10),
-      name: name,
-      key: item.id,
-      managerID: item.managerID,
-    };
-  });
-
-  const groupedData = dashboardData.reduce((acc, item) => {
-    const { date, dept, teamName } = item;
-    if (!acc[date]) {
-      acc[date] = {};
-    }
-    if (!acc[date][dept]) {
-      acc[date][dept] = {};
-    }
-    if (!acc[date][dept][teamName]) {
-      acc[date][dept][teamName] = [];
-    }
-
-    acc[date][dept][teamName].push({
-      key: item.key,
-      name: item.name,
-      managerID: item.managerID,
-    });
-    return acc;
-  }, {});
-  
-  // Transform groupedData to rows
-  const rows = Object.keys(groupedData).flatMap(date => {
-    return Object.keys(groupedData[date]).flatMap(dept => {
-      return Object.keys(groupedData[date][dept]).map(teamName => {
-        const entries = groupedData[date][dept][teamName];
-        const manpowerInOffice = getManpowerCount(entries.length, entries[0].managerID);
-        console.log("Manpower in Office:", manpowerInOffice);
-        return {
-          key: `${date}-${dept}-${teamName}}`, // Or generate a unique key if necessary
-          date: date,
-          department: dept,
-          team: teamName,
-          manpower: manpowerInOffice
-        };
-      });
-    });
-  });
-
-  // const IDEALROWS = [{key: 1, date:'2024-11-01', department: 'HR', team: 'Manager', entries: [{name: 'John Doe'}, {name: 'Jane Doe'}]}];
-
-  // Logging the results
-  console.log('Dashboard Data:', dashboardData);
-  console.log('Grouped Data:', groupedData);
-  console.log('Rows:', rows);
-
-  const handleClick = (index) => {
-    const updatedState = { ...rows[index] }; // Clone the row object
-
-    if (updatedState.other) {
-      delete updatedState.other; // Remove the additional information
-      setState((pre) => pre + 1);
-    } else {
-      updatedState.other = "Hello there" ;
-      setState((pre) => pre + 1);
-    }
-
-    console.log("Updated row:", updatedState);
-    rows[index] = updatedState; // Update the row in the array directly
-  };
-
-  return (
-    <>
-    <DatePicker label="Select Date" className="max-w-[284px]" />
-    <Table aria-label="Example table with dynamic content">
-      <TableHeader columns={columns}>
-        {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
-      </TableHeader>
-
-      <TableBody items={rows}>
-        {(item) => (
-          <TableRow onclick={handleClick} key={item.key}>
-            <TableCell>{item.date}</TableCell>
-            <TableCell>{item.department}</TableCell>
-            <TableCell>{item.team}</TableCell>
-            <TableCell>{item.manpower}</TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
-    </>
-  );
 }

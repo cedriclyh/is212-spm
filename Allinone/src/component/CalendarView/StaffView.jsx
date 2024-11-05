@@ -84,7 +84,7 @@ export default function WFHcalendar() {
             }}
             validRange={validRange}
             fontSize={16}
-            height="100%"
+            // height="100%"
           />
         </div>
       </div>
