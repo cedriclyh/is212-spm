@@ -56,9 +56,9 @@ export default function RequestTable() {
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const {isOpen, onOpen, onOpenChange} = useDisclosure();
-  const [countdown, setCountdown] = useState(3);
+  // const [countdown, setCountdown] = useState(3);
   const [buttonColor, setButtonColor] = useState("danger");
-  const [showCountdown, setShowCountdown] = useState(false);
+  // const [showCountdown, setShowCountdown] = useState(false);
 
   const fetchRequests = async () => {
     try {
@@ -110,6 +110,7 @@ export default function RequestTable() {
 
   const filteredItems = React.useMemo(() => {
     let filteredRequests = [...requests];
+    console.log(requests);
 
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {
@@ -186,8 +187,6 @@ export default function RequestTable() {
             }
         );
 
-        const result = await response.json();
-
         if (response.ok) {
             modalMsg = "Form processed successfully ";
             modalTitle = "Success!";
@@ -251,8 +250,7 @@ export default function RequestTable() {
           body: JSON.stringify({ status: "Cancelled", reason }),
         }
       );
-      const result = await response.json();
-
+      
       if (response.ok) {
           modalMsg = "Form processed successfully ";
           modalTitle = "Success!";
@@ -575,7 +573,7 @@ export default function RequestTable() {
     isOpen,
     onOpen,
     onOpenChange,
-  
+    buttonColor,
   ]);
 
   return (
