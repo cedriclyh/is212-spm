@@ -89,7 +89,16 @@ def get_blockouts():
     except Exception as e:
         app.logger.error(f"Failed to retrieve blockout dates: {e}")
         return jsonify({'message': 'Failed to retrieve blockout dates', 'code': 500}), 500
+    
+@app.route('/blockout/get_blockout/date/<string:query_start_date><string:query_end_date>', methods=['GET'])
+def get_blockout_by_date(query_start_date, query_end_date):
+    blockout = fetch_blockout_by_date(query_start_date, query_end_date)
+    if blockout:
+        return jsonify({'message': 'Blockout found', 'data': blockout.json()})
+    else:
+        return jsonify({'message': 'No blockout date found for given date', 'data': False})
 
+# Helper Function
 def fetch_blockout_by_date(query_start_date, query_end_date):
     try:
         print("[fetch_blockout_by_date] Fetching blockouts...")
@@ -104,14 +113,6 @@ def fetch_blockout_by_date(query_start_date, query_end_date):
     except Exception as e:
         app.logger.error(f"Error fetching blockouts for dates: {query_start_date} to {query_end_date}: {e}")
         return None
-
-@app.route('/blockout/get_blockout/date/<string:query_start_date><string:query_end_date>', methods=['GET'])
-def get_blockout_by_date(query_start_date, query_end_date):
-    blockout = fetch_blockout_by_date(query_start_date, query_end_date)
-    if blockout:
-        return jsonify({'message': 'Blockout found', 'data': blockout.json()})
-    else:
-        return jsonify({'message': 'No blockout date found for given date', 'data': False})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5014, debug=True)  

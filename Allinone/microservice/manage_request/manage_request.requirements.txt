@@ -1,0 +1,12 @@
+Flask
+flask-sqlalchemy
+flask-cors
+requests
+mysql-connector-python
+python-dateutil
+apscheduler
+pika
+pytest
+pytest-mock
+pytest-cov
+sib-api-v3-sdk

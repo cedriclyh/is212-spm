@@ -15,7 +15,13 @@ load_dotenv()
 # Setup database connection 
 # DATABASE_URI = "mysql+mysqlconnector://root@localhost:3306/spm_db" # For Windows
 
-DATABASE_URI = "mysql+mysqlconnector://root:root@localhost:3306/spm_db" or 'sqlite:///:memory:'  or  "mysql+mysqlconnector://root@localhost:3306/spm_db"# fallback for testing # For Mac
+DATABASE_URI = (os.environ.get("dbURL")
+                or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" 
+                or 'sqlite:///:memory:'
+                or  "mysql+mysqlconnector://root@localhost:3306/spm_db"# fallback for testing # For Mac
+                or "mysql+mysqlconnector://root@host.docker.internal:3307/spm_db" 
+
+)
 engine = create_engine(DATABASE_URI)
 
 # Setup Sendinblue API configuration

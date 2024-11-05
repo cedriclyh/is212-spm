@@ -3,15 +3,38 @@ import json
 import requests
 from datetime import datetime
 # from arrangement.arrangement import Arrangement, delete_arrangements, app, db
-from arrangement.arrangement import Arrangement, withdraw_arrangement, app, db
+from arrangement import Arrangement, withdraw_arrangement, app, db
 from dotenv import load_dotenv
 import os
-
+import time
 
 load_dotenv()
 
-# Connect to RabbitMQ
-connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv('RABBITMQ_HOST')))
+# URL endpoints for the existing microservices
+NOTIFICATION_MICROSERVICE_URL = os.getenv("NOTIFICATION_MICROSERVICE_URL")
+MANAGE_REQUEST_MICROSERVICE_URL = os.getenv("MANAGE_REQUEST_MICROSERVICE_URL")
+
+print("URL endpoints")
+print(MANAGE_REQUEST_MICROSERVICE_URL)
+print(NOTIFICATION_MICROSERVICE_URL)
+
+
+# try at least 5 times
+retry_count = 0
+while retry_count < 5:
+    try:
+        # Connect to RabbitMQ
+        connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv('RABBITMQ_HOST')))
+        break
+    except pika.exceptions.AMQPConnectionError:
+        print("RabbitMQ is not available. Retrying...")
+        retry_count += 1
+        time.sleep(5)
+
+if retry_count == 5:
+    raise Exception("Failed to connect to RabbitMQ after multiple attempts.")
+
+
 channel = connection.channel()
 
 # Declare the queue
@@ -54,7 +77,7 @@ def process_revoke_task(ch, method, properties, body):
             }
 
             print("   Updating request status...")
-            update_request_response = requests.put(f"{os.getenv('MANAGE_REQUEST_URL')}/manage_request", json=update_request_data)
+            update_request_response = requests.put(f"{MANAGE_REQUEST_MICROSERVICE_URL}/manage_request", json=update_request_data)
             print(update_request_response.json())
             if update_request_response.status_code != 200:
                 print(f"Failed to update request status for Request ID {request_id}")
@@ -90,7 +113,7 @@ def process_revoke_task(ch, method, properties, body):
         }
         
         print("Sending emails...")
-        notification_response = requests.post(f"{os.getenv('NOTIFICATION_URL')}/notify_revoke_arrangements", json=revoke_notification_data)
+        notification_response = requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/notify_revoke_arrangements", json=revoke_notification_data)
         print(notification_response.json())
 
         if notification_response.status_code != 200:

@@ -1,33 +1,39 @@
 from flask import Flask, request, jsonify
 import requests
 from flask_sqlalchemy import SQLAlchemy
-import os
 from os import environ
 from flask_cors import CORS
+import os
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 app = Flask(__name__)
-if app.config['TESTING']:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = (
-        environ.get("dbURL") or
-        os.environ.get('DB_URL', 'mysql+mysqlconnector://root@localhost:3306/spm_db')
-        or os.environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
-    )
+app.config['SQLALCHEMY_DATABASE_URI'] = ( 
+    environ.get("dbURL") 
+    or "mysql+mysqlconnector://root@host.docker.internal:3307/spm_db" 
+    or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 CORS(app)
 
-EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-BLOCKOUT_URL = "http://localhost:5014/blockout"
-REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
-ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5005"
-NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
-
-from arrangement.arrangement import Arrangement
+from arrangement import Arrangement
 from blockout import BlockoutDates
-from employee.employee import Employee
+from employee import Employee
+
+# URL endpoints for the existing microservices
+EMPLOYEE_MICROSERVICE_URL = os.getenv("EMPLOYEE_MICROSERVICE_URL")
+ARRANGEMENT_MICROSERVICE_URL = os.getenv("ARRANGEMENT_MICROSERVICE_URL")
+BLOCKOUT_MICROSERVICE_URL = os.getenv("BLOCKOUT_MICROSERVICE_URL")
+
+print("URL endpoints:")
+print(EMPLOYEE_MICROSERVICE_URL)
+print(BLOCKOUT_MICROSERVICE_URL)
+print(ARRANGEMENT_MICROSERVICE_URL)
+
 
 @app.route('/manage_blockout', methods=['POST'])
 def manage_blockout():
@@ -86,9 +92,9 @@ def manage_blockout():
                 return delete_response.json(), delete_response.status_code
 
         # 4. Reject all approved/pending requests that coincide with blockout 
-        
+
         # 5. Create blockout via arrangement.py
-        post_response = requests.post(f"{BLOCKOUT_URL}/create_blockout", json=data)
+        post_response = requests.post(f"{BLOCKOUT_MICROSERVICE_URL}/create_blockout", json=data)
 
         if post_response.status_code != 200:
             print("Post response:", post_response.json())

@@ -6,10 +6,15 @@ from flask_cors import CORS
 from dateutil.relativedelta import relativedelta
 from datetime import datetime, timezone
 from apscheduler.schedulers.background import BackgroundScheduler
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
     environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    or "mysql+mysqlconnector://root@host.docker.internal:3307/spm_db" 
     # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
     or 'sqlite:///:memory:'  # fallback for testing
 )
@@ -18,13 +23,20 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 CORS(app)
 
-EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
-ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5005"
-NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
+# URL endpoints for the existing microservices
+EMPLOYEE_MICROSERVICE_URL = os.getenv("EMPLOYEE_MICROSERVICE_URL")
+ARRANGEMENT_MICROSERVICE_URL = os.getenv("ARRANGEMENT_MICROSERVICE_URL")
+REQUEST_LOG_MICROSERVICE_URL = os.getenv("REQUEST_LOG_MICROSERVICE_URL")
+NOTIFICATION_MICROSERVICE_URL = os.getenv("NOTIFICATION_MICROSERVICE_URL")
 
-from arrangement.arrangement import Arrangement
-from employee.employee import Employee
+print("URL endpoints:")
+print(EMPLOYEE_MICROSERVICE_URL)
+print(ARRANGEMENT_MICROSERVICE_URL)
+print(REQUEST_LOG_MICROSERVICE_URL)
+print(NOTIFICATION_MICROSERVICE_URL)
+
+from arrangement import Arrangement
+from employee import Employee
 from requests_log import Request
 
 def count_wfh(manager_id, arrangement_date):

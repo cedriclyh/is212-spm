@@ -1,0 +1,23 @@
+# Use the official Python image as the base image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy the requirements file
+COPY requirements.txt ./
+
+# Copy files in manage_request
+COPY manage_request ./
+
+# Copy dependencies - employee, requests_log, arrangement, amqp_setup, notification
+COPY ../employee/employee.py ../requests_log/requests_log.py ../arrangement/arrangement.py ../amqp_setup.py ../notification/notification.py ./
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt -r manage_request.requirements.txt
+
+# Expose the port the app runs on
+EXPOSE 5010
+
+# Command to run the application
+CMD ["python", "manage_request.py"] 

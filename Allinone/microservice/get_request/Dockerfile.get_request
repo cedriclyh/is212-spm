@@ -1,0 +1,23 @@
+# Use the official Python image as the base image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy the requirements file
+COPY requirements.txt ./
+
+# Copy files in get_request
+COPY get_request ./
+
+# Copy dependencies - employee, requests_log
+COPY ../employee/employee.py ../requests_log/requests_log.py ./
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt -r get_request.requirements.txt
+
+# Expose the port the app runs on
+EXPOSE 5011
+
+# Command to run the application
+CMD ["python", "get_request.py"] 

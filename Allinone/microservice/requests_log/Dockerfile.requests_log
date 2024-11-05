@@ -7,17 +7,14 @@ WORKDIR /usr/src/app
 # Copy the requirements file
 COPY requirements.txt ./
 
-# Copy the requirements file
-COPY arrangement ./
+# Copy files in requests_log
+COPY requests_log ./
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt -r arrangement.requirements.txt
-
-# Copy required application code
-COPY ../employee/employee.py ../amqp_setup.py ./
+RUN pip install --no-cache-dir -r requirements.txt -r requests_log.requirements.txt
 
 # Expose the port the app runs on
-EXPOSE 5005
+EXPOSE 5003
 
 # Command to run the application
-CMD ["python", "arrangement.py"] 
+CMD ["python", "requests_log.py"] 

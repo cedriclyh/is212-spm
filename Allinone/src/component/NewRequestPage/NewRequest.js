@@ -24,6 +24,7 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Spinner,
 } from "@nextui-org/react";
 import {
   extractWeekdays,
@@ -70,6 +71,7 @@ export default function NewRequest({ initialFormData }) {
   const [blockOutDates, setBlockOutDates] = useState([]);
   const [extractedDates, setExtractedDates] = useState([]);
   const [availability, setAvailability] = useState({});
+  const [loading, setLoading] = useState(false);
 
   // Populate form data whenever `initialFormData` changes
   useEffect(() => {
@@ -280,6 +282,7 @@ export default function NewRequest({ initialFormData }) {
     }
 
     if (inputRequestID === null){
+      setLoading(true);
       try {
         const response = await fetch("http://localhost:5004/make_request", {
           method: "POST",
@@ -288,7 +291,7 @@ export default function NewRequest({ initialFormData }) {
           },
           body: JSON.stringify(formData),
         });
-  
+        setLoading(false);
         if (response.ok) {
           const data = await response.json();
           modalMsg = "Form processed successfully " + data.message;
@@ -317,12 +320,14 @@ export default function NewRequest({ initialFormData }) {
           onOpen();
         }
       } catch (error) {
+        setLoading(false);
         console.error("Error:", error);
         modalMsg = "Error submitting form " + error.message;
         onOpen();
       }
     }
     else {
+      setLoading(true);
       try {
         const response = await fetch(`http://localhost:5004/edit_request/${inputRequestID} `, {
           method: "PUT",
@@ -331,7 +336,7 @@ export default function NewRequest({ initialFormData }) {
           },
           body: JSON.stringify(formData),
         });
-  
+        setLoading(false);
         if (response.ok) {
           const data = await response.json();
           modalMsg = "Request Updated Successfully" + data.message;
@@ -360,6 +365,7 @@ export default function NewRequest({ initialFormData }) {
           onOpen();
         }
       } catch (error) {
+        setLoading(false);
         console.error("Error:", error);
         modalMsg = "Error updating request " + error.message;
         onOpen();
@@ -451,9 +457,6 @@ export default function NewRequest({ initialFormData }) {
 
               <div className="mt-4" style={{ marginTop: "24px" }}>
                 <p>Requested Dates</p>
-                <p style={{ fontSize: "0.875rem", color: "gray" }}>
-                  Only Available Dates will be submitted
-                </p>
                 <Table
                   aria-label="Selected Dates with Availability"
                   className="mt-2"
@@ -676,8 +679,23 @@ export default function NewRequest({ initialFormData }) {
               </>
             )}
           </ModalContent>
-        </Modal>
+        </Modal>        
       </div>
+      {loading && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1,
+          }}
+          >
+            <Spinner label="loading..." color="warning" />
+          </div>
+        )}
     </div>
   );
 }

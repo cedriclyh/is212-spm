@@ -1,0 +1,4 @@
+pika==1.2.1
+requests==2.31.0
+python-dotenv==1.0.0
+datetime  # The standard library `datetime` does not need installation

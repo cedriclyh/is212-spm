@@ -4,6 +4,9 @@ import os
 from os import environ
 from flask_cors import CORS
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 if app.config['TESTING']:
@@ -20,8 +23,12 @@ db = SQLAlchemy(app)
 CORS(app)
 
 # URL endpoints for the existing microservices
-EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
+EMPLOYEE_MICROSERVICE_URL = os.getenv("EMPLOYEE_MICROSERVICE_URL")
+REQUEST_LOG_MICROSERVICE_URL = os.getenv("REQUEST_LOG_MICROSERVICE_URL")
+
+print("URL endpoints:")
+print(EMPLOYEE_MICROSERVICE_URL)
+print(REQUEST_LOG_MICROSERVICE_URL)
 
 # Get requests with complete details - for employee request table
 @app.route('/employees/<int:employee_id>/requests', methods=['GET'])

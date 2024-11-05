@@ -17,7 +17,8 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    environ.get("dbURL")
+    or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
     # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -251,7 +252,7 @@ def get_requests_by_manager_id(manager_id):
         }), 500
     
 # Update request status
-@app.route('/update_request/<int:request_id>', methods=['PUT'])
+@app.route('/update_request/<int:request_id>', methods=['PUT','PATCH'])
 def update_request(request_id):
     try:
         data = request.json
