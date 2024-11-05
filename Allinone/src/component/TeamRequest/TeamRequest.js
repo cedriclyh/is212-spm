@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -20,7 +20,7 @@ import {
 import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
 import {SearchIcon} from "../Icons/SearchIcon";
 import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
-import {columns, statusOptions, pulled_data} from "./TeamRequestData";
+import {columns, statusOptions} from "./TeamRequestData";
 import {capitalize, formatDate, formatTimeslot} from "../TeamRequest/TeamRequestUtils";
 import profilePic from "../Icons/profile_pic.png"
 
@@ -48,14 +48,43 @@ export default function TeamRequest() {
 
   const hasSearchFilter = Boolean(filterValue);
 
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
 
     return columns.filter((column) => Array.from(visibleColumns).includes(column.uid));
   }, [visibleColumns]);
 
+  const fetchRequests = async () => {
+    try {
+      const response = await fetch('http://localhost:5011/manager/140894/requests');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRequests(data.data);
+        
+      } else if (response.status === 404) {
+        setRequests([]);
+      } else {
+        console.error("An error occurred:", response.statusText);
+        setRequests([]);
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+      setRequests([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }; 
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
   const filteredItems = React.useMemo(() => {
-    let filteredRequests = [...pulled_data];
+    let filteredRequests = [...requests];
   
     // Search by staff name
     if (hasSearchFilter) {
@@ -73,7 +102,7 @@ export default function TeamRequest() {
     }
   
     return filteredRequests;
-  }, [filterValue, statusFilter, hasSearchFilter]);
+  }, [filterValue, statusFilter, hasSearchFilter, requests]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -353,6 +382,7 @@ export default function TeamRequest() {
       emptyContent={"No Requests found"} 
       items={sortedItems}
       loadingContent={<Spinner label="Loading..." />}
+      isLoading={isLoading}
       >
         {(item, rowIndex) => (
           <TableRow key={item.request_id}>
