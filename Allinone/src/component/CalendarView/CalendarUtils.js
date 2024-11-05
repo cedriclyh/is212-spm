@@ -167,30 +167,35 @@ export const getApprovedandPendingEvents = async (userId) => {
     const requests = data.data;
     // Map the requests into event categories 
     const personalEvents = await Promise.all(
-      requests.map(async (req) => {
+      requests.flatMap(async (req) => {
         if (req.status === 'Rejected') {
           return null; // Skip this request if status is cancelled
         }
-        const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
-        const title = await getArrangementName(req.staff_id);
-        const teamName = await getTeamName(req.manager_id)
-        const {dept} = await getEmployeeInfo(req.staff_id);
-        return {
-          id: req.request_id + req.arrangement_date,
-          title,  
-          start,
-          end,
-          allDay: false,
-          backgroundColor: getBackgroundColor(req.status),
-          teamName: teamName,
-          dept: dept,
-          managerID : req.manager_id,
-        };
-      })
-    );
 
+        const arrangementDates = req.arrangement_dates; 
+        return await Promise.all(arrangementDates.map(async (date) => {
+          const { start, end } = getTimeRange(req.timeslot, date, date);
+          const title = await getArrangementName(req.staff_id);
+          const teamName = await getTeamName(req.manager_id)
+          const {dept} = await getEmployeeInfo(req.staff_id);
+
+          return {
+            id: req.request_id + req.arrangement_date,
+            title,  
+            start,
+            end,
+            allDay: false,
+            backgroundColor: getBackgroundColor(req.status),
+            teamName: teamName,
+            dept: dept,
+            managerID : req.manager_id,
+          };
+      })); 
+    })
+  ); 
+  const flatEvents = personalEvents.flat();
   console.log("Employee's Own Events:", personalEvents); // Log team events for debugging
-  return personalEvents.filter(event=>event !=null);
+  return flatEvents.filter(event=>event !=null);
   } catch (error) {
     console.error("Failed to fetch employee's own events:", error);
   }
@@ -344,7 +349,7 @@ export const getHRTeamEvents = async (userId) => {
 
     // Map the requests into event categories 
     const HRTeamEvents = await Promise.all(
-    requests.map(async (req) => {
+    requests.flatMap(async (req) => {
       if (req.status === 'Rejected') {
         return null; // Skip this request if status is cancelled
       }
@@ -355,27 +360,31 @@ export const getHRTeamEvents = async (userId) => {
         console.warn("Missing timeslot or arrangement_date in request:", req);
         return null; // Skip this request if data is missing
       }
-      const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
-      const staffName = await getArrangementName(req.staff_id);
-      const teamName = await getTeamName(req.manager_id)
-      const title = `[${teamName}] ${staffName}`;
-      const {dept} = await getEmployeeInfo(req.staff_id);
 
-      return {
-        id: `${req.staff_id}-${req.arrangement_date}`, // Create a unique ID per date
-        title,  
-        start,
-        end,
-        allDay: false,
-        backgroundColor: getBackgroundColor(req.status),
-        teamName: teamName,
-        dept: dept,
-      };
+      const arrangementDates = req.arrangement_dates;
+      return await Promise.all (arrangementDates.map(async (date) => {
+        const { start, end } = getTimeRange(req.timeslot, date, date);
+        const staffName = await getArrangementName(req.staff_id);
+        const teamName = await getTeamName(req.manager_id)
+        const title = `[${teamName}] ${staffName}`;
+        const {dept} = await getEmployeeInfo(req.staff_id);
+
+        return {
+          id: `${req.staff_id}-${req.arrangement_date}`, // Create a unique ID per date
+          title,  
+          start,
+          end,
+          allDay: false,
+          backgroundColor: getBackgroundColor(req.status),
+          teamName: teamName,
+          dept: dept,
+        };
+      })); 
     })
-  );
-
+  ); 
+  const flatEvents = HRTeamEvents.flat();
   console.log("Team Events that HR/CEO can view:", HRTeamEvents); // Log team events for debugging
-  return HRTeamEvents.filter(event=>event !=null);
+  return flatEvents.filter(event=>event !=null);
   } catch (error) {
     console.error("Failed to fetch team events that HR/CEO can view::", error);
   }

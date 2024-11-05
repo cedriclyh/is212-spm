@@ -1,4 +1,4 @@
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, DatePicker } from "@nextui-org/react";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, DatePicker, Button } from "@nextui-org/react";
 import React, { useState, useEffect } from "react";
 
 const columns = [
@@ -13,10 +13,10 @@ const columns = [
 export default function Dashboard(inputEvents) {
   // const [state, setState] = useState(0);
   const events = inputEvents.events;
-  console.log("Events inserted into DashBoard:", events);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [rawDate, setRawDate] = useState(null);
 
   useEffect(() =>{
     const processData = async () => {
@@ -62,6 +62,11 @@ export default function Dashboard(inputEvents) {
           totalCounts[managerID] = count;
         })
       );
+
+      function convertDateFormat(dateString) {
+        const [year, month, day] = dateString.split('-');
+        return `${day}-${month}-${year}`;
+      }
       
       const generatedRows = (
         Object.keys(groupedData).flatMap(date => {
@@ -72,7 +77,7 @@ export default function Dashboard(inputEvents) {
               const manpowerInOffice = `${totalCount - entries.length}/${totalCount}`;
               return {
                 key: `${date}-${dept}-${teamName}}`, // Or generate a unique key if necessary
-                date: date,
+                date: convertDateFormat(date),
                 department: dept,
                 team: teamName,
                 entries: entries,
@@ -96,37 +101,53 @@ export default function Dashboard(inputEvents) {
 
     // Handle date change
     const handleDateChange = (date) => {
-      const formattedDate = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+      setRawDate(date); // Store the raw date
+      const formattedDate = `${String(date.day).padStart(2, '0')}-${String(date.month).padStart(2, '0')}-${date.year}`; //convert date to DD-MM-YYYY
       setSelectedDate(formattedDate);
       console.log("Selected Date:", formattedDate);
     };
 
+    const clearDateSelection = () => {
+      setSelectedDate(null); // Reset the selected date
+      setRawDate(null); // Reset the raw date
+    };
+
     // Filter rows based on selected date
     const filteredRows = selectedDate 
-      ? rows.filter(item => item.date === selectedDate) 
-      : rows;
+      ? rows.filter((row) => row.date === selectedDate) 
+      : [];
+    
 
   // const handleClick = (index) => {
-  //   const updatedState = { ...rows[index] }; // Clone the row object
-
-  //   if (updatedState.other) {
-  //     delete updatedState.other; // Remove the additional information
-  //     setState((pre) => pre + 1);
-  //   } else {
-  //     updatedState.other = "Hello there" ;
-  //     setState((pre) => pre + 1);
-  //   }
-
-  //   console.log("Updated row:", updatedState);
-  //   rows[index] = updatedState; // Update the row in the array directly
+  //   setRows((prevRows) => {
+  //     const updatedRows = [...prevRows]; // Clone the rows array
+  //     const updatedRow = { ...updatedRows[index] }; // Clone the specific row object
+  
+  //     if (updatedRow.other) {
+  //       delete updatedRow.other; // Remove the additional information
+  //     } else {
+  //       updatedRow.other = "Hello there";
+  //     }
+  
+  //     updatedRows[index] = updatedRow; // Update the row in the cloned array
+  
+  //     return updatedRows; // Update the state with the new array
+  //   });
+  
+  //   // Optionally update other state if needed, e.g., setState((prev) => prev + 1);
+  //   console.log("Updated row:", rows[index]);
   // };
 
   return (
     <div className="card-container shadow-lg rounded-lg p-4 bg-white">
-      <div style={{ display: 'flex', justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
-        <h1>Dashboard</h1>
-        <DatePicker label="Select Date" style={{ maxWidth: '284px', width: 'auto' }} onChange={handleDateChange}/>
+      <div style={{ display: 'flex', alignItems: "center", justifyContent: "space-between"}}>
+        <h1 class="card-title">Dashboard</h1>
+        <div style={{ display: 'flex', alignItems: "right"}}>
+          <DatePicker label="Select Date" style={{ maxWidth: '284px', width: 'auto' }} value={rawDate} onChange={handleDateChange}/>
+          <Button color="warning" onClick={clearDateSelection}>Clear</Button>
+        </div>
       </div>
+        <br/>
 
       <Table aria-label="Example table with dynamic content">
         <TableHeader columns={columns}>
@@ -140,6 +161,7 @@ export default function Dashboard(inputEvents) {
               <TableCell>{item.department}</TableCell>
               <TableCell>{item.team}</TableCell>
               <TableCell>{item.manpower}</TableCell>
+              <TableCell>{renderCell(item, columnKey)}</TableCell>
             </TableRow>
           )}
         </TableBody>
@@ -172,8 +194,57 @@ export const getTotalCount = async (managerId) => {
   }
 };    
 
-async function getManpowerCount(count, managerID) {
-  const totalCount = await getTotalCount(managerID);
-  const numOfOfficeSlaves = totalCount - count;
-  return `${numOfOfficeSlaves}/${totalCount}`;
-}
+/**
+ * @typedef {Object} ToggleSubRowButtonProps
+ * @property {number} rowId - The ID of the row.
+ */
+
+/**
+ * @param {ToggleSubRowButtonProps} props
+ * @returns {JSX.Element} The button with expand/collapse functionality.
+ */
+
+export const ToggleSubRowButton = ({ rowId }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleSubRow = () => {
+    const rowToInsertAfter = document.getElementById(`row-${rowId}`);
+
+    if (rowToInsertAfter) {
+      if (isExpanded) {
+        const existingRow = document.getElementById(`subrow-${rowId}`);
+        if (existingRow) {
+          existingRow.remove();
+        }
+      } else {
+        const newRow = document.createElement("tr");
+        newRow.id = `subrow-${rowId}`;
+        const newCell = document.createElement("td");
+        newCell.colSpan = 100;
+        newCell.className = "px-4 py-4";
+
+        const root = createRoot(newCell);
+        root.render(
+          <BrowserRouter>
+            <AnyOtherProvider>
+              <YourReactElement />
+            </AnyOtherProvider>
+          </BrowserRouter>
+        );
+
+        newRow.appendChild(newCell);
+        rowToInsertAfter.insertAdjacentElement("afterend", newRow);
+      }
+
+      setIsExpanded(!isExpanded);
+    }
+  };
+
+  return (
+    <Tooltip content={isExpanded ? "Collapse" : "Expand"}>
+      <Button onClick={toggleSubRow} size="sm" variant="light" isIconOnly>
+        {isExpanded ? "-" : "+"}
+      </Button>
+    </Tooltip>
+  );
+};

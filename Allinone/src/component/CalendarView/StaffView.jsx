@@ -17,7 +17,7 @@ export default function WFHcalendar() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(false);
-  const userID = 140004; // Hardcoded for now
+  const userID = 140002; // Hardcoded for now
 
   useEffect(() => {
     const fetchEvents = async () => {
