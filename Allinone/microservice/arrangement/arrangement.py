@@ -8,8 +8,8 @@ import sys
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 import json
-from amqp_setup import publish_to_queue
-from employee.employee import Employee 
+# from amqp_setup import publish_to_queue
+# from employee.employee import Employee 
 from sqlalchemy.orm import aliased
 
 app = Flask(__name__)
@@ -229,84 +229,87 @@ def withdraw_arrangement(request_id, arrangement_id):
             'code': 500
         }), 500
 
-# Revoke 1 person at once
-# at least 1 date
-# Can provide reason for revoking approved arrangement
-# # Withdrawing arrangment must >24 hours start time
-# # withdrawal must be done withon 1 month ago and 3 months forward 
-@app.route('/revoke_arrangements', methods=['POST'])   
-def revoke_arrangements():
+### Commented out for testing
+
+
+# # Revoke 1 person at once
+# # at least 1 date
+# # Can provide reason for revoking approved arrangement
+# # # Withdrawing arrangment must >24 hours start time
+# # # withdrawal must be done withon 1 month ago and 3 months forward 
+# @app.route('/revoke_arrangements', methods=['POST'])   
+# def revoke_arrangements():
     
-    data = request.json
-    # manager_id = data.get("manager_id")
-    staff_id = data.get("staff_id")
-    arrangements = Arrangement.query.filter(
-        Arrangement.staff_id==staff_id
-    ).all()
+#     data = request.json
+#     # manager_id = data.get("manager_id")
+#     staff_id = data.get("staff_id")
+#     arrangements = Arrangement.query.filter(
+#         Arrangement.staff_id==staff_id
+#     ).all()
 
-    revoke_dates = [arrangement.arrangement_date.strftime('%Y-%m-%d') for arrangement in arrangements]
-    arrangements_to_delete = [(arrangement.request_id, arrangement.arrangement_id) for arrangement in arrangements]
+#     revoke_dates = [arrangement.arrangement_date.strftime('%Y-%m-%d') for arrangement in arrangements]
+#     arrangements_to_delete = [(arrangement.request_id, arrangement.arrangement_id) for arrangement in arrangements]
 
-    print(revoke_dates)
+#     print(revoke_dates)
 
-    revoke_dates_check = [datetime.strptime(revoke_date, '%Y-%m-%d').date() for revoke_date in revoke_dates]
+#     revoke_dates_check = [datetime.strptime(revoke_date, '%Y-%m-%d').date() for revoke_date in revoke_dates]
     
-    try: 
-        # 1. Check if arrangement is within 1 month ago and 3 months forward
-        checked_date_response, status_code = check_date(revoke_dates_check)
-        if status_code != 200:
-            return checked_date_response
+#     try: 
+#         # 1. Check if arrangement is within 1 month ago and 3 months forward
+#         checked_date_response, status_code = check_date(revoke_dates_check)
+#         if status_code != 200:
+#             return checked_date_response
     
-        # 2. Package data for async amqp processing
-        staff_email = (
-            db.session.query(Employee.email)
-            .filter(Employee.staff_id == staff_id)
-            .scalar()
-        )
+#         # 2. Package data for async amqp processing
+#         staff_email = (
+#             db.session.query(Employee.email)
+#             .filter(Employee.staff_id == staff_id)
+#             .scalar()
+#         )
 
-        Manager= aliased(Employee)
+#         Manager= aliased(Employee)
 
-        manager_email = (
-            db.session.query(Manager.email)
-            .select_from(Employee)
-            .join(Manager, Manager.staff_id == Employee.reporting_manager)
-            .filter(Employee.staff_id == staff_id)
-            .scalar()
-        )
+#         manager_email = (
+#             db.session.query(Manager.email)
+#             .select_from(Employee)
+#             .join(Manager, Manager.staff_id == Employee.reporting_manager)
+#             .filter(Employee.staff_id == staff_id)
+#             .scalar()
+#         )
 
-        task_data = {
-            "staff_id": staff_id,
-            "revoke_dates": revoke_dates,
-            "arrangements_to_delete": arrangements_to_delete,
-            "staff_email": staff_email,
-            "manager_email": manager_email
-        }
+#         task_data = {
+#             "staff_id": staff_id,
+#             "revoke_dates": revoke_dates,
+#             "arrangements_to_delete": arrangements_to_delete,
+#             "staff_email": staff_email,
+#             "manager_email": manager_email
+#         }
 
-        # Publish to amqp queue to process deleting arrangement and updating request status
-        print("Publishing to queue...")
-        publish_to_queue(task_data)
-        print("Successfully published to queue.")
+#         # Publish to amqp queue to process deleting arrangement and updating request status
+#         print("Publishing to queue...")
+#         publish_to_queue(task_data)
+#         print("Successfully published to queue.")
         
-        print("Revocation process started.")
-        return jsonify({"message": "Revocation process started. An email will be sent to you when the revocation process is completed.", "code": 200}), 200
+#         print("Revocation process started.")
+#         return jsonify({"message": "Revocation process started. An email will be sent to you when the revocation process is completed.", "code": 200}), 200
 
-    except Exception as e:
-        app.logger.error(f"Error revoking arrangments: {e}")
-        return jsonify({'message': 'Failed to revoke arrangements', 'code': 500}), 500
+#     except Exception as e:
+#         app.logger.error(f"Error revoking arrangments: {e}")
+#         return jsonify({'message': 'Failed to revoke arrangements', 'code': 500}), 500
 
 
-# Checks for 1 month ago and 3 months back
-def check_date(dates_to_check):
-    for date_to_check in dates_to_check:
-        print("Checking if current date is not more than 3 months ahead of arrangement date...")
-        # if date.today() <= date_to_check - relativedelta(months=-1):
-        #     return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement more than 1 month past the arrangement date.", "code": 500}), 500
-        if date.today() >=  date_to_check + relativedelta(months=+3):
-            print(f"Failed to revoke arrangement for date {date_to_check}")
-            return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement more than 3 months ahead of arrangement date.", "code": 500}), 500
+# # Checks for 1 month ago and 3 months back
+# def check_date(dates_to_check):
+#     for date_to_check in dates_to_check:
+#         print("Checking if current date is not more than 3 months ahead of arrangement date...")
+#         # if date.today() <= date_to_check - relativedelta(months=-1):
+#         #     return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement more than 1 month past the arrangement date.", "code": 500}), 500
+#         if date.today() >=  date_to_check + relativedelta(months=+3):
+#             print(f"Failed to revoke arrangement for date {date_to_check}")
+#             return jsonify({"message": f"Failed to revoke arrangement for date {date_to_check}: Cannot revoke arrangement more than 3 months ahead of arrangement date.", "code": 500}), 500
     
-    print("ALl arrangements are eligible to be revoked.")
-    return jsonify({"message": f"All arrangement dates are eligible to be revoked.", "code": 200}), 200
+#     print("ALl arrangements are eligible to be revoked.")
+#     return jsonify({"message": f"All arrangement dates are eligible to be revoked.", "code": 200}), 200
  
 
 if __name__ == "__main__":

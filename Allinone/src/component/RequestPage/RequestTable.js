@@ -221,56 +221,6 @@ export default function RequestTable() {
   const handleViewClick = useCallback((requestId) => {
     navigate(`/requests/${requestId}`);
   }, [navigate]);
-  
-  const withdrawRequest_approved = async (requestId, arrangementDate) => {
-    if (!isWithinTwoWeeks(arrangementDate)) {
-      modalMsg = "Withdrawals can only be made within 2 weeks of the arrangement date."
-      modalTitle = "Error Message";
-      setButtonColor("danger");
-      onOpen();
-      return;
-    }
-  
-    const reason = prompt("Please provide a reason for the withdrawal:");
-    if (!reason) {
-      modalMsg = "Withdrawal reason is required."
-      modalTitle = "Error Message";
-      setButtonColor("danger");
-      onOpen();
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `http://localhost:5010/cancel_request/${requestId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Cancelled", reason }),
-        }
-      );
-      
-      if (response.ok) {
-          modalMsg = "Form processed successfully ";
-          modalTitle = "Success!";
-          setButtonColor("success");
-          onOpen();
-      } else {
-          modalMsg = "Failed to cancel request.";
-          modalTitle = "Error Message";
-          setButtonColor("danger");
-          onOpen();
-      }
-      // Handle response as you did previously
-    } catch (error) {
-      console.error("Error:", error);
-      modalMsg = "An error occurred while withdrawing the request."
-      modalTitle = "Error Message";
-      setButtonColor("danger");
-      onOpen();
-      return;
-    }
-  };
 
   const renderCell = React.useCallback((request, columnKey) => {
     const cellValue = request[columnKey];
@@ -343,11 +293,7 @@ export default function RequestTable() {
                     Cancel
                   </DropdownItem>
                 )}
-                {request.status === "Approved" && isWithinTwoWeeks(request.arrangement_date) && (
-                  <DropdownItem onClick={() => withdrawRequest_approved(request.request_id, request.arrangement_date)}>
-                    Withdraw
-                  </DropdownItem>
-                )}
+
 
               </DropdownMenu>
             </Dropdown>
@@ -367,7 +313,7 @@ export default function RequestTable() {
       default:
         return cellValue;
     }
-  }, [handleEditClick, handleViewClick, cancelRequest_pending, withdrawRequest_approved]);
+  }, [handleEditClick, handleViewClick, cancelRequest_pending]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {

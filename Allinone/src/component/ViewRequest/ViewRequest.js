@@ -30,6 +30,62 @@ export default function ViewRequest() {
     const [isLoading, setIsLoading] = useState(true);
     const [arrangements, setArrangements] = useState([]);
 
+    const handleWithdrawArrangement = async (arrangementId) => {
+        if (!window.confirm("Are you sure you want to withdraw this arrangement?")) {
+            return;
+        }
+        
+        const reason = prompt("Please enter a reason for withdrawal:");
+        
+        if (!reason) {
+            alert("Withdrawal reason is required.");
+            return;
+        }
+        
+        const arrangement = arrangements.find(a => a.arrangement_id === arrangementId);
+        if (!arrangement) {
+            alert("Arrangement not found.");
+            return;
+        }
+
+        const currentDate = new Date();
+        const arrangementDate = new Date(arrangement.arrangement_date);
+        const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
+
+        if (Math.abs(arrangementDate - currentDate) > twoWeeksInMs) {
+            alert("You can only withdraw arrangements within two weeks of the arrangement date.");
+            return;
+        }
+        
+        try {
+            const response = await fetch(`http://localhost:5005/withdraw_arrangement/${uid}/${arrangementId}`, {
+                method: 'DELETE',
+            });
+    
+            if (response.ok) {
+                setArrangements(arrangements.filter(a => a.arrangement_id !== arrangementId));
+                setRequestData(prevData => ({
+                    ...prevData,
+                    status: "Withdrawn",
+                }));
+                // Make a call to update the status in the database
+                const statusResponse = await fetch(`http://localhost:5003/update_request/${uid}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: "Withdrawn" }),
+                });
+
+                if (!statusResponse.ok) {
+                    console.error('Error updating request status:', statusResponse.status);
+                }
+            } else {
+                console.error('Error deleting arrangement:', response.status);
+            }
+        } catch (error) {
+            console.error('Error deleting arrangement:', error);
+        }
+    };
+    
     useEffect(() => {
         const fetchRequestData = async () => {
             try {
@@ -65,16 +121,10 @@ export default function ViewRequest() {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const output = await response.json();
-                console.log("API Response:", output.data);
-    
-                // Fix: Properly map through the array and extract arrangement_date
-                const list_of_dates = output.data.map(item => item.arrangement_date);
-                console.log("Extracted dates:", list_of_dates);
-                
-                setArrangements(list_of_dates);
+                setArrangements(output.data);
             } catch (error) {
                 console.error("Error fetching arrangement dates:", error);
-                setArrangements([]); // Set empty array on error
+                setArrangements([]);
             }
         }
     
@@ -167,53 +217,32 @@ export default function ViewRequest() {
             )}
 
             <div style={{ marginTop: "20px", marginBottom: "20px" }}>
-                {requestData.status !== "Approved" && (
+                {requestData.status === "Approved" && (
                     <Table aria-label="Arrangement dates table" isCompact>
                         <TableHeader>
                             <TableColumn>ARRANGEMENT DATES (YYYY-MM-DD)</TableColumn>
+                            <TableColumn>STATUS</TableColumn>
+                            <TableColumn>ACTIONS</TableColumn>
                         </TableHeader>
                         <TableBody>
-                                {dates.map((date, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell>{date}</TableCell>
-                                    </TableRow>
-                                ))
-                                }
+                            {arrangements.map((arrangement, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{arrangement.arrangement_date}</TableCell>
+                                    <TableCell>
+                                        <Chip color="success" size="sm" variant="flat">Approved</Chip>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button color="danger" size="sm" variant="flat" 
+                                            onClick={() => handleWithdrawArrangement(arrangement.arrangement_id)}
+                                        >
+                                            Withdraw
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                 )}
-            
-
-            {requestData.status === "Approved" && (
-                <Table aria-label="Arrangement dates table" isCompact>
-                <TableHeader>
-                    <TableColumn>ARRANGEMENT DATES (YYYY-MM-DD)</TableColumn>
-                    <TableColumn>STATUS</TableColumn>
-                    <TableColumn>ACTIONS</TableColumn>
-                </TableHeader>
-                <TableBody>
-                    {dates.map((date, index) => (
-                        <TableRow key={index}>
-                            <TableCell>{date}</TableCell>
-                            <TableCell>
-                                {arrangements.includes(date) ? (
-                                    <Chip color="success" size="sm" variant="flat">Approved</Chip>
-                                ) : (
-                                    <Chip color="default" size="sm" variant="flat">Cancelled</Chip>
-                                )}
-                            </TableCell>
-                            <TableCell>
-                                {arrangements.includes(date) ? (
-                                    <Button color="danger" size="sm" variant="flat">Withdraw</Button>
-                                ) : (
-                                    <Button color="danger" isDisabled size="sm" variant="flat">Withdraw</Button>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-            )}
             </div>
         </div>
     );

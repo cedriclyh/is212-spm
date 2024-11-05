@@ -251,7 +251,7 @@ def get_requests_by_manager_id(manager_id):
         }), 500
     
 # Update request status
-@app.route('/update_request/<int:request_id>', methods=['PUT'])
+@app.route('/update_request/<int:request_id>', methods=['PUT','PATCH'])
 def update_request(request_id):
     try:
         data = request.json
