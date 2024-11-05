@@ -25,9 +25,9 @@ REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5005"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
 
-from arrangement import Arrangement
+from arrangement.arrangement import Arrangement
 from blockout import BlockoutDates
-from employee import Employee
+from employee.employee import Employee
 
 @app.route('/manage_blockout', methods=['POST'])
 def manage_blockout():

@@ -23,8 +23,8 @@ REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
 ARRANGEMENT_MICROSERVICE_URL = "http://localhost:5005"
 NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
 
-from arrangement import Arrangement
-from employee import Employee
+from arrangement.arrangement import Arrangement
+from employee.employee import Employee
 from requests_log import Request
 
 def count_wfh(manager_id, arrangement_date):
