@@ -196,7 +196,7 @@ def get_request(request_id):
                         'code': 500
         }), 500
 
-#Retrieve a WFH request by staff
+#Retrieve a WFH request by staff (used in get_request.py)
 @app.route('/get_requests/staff/<int:staff_id>', methods=['GET'])
 def get_requests_by_staff_id(staff_id):
     try:
@@ -215,6 +215,33 @@ def get_requests_by_staff_id(staff_id):
             }), 200
         else:
             return jsonify({'message': f'No requests from staff {staff_id}', 
+                            'code': 404
+            }), 404
+    except Exception as e:
+        app.logger.error(f"Failed to retrieve requests by staff ID: {e}")
+        return jsonify({'message': 'Failed to retrieve requests by staff ID', 
+                        'code': 500
+        }), 500
+
+#Retrieve a WFH request by manager (used in get_request.py)
+@app.route('/get_requests/manager/<int:manager_id>', methods=['GET'])
+def get_requests_by_manager_id(manager_id):
+    try:
+        requests = Request.query.filter_by(manager_id=manager_id).all()
+        if requests:
+            request_with_dates = []
+            for request in requests:
+                request_data = request.json()
+                related_dates = db.session.query(RequestDates.arrangement_date).filter_by(request_id=request.request_id).all()
+                request_data["arrangement_dates"] = [str(date.arrangement_date) for date in related_dates]
+                request_with_dates.append(request_data)
+            return jsonify({
+                'message': f'Requests for manager {manager_id} found', 
+                'data': request_with_dates, 
+                'code': 200
+            }), 200
+        else:
+            return jsonify({'message': f'No requests from staff {manager_id}', 
                             'code': 404
             }), 404
     except Exception as e:

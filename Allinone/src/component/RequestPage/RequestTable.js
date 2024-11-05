@@ -368,7 +368,7 @@ export default function RequestTable() {
       default:
         return cellValue;
     }
-  }, [handleEditClick, handleViewClick, cancelRequest_pending]);
+  }, [handleEditClick, handleViewClick, cancelRequest_pending, withdrawRequest_approved]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {

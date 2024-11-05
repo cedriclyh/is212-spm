@@ -1,0 +1,135 @@
+version: '3.8'
+
+networks:
+  my-network:
+    name: my-network
+
+volumes:
+  rabbitmq_data:
+
+services:
+
+###############################################
+# # RabbitMQ: Messaging broker
+###############################################
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-mgmt
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes: 
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+###############################################
+# # Requests Microservices
+###############################################
+  manage_request:
+    build:
+      context: ./
+      dockerfile: Dockerfile.manage_request
+    image: manage_request:spm
+    ports:
+      - "5010:5010"
+    environment:
+      DB_URL: "mysql+mysqlconnector://root:root@db:3306/spm_db"
+    depends_on:
+      - db
+      - get_request
+      - make_request
+    networks:
+      - my-network
+
+  get_request:
+    build:
+      context: ./
+      dockerfile: Dockerfile.get_request
+    image: manage_request:spm
+    ports:
+      - "5010:5010"
+    environment:
+      DB_URL: "mysql+mysqlconnector://root:root@db:3306/spm_db"
+    depends_on:
+      - db
+      - get_request
+      - make_request
+    networks:
+      - my-network
+
+###############################################
+# # Arrangements Microservices
+###############################################
+  arrangement:
+    build:
+      context: ./
+      dockerfile: Dockerfile.arrangement
+    image: arrangement:spm
+    ports:
+      - "5005:5005"
+    env_file:
+      - .env  # Specify the .env file to load environment variables
+    depends_on:
+      - rabbitmq
+      - employee
+      - manage_request
+      - db
+    environment:
+      - dbURL: mysql+mysqlconnector://root:root@db:3306/spm_db
+    networks:
+      - my-network
+
+  worker:
+    build:
+      context: ./
+      dockerfile: Dockerfile.worker  # Name of your worker Dockerfile
+    image: worker:spm
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq 
+      - arrangement
+      - db
+    environment:
+      - dbURL: mysql+mysqlconnector://root:root@db:3306/spm_db
+    networks:
+      - my-network
+
+###############################################
+# # Blockout Microservices
+###############################################
+
+
+###############################################
+# # Misc Microservices
+###############################################
+  employee:
+    build:
+      context: ./
+      dockerfile: Dockerfile.employee  # Name of your worker Dockerfile
+    image: employee:spm
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - db
+    environment:
+      - dbURL: mysql+mysqlconnector://root:root@db:3306/spm_db
+    networks:
+      - my-network
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: spm_db
+    ports:
+      - "3306:3306"

@@ -92,6 +92,7 @@ def get_employee_requests(employee_id):
         'code': 200
     }), 200
 
+# Get requests with complete details - for manager request table
 @app.route("/manager/<int:manager_id>/requests", methods=["GET"])
 def get_team_requests(manager_id):
     try:
@@ -158,6 +159,7 @@ def get_team_requests(manager_id):
         'code': 200
     }), 200
 
+# Get requests with complete details - for individual request
 @app.route("/view_request/<int:request_id>")
 def view_request(request_id):
     try:

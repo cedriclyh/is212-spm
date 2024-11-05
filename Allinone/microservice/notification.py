@@ -156,12 +156,21 @@ def notify_revoke_arranagements():
         data = request.json
         staff_email = data.get("staff_email")
         manager_email = data.get("manager_email")
+        revoke_dates = data.get("revoke_dates")
         request_ids = data.get("request_ids")
         request_id_str = ""
+        request_id_check = ""
+        # Concatenating revoked dates as undordered list (based on Request ID) to email body
         for i in range(0, len(request_ids)):
-            request_id_str += str(request_ids[i])
-            if(i <= len(request_ids)):
-                request_ids += ", "
+            if i == 0:
+                request_id_str += f"<ul>Request ID{request_ids[i]}"
+                request_id_check = request_ids[i]
+            elif request_id_check == request_ids[i]:
+                request_id_str += f"<li>{revoke_dates[i]}</li>"
+            else:
+                request_id_str += "</ul>"
+                request_id_str += f"<ul>Request ID{request_ids[i]} <li>Request ID {revoke_dates[i]}</li>"
+                request_id_check = request_ids[i]
 
         # Validate presence of staff_email and manager_email
         if not staff_email or not manager_email:
@@ -178,7 +187,10 @@ def notify_revoke_arranagements():
         <html>
         <body>
             <h3>Your WFH Request Has Been revoked.</h3>
-            <p>Your WFH request(s) with request ID {request_id_str} has been revoked.</p>
+            <p>
+                The following WFH request(s) have been revoked:\n
+                {request_id_str}
+            </p>
         </body>
         </html>
         """
@@ -187,7 +199,10 @@ def notify_revoke_arranagements():
         <html>
         <body>
             <h3>WFH Request for {staff_email} Has Been revoked.</h3>
-            <p>Your WFH request(s) with request ID {request_id_str} has been revoked.</p>
+            <p>
+                The following WFH request(s) have been revoked:\n
+                {request_id_str}
+            </p>
         </body>
         </html>
         """

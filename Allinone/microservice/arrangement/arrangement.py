@@ -9,25 +9,18 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 import json
 from amqp_setup import publish_to_queue
-from employee import Employee 
+from employee.employee import Employee 
 from sqlalchemy.orm import aliased
 
 app = Flask(__name__)
-if app.config['TESTING']:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = (
-        # environ.get("dbURL") or
-        # os.environ.get('DB_URL', 'mysql+mysqlconnector://root@localhost:3306/spm_db')
-        # or os.environ.get("dbURL") or 
-        "mysql+mysqlconnector://root@localhost:3306/spm_db" #this is for mac users
-    )
+app.config['SQLALCHEMY_DATABASE_URI'] = ( 
+    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 CORS(app)
-
-MANAGE_REQUEST_URL = "http://localhost:5010"
 
 # Arrangement model
 class Arrangement(db.Model):
@@ -40,8 +33,6 @@ class Arrangement(db.Model):
     timeslot = db.Column(db.String(50), nullable=False) 
     reason = db.Column(db.String(255), nullable=False)
 
-    __table_args__ = (db.UniqueConstraint('staff_id', 'arrangement_date', 'timeslot', name='unique_arrangement_constraint'),)
-    
     def __init__(self, request_id, arrangement_id, staff_id, arrangement_date, timeslot, reason):
         self.request_id = request_id
         self.arrangement_id = arrangement_id
@@ -57,7 +48,7 @@ class Arrangement(db.Model):
             "staff_id": self.staff_id,
             "arrangement_date": str(self.arrangement_date),
             "timeslot": self.timeslot,
-            "reason": self.reason,
+            "reason": self.reason
         }
     
 # get the next available arrangement_id for a given request_id
@@ -125,6 +116,7 @@ def create_arrangement():
         app.logger.error(f"Failed to create arrangement: {e}")
         return jsonify({"message": "Failed to create arrangement", "code": 500}), 500
 
+
 # Fetch all arrangements
 @app.route('/get_all_arrangements', methods=['GET'])
 def get_all_arrangements():
@@ -162,7 +154,7 @@ def get_arrangement(request_id, arrangement_id):
         return jsonify({'message': f'Failed to retrieve arrangement with id {request_id}', 
                         'code': 500
         }), 500
-    
+
 # Get all arrangements for a specific request
 @app.route('/get_arrangements/request/<int:request_id>', methods=['GET'])
 def get_arrangements_by_request(request_id):
@@ -187,30 +179,20 @@ def get_arrangements_by_request(request_id):
             'message': 'Failed to retrieve arrangements',
             'code': 500
         }), 500
-    
-# Retrieve a WFH arrangement by staff
+
+#Retrieve a WFH request by staff
 @app.route('/get_arrangement/staff/<int:staff_id>', methods=['GET'])
 def get_arrangements_by_staff_id(staff_id):
     try:
-        arrangements = Arrangement.query.filter_by(staff_id=staff_id)\
-            .order_by(Arrangement.request_id, Arrangement.arrangement_id).all()
+        arrangements = Arrangement.query.filter_by(staff_id=staff_id).all()
         if arrangements:
-            return jsonify({'message': f'Requests from staff {staff_id} found', 
-                            'data': [arrangement.json() for arrangement in arrangements], 
-                            'code': 200
-                    }), 200
+            return jsonify({'message': f'Requests from staff {staff_id} found', 'data': [arrangement.json() for arrangement in arrangements], 'code': 200}), 200
         else:
-            return jsonify({'message': f'No requests from staff {staff_id}', 
-                            'data': [], 
-                            'code': 200
-                    }), 200
+            return jsonify({'message': f'No requests from staff {staff_id}', 'data': [], 'code': 200}), 200
     except Exception as e:
         app.logger.error(f"Failed to retrieve requests by staff ID: {e}")
-        return jsonify({'message': 'Failed to retrieve requests by staff ID', 
-                        'code': 500
-                }), 500
+        return jsonify({'message': 'Failed to retrieve requests by staff ID', 'code': 500}), 500
 
-# withdraw specific arrangement by ID
 @app.route('/withdraw_arrangement/<int:request_id>/<int:arrangement_id>', methods=['DELETE'])
 def withdraw_arrangement(request_id, arrangement_id):
     try:
@@ -232,6 +214,7 @@ def withdraw_arrangement(request_id, arrangement_id):
         db.session.delete(arrangement)
         db.session.commit()
         
+        print(f"Arrangement ({request_id}, {arrangement_id}) deleted successfully.")
         return jsonify({
             'message': 'Arrangement withdrawn successfully',
             'data': arrangement_details,
@@ -246,7 +229,6 @@ def withdraw_arrangement(request_id, arrangement_id):
             'code': 500
         }), 500
 
-
 # Revoke 1 person at once
 # at least 1 date
 # Can provide reason for revoking approved arrangement
@@ -257,20 +239,16 @@ def revoke_arrangements():
     
     data = request.json
     # manager_id = data.get("manager_id")
-    revoke_action = data.get("revoke_action") # either "ALL" or "SELECTED" dates
     staff_id = data.get("staff_id")
-    if revoke_action == "ALL":
-        revoke_dates = (
-            db.session.query(Arrangement.arrangement_date)
-            .filter(Arrangement.staff_id == staff_id)
-            .all()
-        )
-        revoke_dates = [revoke_date[0].strftime('%Y-%m-%d') for revoke_date in revoke_dates]
+    arrangements = Arrangement.query.filter(
+        Arrangement.staff_id==staff_id
+    ).all()
 
-        print(revoke_dates)
-    else:
-        revoke_dates = data.get("revoke_dates") # has to be received in YYYY-MM-DD format
-    
+    revoke_dates = [arrangement.arrangement_date.strftime('%Y-%m-%d') for arrangement in arrangements]
+    arrangements_to_delete = [(arrangement.request_id, arrangement.arrangement_id) for arrangement in arrangements]
+
+    print(revoke_dates)
+
     revoke_dates_check = [datetime.strptime(revoke_date, '%Y-%m-%d').date() for revoke_date in revoke_dates]
     
     try: 
@@ -299,6 +277,7 @@ def revoke_arrangements():
         task_data = {
             "staff_id": staff_id,
             "revoke_dates": revoke_dates,
+            "arrangements_to_delete": arrangements_to_delete,
             "staff_email": staff_email,
             "manager_email": manager_email
         }
