@@ -110,6 +110,7 @@ export default function RequestTable() {
 
   const filteredItems = React.useMemo(() => {
     let filteredRequests = [...requests];
+    console.log(requests);
 
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {
