@@ -2,7 +2,7 @@ import pika
 import json
 import requests
 from datetime import datetime
-from arrangement.arrangement import Arrangement, withdraw_arrangement, app, db
+from arrangement import Arrangement, withdraw_arrangement, app, db
 from dotenv import load_dotenv
 import os
 import time
@@ -13,7 +13,6 @@ load_dotenv()
 NOTIFICATION_MICROSERVICE_URL = os.getenv("NOTIFICATION_MICROSERVICE_URL")
 MANAGE_REQUEST_MICROSERVICE_URL = os.getenv("MANAGE_REQUEST_MICROSERVICE_URL")
 
-print("URL endpoints")
 print(MANAGE_REQUEST_MICROSERVICE_URL)
 print(NOTIFICATION_MICROSERVICE_URL)
 

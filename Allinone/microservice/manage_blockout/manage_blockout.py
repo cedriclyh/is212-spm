@@ -20,9 +20,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 CORS(app)
 
-from arrangement.arrangement import Arrangement
-from blockout.blockout import BlockoutDates
-from employee.employee import Employee
+from arrangement import Arrangement
+from blockout import BlockoutDates
+from employee import Employee
 
 # URL endpoints for the existing microservices
 EMPLOYEE_MICROSERVICE_URL = os.getenv("EMPLOYEE_MICROSERVICE_URL")
@@ -44,11 +44,10 @@ def manage_blockout():
         start_date = data["start_date"]
         end_date = data["end_date"]
         timeslot = data["timeslot"]["anchorKey"]
-        manager_id = 140003  # replace code to retrieve from json
-
+        manager_id = 140894  # replace code to retrieve from json
 
         # 1: fetch manager email and department from employee.py using staff_id
-        employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
+        employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{manager_id}")
         
         if employee_response.status_code != 200:
             return jsonify({"message": "Failed to fetch employee details", 
@@ -63,35 +62,38 @@ def manage_blockout():
 
         # 2. Delete all existing arrangements within blockout range
         
-        delete_arrangements_query = db.session.query(Arrangement) \
+        arrangements_to_delete = db.session.query(Arrangement) \
             .join(Employee, Employee.staff_id == Arrangement.staff_id) \
             .filter(Employee.reporting_manager == manager_id, 
-                    Arrangement.arrangement_date == start_date)
+                    Arrangement.arrangement_date == start_date,
+                    Arrangement.timeslot.in_([timeslot, "FULL"])
+            ).all()
 
-        print("Arrangements to delete query created")
 
-        arrangements_to_delete = delete_arrangements_query.all()
-        print("Arrangements to delete", arrangements_to_delete)
+        # print("Arrangements to delete query created")
+
+        # arrangements_to_delete = delete_arrangements_query.all()
+        # print("Arrangements to delete", arrangements_to_delete)
 
         if arrangements_to_delete:
-            if timeslot == "FULL":
-                arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_(["AM", "PM", "FULL"])).all()
-            else:
-                arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_([timeslot, "FULL"])).all()
+        #     if timeslot == "FULL":
+        #         arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_(["AM", "PM", "FULL"])).all()
+        #     else:
+        #         arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_([timeslot, "FULL"])).all()
 
             # Extracting the arrangement request_ids
             arrangement_ids = [(arrangement.request_id, arrangement.arrangement_id, arrangement.timeslot) for arrangement in arrangements_to_delete]
 
             # 3. Call delete_arrangements endpoint to delete the arrangements
-            for i in range (0, len(arrangement_ids)-1):
-                delete_response = requests.delete(f"{ARRANGEMENT_MICROSERVICE_URL}/withdraw_arrangements/{arrangement_ids[i][0]}/{arrangement_ids[i][1]}")
+            for i in range (0, len(arrangement_ids)):
+                delete_response = requests.delete(f"{ARRANGEMENT_MICROSERVICE_URL}/withdraw_arrangement/{arrangement_ids[i][0]}/{arrangement_ids[i][1]}")
 
                 if delete_response.status_code != 200:
                     print("Delete response:", delete_response.json())
                     return delete_response.json(), delete_response.status_code
 
         # 4. Reject all approved/pending requests that coincide with blockout 
-
+            
 
         # 5. Create blockout via arrangement.py
         post_response = requests.post(f"{BLOCKOUT_MICROSERVICE_URL}/create_blockout", json=data)
