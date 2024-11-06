@@ -162,21 +162,9 @@ def notify_revoke_arranagements():
         data = request.json
         staff_email = data.get("staff_email")
         manager_email = data.get("manager_email")
-        revoke_dates = data.get("revoke_dates")
         request_ids = data.get("request_ids")
         request_id_str = ""
-        request_id_check = ""
-        # Concatenating revoked dates as undordered list (based on Request ID) to email body
-        for i in range(0, len(request_ids)):
-            if i == 0:
-                request_id_str += f"<ul>Request ID{request_ids[i]}"
-                request_id_check = request_ids[i]
-            elif request_id_check == request_ids[i]:
-                request_id_str += f"<li>{revoke_dates[i]}</li>"
-            else:
-                request_id_str += "</ul>"
-                request_id_str += f"<ul>Request ID{request_ids[i]} <li>Request ID {revoke_dates[i]}</li>"
-                request_id_check = request_ids[i]
+        # request_id_check = ""
 
         # Validate presence of staff_email and manager_email
         if not staff_email or not manager_email:
@@ -187,15 +175,14 @@ def notify_revoke_arranagements():
         sender = {"name": "Allinone", "email": "no-reply@yourcompany.com"}
         to_staff = [{"email": staff_email}]
         to_manager = [{"email": manager_email}]
-        subject_staff = f"Your Work From Home Request has been Revoked"
-        subject_manager = f"Work From Home Request Successfuly Revoked"
+        subject_staff = f"Work From Home Arrangements Revoked"
+        subject_manager = f"Work From Home Arrangements Successfuly Revoked"
         html_content_staff = f"""
         <html>
         <body>
-            <h3>Your WFH Request Has Been revoked.</h3>
+            <h3>All your WFH arrangements have been revoked.</h3>
             <p>
-                The following WFH request(s) have been revoked:\n
-                {request_id_str}
+                If you think this is a mistake, please contact your manager.
             </p>
         </body>
         </html>
@@ -204,10 +191,9 @@ def notify_revoke_arranagements():
         html_content_manager = f"""
         <html>
         <body>
-            <h3>WFH Request for {staff_email} Has Been revoked.</h3>
+            <h3>All WFH Arrangements for {staff_email} have been revoked.</h3>
             <p>
-                The following WFH request(s) have been revoked:\n
-                {request_id_str}
+                An email has been sent to the affected staff to inform of the revocation. 
             </p>
         </body>
         </html>

@@ -8,7 +8,7 @@ const BlockoutPopup = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // const [endDate, setEndDate] = useState('');
   const [blockoutDescription, setBlockoutDescription] = useState('');
   const [errors, setErrors] = useState([]);
   const [timeslot, setTimeslot] = useState({'anchorKey': 'FULL', 'currentKey': 'FULL'}); // Default: FULL day
@@ -18,7 +18,7 @@ const BlockoutPopup = () => {
   };
 
   const closePopup = () => {
-    if (title || startDate || endDate || blockoutDescription) {
+    if (title || startDate || blockoutDescription) {
       if (window.confirm('Are you sure you want to close the popup? All changes will be lost.')) {
         resetForm();
       }
@@ -31,7 +31,7 @@ const BlockoutPopup = () => {
     setIsOpen(false);
     setTitle('');
     setStartDate('');
-    setEndDate('');
+    // setEndDate('');
     setBlockoutDescription('');
     setErrors([]);
     setTimeslot({'anchorKey': 'FULL', 'currentKey': 'FULL'});
@@ -45,7 +45,7 @@ const BlockoutPopup = () => {
       const response = await axios.post('http://localhost:5012/manage_blockout', {
         title,
         start_date: startDate,
-        end_date: endDate,
+        end_date: startDate,
         timeslot: timeslot,
         blockout_description: blockoutDescription,
       });
@@ -77,12 +77,12 @@ const BlockoutPopup = () => {
     if (!startDate) {
       currentErrors.push('Start date is required.');
     }
-    if (!endDate) {
-      currentErrors.push('End date is required.');
-    }
-    if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
-      currentErrors.push('End date cannot be earlier than start date.');
-    }
+    // if (!endDate) {
+    //   currentErrors.push('End date is required.');
+    // }
+    // if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+    //   currentErrors.push('End date cannot be earlier than start date.');
+    // }
 
     setErrors(currentErrors);
     return currentErrors.length === 0; // Return true if no errors
@@ -105,27 +105,27 @@ const BlockoutPopup = () => {
         if (value && updatedErrors.includes('Start date is required.')) {
           updatedErrors = updatedErrors.filter(error => error !== 'Start date is required.');
         }
-        if (value && endDate && new Date(value) > new Date(endDate)) {
-          if (!updatedErrors.includes('End date cannot be earlier than start date.')) {
-            updatedErrors.push('End date cannot be earlier than start date.');
-          }
-        } else {
-          updatedErrors = updatedErrors.filter(error => error !== 'End date cannot be earlier than start date.');
-        }
+        // if (value && endDate && new Date(value) > new Date(endDate)) {
+        //   if (!updatedErrors.includes('End date cannot be earlier than start date.')) {
+        //     updatedErrors.push('End date cannot be earlier than start date.');
+        //   }
+        // } else {
+        //   updatedErrors = updatedErrors.filter(error => error !== 'End date cannot be earlier than start date.');
+        // }
         break;
-      case 'endDate':
-        setEndDate(value);
-        if (value && updatedErrors.includes('End date is required.')) {
-          updatedErrors = updatedErrors.filter(error => error !== 'End date is required.');
-        }
-        if (value && startDate && new Date(value) < new Date(startDate)) {
-          if (!updatedErrors.includes('End date cannot be earlier than start date.')) {
-            updatedErrors.push('End date cannot be earlier than start date.');
-          }
-        } else {
-          updatedErrors = updatedErrors.filter(error => error !== 'End date cannot be earlier than start date.');
-        }
-        break;
+      // case 'endDate':
+      //   setEndDate(value);
+      //   if (value && updatedErrors.includes('End date is required.')) {
+      //     updatedErrors = updatedErrors.filter(error => error !== 'End date is required.');
+      //   }
+      //   if (value && startDate && new Date(value) < new Date(startDate)) {
+      //     if (!updatedErrors.includes('End date cannot be earlier than start date.')) {
+      //       updatedErrors.push('End date cannot be earlier than start date.');
+      //     }
+      //   } else {
+      //     updatedErrors = updatedErrors.filter(error => error !== 'End date cannot be earlier than start date.');
+      //   }
+      //   break;
       case 'blockoutDescription':
         setBlockoutDescription(value);
         break;
@@ -140,8 +140,8 @@ const BlockoutPopup = () => {
   const hasError = (field) => {
     if (field === 'title' && errors.includes('Title is required.')) return true;
     if (field === 'startDate' && errors.includes('Start date is required.')) return true;
-    if (field === 'endDate' && errors.includes('End date is required.')) return true;
-    if (startDate && endDate && new Date(startDate) > new Date(endDate) && field === 'endDate') return true;
+    // if (field === 'endDate' && errors.includes('End date is required.')) return true;
+    // if (startDate && endDate && new Date(startDate) > new Date(endDate) && field === 'endDate') return true;
     return false;
   };
 
@@ -197,7 +197,7 @@ const BlockoutPopup = () => {
                 required
               />
             </label>
-            <label className={hasError('endDate') ? 'error-input' : ''}>
+            {/* <label className={hasError('endDate') ? 'error-input' : ''}>
               End Date:
               <input
                 type="date"
@@ -205,7 +205,7 @@ const BlockoutPopup = () => {
                 onChange={(e) => handleInputChange('endDate', e.target.value)}
                 required
               />
-            </label>
+            </label> */}
             <label>
               Timeslot:
               <Dropdown>
@@ -222,10 +222,10 @@ const BlockoutPopup = () => {
                   selectedKey={selectedKey}
                   onSelectionChange={handleTimeslotChange}
                 >
-                  <DropdownItem key="FULL">FULL</DropdownItem>
-                  <DropdownItem key="AM">AM</DropdownItem>
-                  <DropdownItem key="PM">PM</DropdownItem>
-                </DropdownMenu>
+                  <DropdownItem key="FULL">Full Day</DropdownItem>
+                  <DropdownItem key="AM">Morning (9am-1pm)</DropdownItem>
+                  <DropdownItem key="PM">Afternoon (2pm-6pm)</DropdownItem>
+                </DropdownMenu> 
               </Dropdown>
             </label>
             <label style={{display:"flex"}}>

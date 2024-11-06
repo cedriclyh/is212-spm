@@ -187,87 +187,88 @@ def manage_request():
                 "code": 200
             }), 200
         
-        # 4: check for duplicate dates 
-        duplicate_dates = check_duplicate_dates(staff_id, arrangement_dates)
-        if duplicate_dates:
-            return jsonify({
-                "message": "Duplicate dates found in request",
-                "duplicate_dates": duplicate_dates,
-                "code": 400
-            }), 400
-        
-        # 5: fetch employee's team size 
-        team_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/users/team/{reporting_manager}")
-        if team_response.status_code != 200:
-            return jsonify({"message": "Failed to fetch team details", 
-                            "code": 404
-            }), 404
+        if status == "Approved":
+            # 4: check for duplicate dates 
+            duplicate_dates = check_duplicate_dates(staff_id, arrangement_dates)
+            if duplicate_dates:
+                return jsonify({
+                    "message": "Duplicate dates found in request",
+                    "duplicate_dates": duplicate_dates,
+                    "code": 400
+                }), 400
+            
+            # 5: fetch employee's team size 
+            team_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/users/team/{reporting_manager}")
+            if team_response.status_code != 200:
+                return jsonify({"message": "Failed to fetch team details", 
+                                "code": 404
+                }), 404
 
-        team_data = team_response.json().get("data")
-        team_size = len(team_data)
+            team_data = team_response.json().get("data")
+            team_size = len(team_data)
 
-        failed_dates = [] # to be showed to staff, which dates caused the request to be rejected
+            failed_dates = [] # to be showed to staff, which dates caused the request to be rejected
 
-        if dept != "CEO": # do not need to check threshold for CEO
-        # 6: loop through arrangement_dates to process each date
-            for arrangement_date in arrangement_dates:
-            # check if the employee has already worked from home on the arrangement date
-                if past_wfh(staff_id, arrangement_date):
-                    continue
+            if dept != "CEO": # do not need to check threshold for CEO
+            # 6: loop through arrangement_dates to process each date
+                for arrangement_date in arrangement_dates:
+                # check if the employee has already worked from home on the arrangement date
+                    if past_wfh(staff_id, arrangement_date):
+                        continue
 
-            # 7: check WFH threshold before approving (only if not CEO)
-                am_count, pm_count = count_wfh(reporting_manager, arrangement_date)
-                if timeslot == "AM" and (am_count + 1)/ team_size > 0.5:
-                    failed_dates.append({
-                        'date': arrangement_date,
-                        'reason': "Exceeds 50% threshold for AM shift"
-                    })
-                elif timeslot == "PM" and (pm_count + 1)/ team_size > 0.5:
-                    failed_dates.append({
-                        'date': arrangement_date,
-                        'reason': "Exceeds 50% threshold for PM shift"
-                    })
-                elif timeslot == "FULL":
-                    if (am_count + 1)/ team_size > 0.5 or (pm_count + 1)/ team_size > 0.5:
+                # 7: check WFH threshold before approving (only if not CEO)
+                    am_count, pm_count = count_wfh(reporting_manager, arrangement_date)
+                    if timeslot == "AM" and (am_count + 1)/ team_size > 0.5:
                         failed_dates.append({
                             'date': arrangement_date,
-                            'reason': "Exceeds 50% threshold for FULL shift"
+                            'reason': "Exceeds 50% threshold for AM shift"
                         })
+                    elif timeslot == "PM" and (pm_count + 1)/ team_size > 0.5:
+                        failed_dates.append({
+                            'date': arrangement_date,
+                            'reason': "Exceeds 50% threshold for PM shift"
+                        })
+                    elif timeslot == "FULL":
+                        if (am_count + 1)/ team_size > 0.5 or (pm_count + 1)/ team_size > 0.5:
+                            failed_dates.append({
+                                'date': arrangement_date,
+                                'reason': "Exceeds 50% threshold for FULL shift"
+                            })
 
-        # 8: show staff the dates that caused the request to rejected        
-        if failed_dates:
-            return jsonify({
-                "message": "Request rejected because some dates exceed team WFH threshold",
-                "failed_dates": failed_dates,
-                "code": 403
-            }), 403
-        
-        # 9: if all dates pass, create individual arrangements
-        try: 
-            for index, date in enumerate(arrangement_dates, 1):
-                arrangement_data = {
-                    "request_id": request_id,
-                    "staff_id": staff_id,
-                    "arrangement_date": date,
-                    "timeslot": timeslot,
-                    "reason": reason
-                }
-                arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_arrangement", json=arrangement_data)
+            # 8: show staff the dates that caused the request to rejected        
+            if failed_dates:
+                return jsonify({
+                    "message": "Request rejected because some dates exceed team WFH threshold",
+                    "failed_dates": failed_dates,
+                    "code": 403
+                }), 403
             
-                if arrangement_response.status_code != 201:
-                    return jsonify({"message": f"Failed to create arrangement entry for date {date}", 
-                                    "code": 500
-                    }), 500
-            
-        except Exception as e:
-            # if any arrangement creation fails, reject the entire request
-            update_status(request_id, "Rejected", f"Failed to create arrangements: {str(e)}")
-            notify_staff(staff_email, "Rejected", request_id, str(e))
-            return jsonify({
-                "message": "Failed to create arrangements",
-                "error": str(e),
-                "code": 500
-            }), 500
+            # 9: if all dates pass, create individual arrangements
+            try: 
+                for index, date in enumerate(arrangement_dates, 1):
+                    arrangement_data = {
+                        "request_id": request_id,
+                        "staff_id": staff_id,
+                        "arrangement_date": date,
+                        "timeslot": timeslot,
+                        "reason": reason
+                    }
+                    arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/create_arrangement", json=arrangement_data)
+                
+                    if arrangement_response.status_code != 201:
+                        return jsonify({"message": f"Failed to create arrangement entry for date {date}", 
+                                        "code": 500
+                        }), 500
+                
+            except Exception as e:
+                # if any arrangement creation fails, reject the entire request
+                update_status(request_id, "Rejected", f"Failed to create arrangements: {str(e)}")
+                notify_staff(staff_email, "Rejected", request_id, str(e))
+                return jsonify({
+                    "message": "Failed to create arrangements",
+                    "error": str(e),
+                    "code": 500
+                }), 500
 
         # 10: update the request status and notify staff
         update_status(request_id, status, remarks)

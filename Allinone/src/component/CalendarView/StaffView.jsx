@@ -3,7 +3,7 @@ import './CalendarView.css'; // Import the CSS file
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getValidRange, getStaffTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { getBlockoutDates, getValidRange, getStaffTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
 import BasicEventFilter from './BasicEventFilter';
 import Dashboard from './Dashboard';
@@ -17,7 +17,9 @@ export default function WFHcalendar() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(false);
+  const [blockoutEvents, setBlockoutEvents] = useState([]);
   const userID = 140002; // Hardcoded for now
+
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -25,15 +27,23 @@ export default function WFHcalendar() {
       setTeamEvents(teamEvents); 
 
       const personalEvents = await getPersonalEvents(userID); 
-      setPersonalEvents(personalEvents);
+      setPersonalEvents(personalEvents);      
     };
+
+    const fetchBlockoutEvents = async () => {
+      const blockouts = await getBlockoutDates(view); // Fetch blockout dates
+      setBlockoutEvents(blockouts || []);
+    } 
+
+    fetchBlockoutEvents();
     fetchEvents();
-  }, []); // Run once on mount
+  }, [view]); // Run once on mount
 
   useEffect(() => {
     const combinedEvents = [
       ...(showPersonal && personalEvents ? personalEvents : []),
       ...(showTeam && teamEvents ? teamEvents : []),
+      ...blockoutEvents
     ];
     setFilteredEvents(combinedEvents);
 }, [showPersonal, showTeam,personalEvents, teamEvents]);

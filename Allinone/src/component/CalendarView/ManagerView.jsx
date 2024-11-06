@@ -3,7 +3,7 @@ import './CalendarView.css'; // Import the CSS file
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getValidRange, getManagerTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { getBlockoutDates, getValidRange, getManagerTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
 import BasicEventFilter from './BasicEventFilter';
 import Dashboard from './Dashboard';
@@ -17,6 +17,7 @@ export default function WFHcalendar() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(true);
+  const [blockoutEvents, setBlockoutEvents] = useState([]);
   const [loading, setLoading] = useState(false); // Loading state
   const userID = 140894; // Hardcoded for now
 
@@ -29,17 +30,21 @@ export default function WFHcalendar() {
 
         const personalEvents = await getPersonalEvents(userID); 
         setPersonalEvents(personalEvents);
+
+        const blockouts = await getBlockoutDates(view); // Fetch blockout dates
+          setBlockoutEvents(blockouts);
       } finally {
         setLoading(false); // Stop loading once data is fetched
       }
     };
     fetchEvents();
-  }, []);
+  }, [view]);
 
   useEffect(() => {
     const combinedEvents = [
       ...(showPersonal && personalEvents ? personalEvents : []),
       ...(showTeam && teamEvents ? teamEvents : []),
+      ... blockoutEvents
     ];
     setFilteredEvents(combinedEvents);
 }, [showPersonal, showTeam,personalEvents, teamEvents]);
