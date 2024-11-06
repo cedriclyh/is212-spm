@@ -12,7 +12,6 @@ import NewRequest from './component/NewRequestPage/NewRequest';
 import TeamRequest from './component/TeamRequest/TeamRequest';
 import EditRequestPage from './component/EditRequestPage/EditRequest';
 import ViewRequest from './component/ViewRequest/ViewRequest';
-import AvailabilityTable from './component/CalendarView/Dashboard';
 
 const App = () => {
   return (
@@ -33,7 +32,6 @@ const App = () => {
           <Route path="/HR" element={ <HRView /> } /> 
           <Route path="/manager" element={ <ManagerView /> } /> {/* role num = 3*/}
           <Route path="/staff" element={ <StaffView /> } />
-          <Route path="/tabletest" element={ <AvailabilityTable /> } /> {/* role num = 4*/}
           {/* <Route path="/manager-data" component={ Manager-Data } /> */}
         </Route>
       </Routes>

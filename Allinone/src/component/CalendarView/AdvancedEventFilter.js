@@ -1,7 +1,7 @@
 // EventFilter.jsx
 import React, { useEffect, useState }  from 'react';
 import {CheckboxGroup, Checkbox} from "@nextui-org/react";
-import { getDeptName, getDirectorTeamEvents } from './CalendarUtils';
+import { getDeptName, getDirectorTeamEvents, getHRTeamEvents } from './CalendarUtils';
 
 export default function EventFilter({ showPersonal, showTeam, handleCheckboxChange, selectedDepartments, handleDepartmentChange, userID }) {
   const [deptName, setDeptName] = useState('');
@@ -13,9 +13,15 @@ export default function EventFilter({ showPersonal, showTeam, handleCheckboxChan
       const name = await getDeptName(userID);  // Replace 140004 with a dynamic ID if needed
       setDeptName(name || 'Unknown Dept');
     };
+    fetchDeptName();
+  }, [userID]);
 
+  useEffect(()=>{
     const fetchTeamNameAndDept = async () => {
-      const retrieveAllEvents = await getDirectorTeamEvents(userID);
+      const retrieveAllEvents = (deptName === 'HR' || deptName === 'CEO')
+      ? await getHRTeamEvents(userID) 
+      : await getDirectorTeamEvents(userID);
+
       const groupedByDept = retrieveAllEvents.reduce((acc, event) => {
         const { dept, teamName } = event;
         if (!acc[dept]) {
@@ -26,13 +32,12 @@ export default function EventFilter({ showPersonal, showTeam, handleCheckboxChan
         }
         return acc;
       }, {});
-
       setTeamNamesByDept(groupedByDept);
-
     };
-    fetchDeptName();
-    fetchTeamNameAndDept();
-  });
+    if (deptName) { // Ensure deptName is available before fetching team events
+      fetchTeamNameAndDept();
+    }}, [deptName, userID]); 
+    
   
   return (
     <div>

@@ -359,10 +359,6 @@ export const getHRTeamEvents = async (userId) => {
       if (req.staff_id === userId) {
         return null; // remove any requests made by the employee himself
       }
-      if (!req.timeslot || !req.arrangement_date) {
-        console.warn("Missing timeslot or arrangement_date in request:", req);
-        return null; // Skip this request if data is missing
-      }
 
       const arrangementDates = req.arrangement_dates;
       return await Promise.all (arrangementDates.map(async (date) => {
