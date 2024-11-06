@@ -20,9 +20,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 CORS(app)
 
-from arrangement.arrangement import Arrangement
-from blockout.blockout import BlockoutDates
-from employee.employee import Employee
+from arrangement import Arrangement
+from blockout import BlockoutDates
+from employee import Employee
 
 # URL endpoints for the existing microservices
 EMPLOYEE_MICROSERVICE_URL = os.getenv("EMPLOYEE_MICROSERVICE_URL")

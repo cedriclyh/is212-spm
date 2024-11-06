@@ -2,7 +2,7 @@ import pika
 import json
 import requests
 from datetime import datetime
-from arrangement.arrangement import Arrangement, withdraw_arrangement, app, db
+from arrangement import Arrangement, withdraw_arrangement, app, db
 from dotenv import load_dotenv
 import os
 import time

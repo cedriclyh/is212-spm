@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS Arrangement (
     staff_id INT NOT NULL,    
     arrangement_date DATE NOT NULL,
     timeslot VARCHAR(50) NOT NULL,  
-    reason VARCHAR(255) NOT NULL,
+    reason VARCHAR(255) NOT NULL DEFAULT "",
     PRIMARY KEY (request_id, arrangement_id),
     FOREIGN KEY (staff_id) REFERENCES Employee(staff_id),
     UNIQUE KEY unique_arrangement_constraint (staff_id, arrangement_date, timeslot)
