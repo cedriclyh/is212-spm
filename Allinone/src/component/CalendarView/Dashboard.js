@@ -28,14 +28,12 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
 
   useEffect(() => {
     // Fetch other staff members if there are no entries
-    if (rowData.entries && rowData.entries.length === 0) {
       const fetchStaffList = async () => {
         const staffMembers = await getListofStaffs(managerID);
         setStaffList(staffMembers);
         console.log("Staff list fetched:", staffMembers);
       };
       fetchStaffList();
-    }
   }, [rowData.entries, managerID]);
 
   useEffect(() => {
@@ -61,7 +59,7 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
         const root = createRoot(newCell);
         root.render(
           <div>
-              <table>
+              <table style={{width:'100%'}}>
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -106,7 +104,9 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="3">No staff found</td></tr>
+                <tr>
+                  <td colSpan="3">No staff found</td>
+                </tr>
               )
             )}
           </tbody>
@@ -254,10 +254,10 @@ export default function Dashboard(inputEvents) {
       : [];
 
   return (
-    <div className="card-container shadow-lg rounded-lg p-4 bg-white">
+    <div className="card-container shadow-lg rounded-lg p-4 bg-white" style={{marginBottom: '10px', borderRadius: '25px'}}>
       <div style={{ display: 'flex', alignItems: "center", justifyContent: "space-between"}}>
         <h1 class="card-title">Dashboard</h1>
-        <div style={{ display: 'flex', alignItems: "right"}}>
+        <div style={{ display: 'flex', alignItems: "right", gap:'1rem'}}>
           <DatePicker label="Select Date" style={{ maxWidth: '284px', width: 'auto' }} value={rawDate} onChange={handleDateChange}/>
           <Button color="warning" onClick={clearDateSelection}>Clear</Button>
         </div>
