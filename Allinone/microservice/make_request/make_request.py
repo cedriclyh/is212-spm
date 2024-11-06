@@ -31,7 +31,7 @@ print(EMPLOYEE_MICROSERVICE_URL)
 print(REQUEST_LOG_MICROSERVICE_URL)
 print(NOTIFICATION_MICROSERVICE_URL)
 
-from requests_log import Request
+from requests_log.requests_log import Request
 
 # function to validate dates are within allowed range
 def validate_dates(request_date, arrangement_dates):

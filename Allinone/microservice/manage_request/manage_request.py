@@ -35,9 +35,9 @@ print(ARRANGEMENT_MICROSERVICE_URL)
 print(REQUEST_LOG_MICROSERVICE_URL)
 print(NOTIFICATION_MICROSERVICE_URL)
 
-from arrangement import Arrangement
-from employee import Employee
-from requests_log import Request
+from arrangement.arrangement import Arrangement
+from employee.employee import Employee
+from requests_log.requests_log import Request
 
 def count_wfh(manager_id, arrangement_date):
     try:
