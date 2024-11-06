@@ -22,14 +22,28 @@ const columns = [
  * @param {ToggleSubRowButtonProps} props - The props for the button component.
  * @returns {JSX.Element} The button with expand/collapse functionality.
  */
-export const ToggleSubRowButton = ({ rowId, rowData }) => {
+export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [staffList, setStaffList] = useState([]);
+
+  useEffect(() => {
+    // Fetch other staff members if there are no entries
+    if (rowData.entries && rowData.entries.length === 0) {
+      const fetchStaffList = async () => {
+        const staffMembers = await getListofStaffs(managerID);
+        setStaffList(staffMembers);
+        console.log("Staff list fetched:", staffMembers);
+      };
+      fetchStaffList();
+    }
+  }, [rowData.entries, managerID]);
+
+  useEffect(() => {
+    console.log("Updated staff list:", staffList);
+  }, [staffList]);
 
   const toggleSubRow = () => {
-    console.log("Current rowId:", rowId);
     const rowToInsertAfter = document.getElementById(`row-${rowId}`);
-    console.log("rowToInsertAfter:", rowToInsertAfter); // Check if the row element exists
-
 
     if (rowToInsertAfter) {
       if (isExpanded) {
@@ -47,17 +61,57 @@ export const ToggleSubRowButton = ({ rowId, rowData }) => {
         const root = createRoot(newCell);
         root.render(
           <div>
-          {rowData.entries && rowData.entries.length > 0 ? (
-            rowData.entries.map((entry) => (
-              <div key={entry.key}>
-                <p><strong>Manager ID:</strong> {entry.managerID}</p>
-                <p><strong>Name:</strong> {entry.name}</p>
-              </div>
-            ))
-          ) : (
-            <p>No entries available</p>
-          )}
-        </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Place</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {rowData.entries && rowData.entries.length > 0 ? (
+                  <>
+                    {rowData.entries.map((entry) => (
+                      <tr key={entry.key}>
+                        <td>{entry.name}</td>
+                        <td>{entry.position}</td>
+                        <td>Home</td>
+                      </tr>
+                    ))}
+                    {staffList.map((staff) => {                    
+                      const isInEntries = rowData.entries.some(
+                        (entry) => entry.name === staff.fullName
+                      );
+                      // If the staff is not in entries, add them to the table with "Office" as the place
+                      if (!isInEntries) {
+                        return(
+                          <tr key={staff.fullName}>
+                            <td>{staff.fullName}</td>
+                            <td>{staff.position}</td>
+                            <td>Office</td>
+                          </tr>
+                        )
+                      }
+                      return null; // Don't render anything for staff already in entries
+                    })}
+                   </>
+            ) : (
+              staffList.length > 0 ? (
+                staffList.map((staff, index) => (
+                  <tr key={staff.fullName}>
+                    <td>{staff.fullName}</td>
+                    <td>{staff.position}</td>
+                    <td>Office</td> 
+                  </tr>
+                ))
+              ) : (
+                <tr><td colSpan="3">No staff found</td></tr>
+              )
+            )}
+          </tbody>
+          </table>
+          </div>
         );
 
         newRow.appendChild(newCell);
@@ -87,6 +141,7 @@ export default function Dashboard(inputEvents) {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
   const [rawDate, setRawDate] = useState(null);
+  console.log(events)
 
   useEffect(() =>{
     const processData = async () => {
@@ -101,6 +156,7 @@ export default function Dashboard(inputEvents) {
             name: name,
             key: item.id,
             managerID: item.managerID,
+            position: item.position,
           };
         }
       );
@@ -121,6 +177,7 @@ export default function Dashboard(inputEvents) {
           key: item.key,
           name: item.name,
           managerID: item.managerID,
+          position: item.position,
         });
         return acc;
       }, {});
@@ -153,8 +210,14 @@ export default function Dashboard(inputEvents) {
                 date: convertDateFormat(date),
                 department: dept,
                 team: teamName,
-                entries: entries,
-                manpower: manpowerInOffice
+                entries: entries.map(entry => ({
+                  key: entry.key,
+                  name: entry.name,
+                  managerID: entry.managerID,
+                  position: entry.position,  // Add position here
+                })),
+                manpower: manpowerInOffice,
+                managerID: entries[0].managerID,
               };
             });
           });
@@ -214,7 +277,7 @@ export default function Dashboard(inputEvents) {
               <TableCell>{item.team}</TableCell>
               <TableCell>{item.manpower}</TableCell>
               <TableCell>
-                <ToggleSubRowButton rowId={item.key} rowData={item}/>
+                <ToggleSubRowButton rowId={item.key} rowData={item} managerID={item.managerID}/>
               </TableCell>
             </TableRow>
           )}
@@ -241,8 +304,35 @@ export const getTotalCount = async (managerId) => {
 
     const data = await response.json();
     const requests = data.team_count;
-    console.log("Total Staffs under the Manager:", requests); // Log team events for debugging
+    console.log("Total Count of Staffs under the Manager:", requests); // Log team events for debugging
     return requests;
+  } catch (error) {
+    console.error('Failed to fetch list of staffs under the manager:', error);
+  }
+};    
+
+export const getListofStaffs = async (managerId) => {
+  try {
+    const response = await fetch(`http://localhost:5002/users/team/${managerId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+
+    const data = await response.json();
+    const requests = data.data; 
+    const ListOfStaffs = requests.map(item => ({
+      fullName: `${item.staff_fname} ${item.staff_lname}`,
+      position: item.position
+    }));
+
+    console.log("Total Staffs under the Manager:", ListOfStaffs); // Log team events for debugging
+    return ListOfStaffs;
   } catch (error) {
     console.error('Failed to fetch list of staffs under the manager:', error);
   }

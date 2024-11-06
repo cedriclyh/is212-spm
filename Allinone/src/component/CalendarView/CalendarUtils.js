@@ -129,7 +129,7 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
         const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
         const title = await getArrangementName(req.staff_id);
         const teamName = await getTeamName(req.manager_id)
-        const {dept} = await getEmployeeInfo(req.staff_id);
+        const {dept, position} = await getEmployeeInfo(req.staff_id);
         return {
           id: req.request_id + req.arrangement_date,
           title,  
@@ -140,6 +140,7 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
           teamName: teamName,
           dept: dept,
           managerID : req.manager_id,
+          position: position, 
         };
       })
     );
@@ -177,7 +178,7 @@ export const getApprovedandPendingEvents = async (userId) => {
           const { start, end } = getTimeRange(req.timeslot, date, date);
           const title = await getArrangementName(req.staff_id);
           const teamName = await getTeamName(req.manager_id)
-          const {dept} = await getEmployeeInfo(req.staff_id);
+          const {dept, position} = await getEmployeeInfo(req.staff_id);
 
           return {
             id: req.request_id + req.arrangement_date,
@@ -189,6 +190,7 @@ export const getApprovedandPendingEvents = async (userId) => {
             teamName: teamName,
             dept: dept,
             managerID : req.manager_id,
+            position: position,
           };
       })); 
     })
@@ -235,7 +237,7 @@ export const getApprovedEventsOnly = async (userId) => {
       const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
       const title = await getArrangementName(req.staff_id) ;
       const teamName = await getTeamName(manager_id)
-      const {dept} = await getEmployeeInfo(req.staff_id);
+      const {dept, position} = await getEmployeeInfo(req.staff_id);
       return {
         id: `${req.staff_id}-${req.arrangement_date}`, // Create a unique ID per date to show all 
         title,  
@@ -246,6 +248,7 @@ export const getApprovedEventsOnly = async (userId) => {
         teamName: teamName,
         dept: dept,
         managerID : manager_id, 
+        position: position,
       };
     })
   );
@@ -366,8 +369,9 @@ export const getHRTeamEvents = async (userId) => {
         const { start, end } = getTimeRange(req.timeslot, date, date);
         const staffName = await getArrangementName(req.staff_id);
         const teamName = await getTeamName(req.manager_id)
+        const manager_id = req.manager_id
         const title = `[${teamName}] ${staffName}`;
-        const {dept} = await getEmployeeInfo(req.staff_id);
+        const {dept, position} = await getEmployeeInfo(req.staff_id);
 
         return {
           id: `${req.staff_id}-${req.arrangement_date}`, // Create a unique ID per date
@@ -378,6 +382,8 @@ export const getHRTeamEvents = async (userId) => {
           backgroundColor: getBackgroundColor(req.status),
           teamName: teamName,
           dept: dept,
+          managerID : manager_id,
+          position: position,
         };
       })); 
     })
