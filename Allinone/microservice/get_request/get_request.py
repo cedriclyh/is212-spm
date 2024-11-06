@@ -1,13 +1,34 @@
 from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+import os
+from os import environ
 from flask_cors import CORS
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
+if app.config['TESTING']:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        environ.get("dbURL") or
+        os.environ.get('DB_URL', 'mysql+mysqlconnector://root@localhost:3306/spm_db')
+        or os.environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    )
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
 CORS(app)
 
 # URL endpoints for the existing microservices
-EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
+EMPLOYEE_MICROSERVICE_URL = os.getenv("EMPLOYEE_MICROSERVICE_URL")
+REQUEST_LOG_MICROSERVICE_URL = os.getenv("REQUEST_LOG_MICROSERVICE_URL")
+
+print("URL endpoints:")
+print(EMPLOYEE_MICROSERVICE_URL)
+print(REQUEST_LOG_MICROSERVICE_URL)
 
 # Get requests with complete details - for employee request table
 @app.route('/employees/<int:employee_id>/requests', methods=['GET'])
@@ -78,6 +99,7 @@ def get_employee_requests(employee_id):
         'code': 200
     }), 200
 
+# Get requests with complete details - for manager request table
 @app.route("/manager/<int:manager_id>/requests", methods=["GET"])
 def get_team_requests(manager_id):
     try:
@@ -144,6 +166,7 @@ def get_team_requests(manager_id):
         'code': 200
     }), 200
 
+# Get requests with complete details - for individual request
 @app.route("/view_request/<int:request_id>")
 def view_request(request_id):
     try:

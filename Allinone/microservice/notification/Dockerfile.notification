@@ -1,0 +1,20 @@
+# Use an official Python runtime as a parent image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy the requirements file
+COPY requirements.txt ./
+
+# Copies everything in notification folder 
+COPY notification ./
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -r notification.requirements.txt
+
+# Expose the port your app runs on
+EXPOSE 5009
+
+# Run the application
+CMD ["python", "notification.py"]

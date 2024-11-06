@@ -1,0 +1,20 @@
+# Use the official Python image as the base image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy the requirements file
+COPY requirements.txt ./
+
+# Copy files in worker foldler
+COPY worker ./
+
+# Copy dependencies - arrangement, employee, amqp_setup.py
+COPY ../arrangement/arrangement.py ../employee/employee.py ../amqp_setup.py ./
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt -r worker.requirements.txt
+
+# Command to run the application
+CMD ["python", "worker.py"] 

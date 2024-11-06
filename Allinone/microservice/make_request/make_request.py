@@ -5,21 +5,31 @@ from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
 from dateutil.relativedelta import relativedelta
+from flask_cors import CORS
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
     environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    or "mysql+mysqlconnector://root@host.docker.internal:3307/spm_db" 
     # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 # URL endpoints for the existing microservices
-EMPLOYEE_MICROSERVICE_URL = "http://localhost:5002"
-REQUEST_LOG_MICROSERVICE_URL = "http://localhost:5003"
-NOTIFICATION_MICROSERVICE_URL = "http://localhost:5009"
+EMPLOYEE_MICROSERVICE_URL = os.getenv("EMPLOYEE_MICROSERVICE_URL")
+REQUEST_LOG_MICROSERVICE_URL = os.getenv("REQUEST_LOG_MICROSERVICE_URL")
+NOTIFICATION_MICROSERVICE_URL = os.getenv("NOTIFICATION_MICROSERVICE_URL")
+
+print("URL endpoints:")
+print(EMPLOYEE_MICROSERVICE_URL)
+print(REQUEST_LOG_MICROSERVICE_URL)
+print(NOTIFICATION_MICROSERVICE_URL)
 
 from requests_log import Request
 

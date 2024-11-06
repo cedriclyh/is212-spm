@@ -473,5 +473,3 @@ export const checkRoleNum = async (userId) => {
   const {roleNum} = await getEmployeeInfo(userId);
   return roleNum;
 }
-
-

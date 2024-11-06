@@ -1,0 +1,23 @@
+# Use the official Python image as the base image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy the requirements file
+COPY requirements.txt ./
+
+# Copy the requirements file
+COPY arrangement ./
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt -r arrangement.requirements.txt
+
+# Copy required application code
+COPY ../employee/employee.py ../amqp_setup.py ./
+
+# Expose the port the app runs on
+EXPOSE 5005
+
+# Command to run the application
+CMD ["python", "arrangement.py"] 

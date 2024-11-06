@@ -1,0 +1,20 @@
+# Use the official Python image as the base image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy the requirements file
+COPY requirements.txt ./
+
+# Copy files in blockout
+COPY blockout ./
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt -r blockout.requirements.txt
+
+# Expose the port the app runs on
+EXPOSE 5014
+
+# Command to run the application
+CMD ["python", "blockout.py"] 

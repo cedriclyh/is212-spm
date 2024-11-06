@@ -24,6 +24,7 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Spinner,
 } from "@nextui-org/react";
 import {
   extractWeekdays,
@@ -70,6 +71,7 @@ export default function NewRequest({ initialFormData }) {
   const [blockOutDates, setBlockOutDates] = useState([]);
   const [extractedDates, setExtractedDates] = useState([]);
   const [availability, setAvailability] = useState({});
+  const [loading, setLoading] = useState(false);
 
   // Populate form data whenever `initialFormData` changes
   useEffect(() => {
@@ -199,28 +201,37 @@ export default function NewRequest({ initialFormData }) {
     timeslot: selectedTimeslot,
     reason: reason,
     is_recurring: isRecurring,
-  });
+});
 
   useEffect(() => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      arrangement_date: isRecurring ? null : inputDates[0] || "",
-      recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
-      start_date: isRecurring ? formatDateFromPicker(startDate) : null,
-      end_date: isRecurring ? formatDateFromPicker(endDate) : null,
-      timeslot: selectedTimeslot,
-      reason: reason,
-      is_recurring: isRecurring,
+    if (inputRequestID === null){
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        arrangement_date: isRecurring ? null : inputDates[0] || "",
+        recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
+        start_date: isRecurring ? formatDateFromPicker(startDate) : null,
+        end_date: isRecurring ? formatDateFromPicker(endDate): null,
+        timeslot: selectedTimeslot,
+        reason: reason,
+        is_recurring: isRecurring,
     }));
-  }, [
-    isRecurring,
-    inputDates,
-    SelectedDayOfTheWeek,
-    startDate,
-    endDate,
-    selectedTimeslot,
-    reason,
-  ]);
+    }
+    else{
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        arrangement_date: isRecurring ? null : inputDates[0] || "",
+        recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
+        start_date: isRecurring ? formatDateFromPicker(startDate) : null,
+        end_date: isRecurring ? formatDateFromPicker(endDate): null,
+        timeslot: selectedTimeslot,
+        reason: reason,
+        is_recurring: isRecurring,
+        request_id: inputRequestID,
+    }));
+    }
+      
+  }, [isRecurring, inputDates, inputRequestID, SelectedDayOfTheWeek, startDate, endDate, selectedTimeslot, reason]);
+
 
   const handleSubmit = async (e) => {
     console.log(formData);
@@ -270,47 +281,119 @@ export default function NewRequest({ initialFormData }) {
       }
     }
 
-    try {
-      const response = await fetch("http://localhost:5004/make_request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        modalMsg = "Form processed successfully " + data.message;
-        modalTitle = "Success!";
-        setButtonColor("success");
-        setShowCountdown(true);
-        onOpen();
-
-        // Start the countdown
-        let countdownTimer = 3;
-        setCountdown(countdownTimer);
-
-        const timer = setInterval(() => {
-          countdownTimer--;
+    if (inputRequestID === null){
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:5004/make_request", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+        setLoading(false);
+        if (response.ok) {
+          const data = await response.json();
+          modalMsg = "Form processed successfully " + data.message;
+          modalTitle = "Success!";
+          setButtonColor("success");
+          setShowCountdown(true);
+          onOpen();
+  
+          // Start the countdown
+          let countdownTimer = 3;
           setCountdown(countdownTimer);
-
-          if (countdownTimer === 0) {
-            clearInterval(timer);
-            navigate("/requests");
-          }
-        }, 1000);
-
-        return () => clearInterval(timer);
-      } else {
-        modalMsg = "Error submitting form";
+  
+          const timer = setInterval(() => {
+            countdownTimer--;
+            setCountdown(countdownTimer);
+  
+            if (countdownTimer === 0) {
+              clearInterval(timer);
+              navigate("/requests");
+            }
+          }, 1000);
+  
+          return () => clearInterval(timer);
+        } else {
+          modalMsg = "Error submitting form";
+          onOpen();
+        }
+      } catch (error) {
+        setLoading(false);
+        console.error("Error:", error);
+        modalMsg = "Error submitting form " + error.message;
         onOpen();
       }
-    } catch (error) {
-      console.error("Error:", error);
-      modalMsg = "Error submitting form " + error.message;
-      onOpen();
     }
+    else {
+      setLoading(true);
+      try {
+        const response = await fetch(`http://localhost:5004/edit_request/${inputRequestID} `, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+        setLoading(false);
+        if (response.ok) {
+          const data = await response.json();
+          modalMsg = "Request Updated Successfully" + data.message;
+          modalTitle = "Success!";
+          setButtonColor("success");
+          setShowCountdown(true);
+          onOpen();
+  
+          // Start the countdown
+          let countdownTimer = 3;
+          setCountdown(countdownTimer);
+  
+          const timer = setInterval(() => {
+            countdownTimer--;
+            setCountdown(countdownTimer);
+  
+            if (countdownTimer === 0) {
+              clearInterval(timer);
+              navigate("/requests");
+            }
+          }, 1000);
+  
+          return () => clearInterval(timer);
+        } 
+        else if (!response.ok) {
+          const errorData = await response.json();
+          modalMsg = "Error updating request: " + errorData.message;
+          onOpen(); 
+          setShowCountdown(true);
+          onOpen();
+          let countdownTimer = 3;
+          setCountdown(countdownTimer);
+  
+          const timer = setInterval(() => {
+            countdownTimer--;
+            setCountdown(countdownTimer);
+  
+            if (countdownTimer === 0) {
+              clearInterval(timer);
+              navigate("/requests");
+            }
+          }, 1000);
+  
+          return () => clearInterval(timer);
+        }
+        else {
+          modalMsg = "Error updating request";
+          onOpen();
+        }
+      } catch (error) {
+        setLoading(false);
+        console.log("Error:", error.message);
+        modalMsg = "Error updating request: " + error.message;
+        onOpen();
+      }
+    }
+    
   };
 
   return (
@@ -396,9 +479,6 @@ export default function NewRequest({ initialFormData }) {
 
               <div className="mt-4" style={{ marginTop: "24px" }}>
                 <p>Requested Dates</p>
-                <p style={{ fontSize: "0.875rem", color: "gray" }}>
-                  Only Available Dates will be submitted
-                </p>
                 <Table
                   aria-label="Selected Dates with Availability"
                   className="mt-2"
@@ -461,15 +541,9 @@ export default function NewRequest({ initialFormData }) {
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu onAction={handleSelection}>
-                    <DropdownItem key="Whole Day" description="9AM - 6PM">
-                      Whole Day
-                    </DropdownItem>
-                    <DropdownItem key="Morning" description="9AM - 1PM">
-                      Morning
-                    </DropdownItem>
-                    <DropdownItem key="Afternoon" description="2PM - 6PM">
-                      Afternoon
-                    </DropdownItem>
+                    <DropdownItem key="FULL" description="9AM - 6PM">Whole Day</DropdownItem>
+                    <DropdownItem key="AM" description="9AM - 1PM">Morning</DropdownItem>
+                    <DropdownItem key="PM" description="2PM - 6PM">Afternoon</DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
               </div>
@@ -627,8 +701,23 @@ export default function NewRequest({ initialFormData }) {
               </>
             )}
           </ModalContent>
-        </Modal>
+        </Modal>        
       </div>
+      {loading && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1,
+          }}
+          >
+            <Spinner label="loading..." color="warning" />
+          </div>
+        )}
     </div>
   );
 }

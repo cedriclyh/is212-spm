@@ -20,9 +20,15 @@ jobs:
             env:
               MYSQL_ROOT_PASSWORD: root
               MYSQL_DATABASE: spm_db
+              # MYSQL_USER: root
             ports:
               - 3306:3306
             options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=5
+        
+        env:
+          DATABASE_URL: mysql+mysqlconnector://root:root@localhost:3306/spm_db
+          TESTING: "true"
+          PYTHONPATH: ${{ github.workspace }}/Allinone/microservice
 
         steps:
         # Step 1: Check out the repository code

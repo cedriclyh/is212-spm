@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import NewRequest from '../NewRequestPage/NewRequest';
+import { Spinner } from "@nextui-org/react";
 
 const EditRequestPage = () => {
   const { uid } = useParams();
@@ -29,7 +30,15 @@ const EditRequestPage = () => {
   return requestData ? (
     <NewRequest initialFormData={requestData} />
   ) : (
-    <p>Loading...</p>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      textAlign: 'center'
+  }}>
+      <Spinner />
+  </div>
   );
 };
 

@@ -1,0 +1,197 @@
+version: '3.8'
+
+networks:
+  my-network:
+    name: my-network
+
+volumes:
+  rabbitmq_data:
+
+services:
+
+###############################################
+# # RabbitMQ: Messaging broker
+###############################################
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-mgmt
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes: 
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmqctl status || exit 1"]
+      interval: 30s   # Check every 30 seconds
+      timeout: 10s    # Timeout after 10 seconds
+      retries: 5      # Retry up to 5 times before marking unhealthy
+
+###############################################
+# # Requests Microservices
+###############################################
+  manage_request:
+    build:
+      context: ./
+      dockerfile: manage_request/Dockerfile.manage_request
+    image: manage_request:spm
+    ports:
+      - "5010:5010"
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - get_request
+      - make_request
+      - requests_log
+      - notification
+    networks:
+      - my-network
+
+  get_request:
+    build:
+      context: ./
+      dockerfile: get_request/Dockerfile.get_request
+    image: get_request:spm
+    ports:
+      - "5011:5011"
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - requests_log
+      - employee
+    networks:
+      - my-network
+
+  make_request:
+    build:
+      context: ./
+      dockerfile: make_request/Dockerfile.make_request
+    image: make_request:spm
+    ports:
+      - "5004:5004"
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - requests_log
+      - employee
+      - notification
+    networks:
+      - my-network
+
+  requests_log:
+    build:
+      context: ./
+      dockerfile: requests_log/Dockerfile.requests_log
+    image: request_log:spm
+    ports:
+      - "5003:5003"
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - my-network
+
+###############################################
+# # Arrangements Microservices
+###############################################
+  arrangement:
+    build:
+      context: ./
+      dockerfile: arrangement/Dockerfile.arrangement
+    image: arrangement:spm
+    ports:
+      - "5005:5005"
+    restart: always
+    env_file:
+      - .env  # Specify the .env file to load environment variables
+    depends_on:
+      - rabbitmq
+      - employee
+      - manage_request
+    networks:
+      - my-network
+
+  worker:
+    build:
+      context: ./
+      dockerfile: worker/Dockerfile.worker  # Name of your worker Dockerfile
+    image: worker:spm
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      arrangement:
+        condition: service_started
+    networks:
+      - my-network
+
+###############################################
+# # Blockout Microservices
+###############################################
+  manage_blockout:
+    build:
+      context: ./
+      dockerfile: manage_blockout/Dockerfile.manage_blockout
+    image: manage_blockout:spm
+    ports:
+      - "5012:5012"
+    restart: always
+    env_file:
+      - .env  
+    depends_on:
+      - employee
+      - blockout
+      - requests_log
+      - arrangement
+      - notification
+    networks:
+      - my-network
+
+  blockout:
+    build:
+      context: ./
+      dockerfile: blockout/Dockerfile.blockout
+    image: blockout:spm
+    ports:
+      - "5014:5014"
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - my-network
+
+###############################################
+# # Misc Microservices
+###############################################
+  employee:
+    build:
+      context: ./
+      dockerfile: employee/Dockerfile.employee  # Name of your worker Dockerfile
+    image: employee:spm
+    ports:
+      - "5002:5002"
+    restart: always
+    env_file:
+      - .env 
+    networks:
+      - my-network
+  
+  notification:
+    build:
+      context: ./
+      dockerfile: notification/Dockerfile.notification  # Name of your worker Dockerfile
+    image: notification:spm
+    ports:
+      - "5009:5009"
+    restart: always
+    env_file:
+      - .env  
+    networks:
+      - my-network

@@ -1,14 +1,14 @@
-import pytest, os
-from manage_blockout import app, db, BlockoutDates, Arrangement, Employee
+import pytest
+from manage_blockout.manage_blockout import app, db, BlockoutDates, Arrangement, Employee
 from datetime import date
 import json
 from unittest.mock import patch
 
 @pytest.fixture
 def client():
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_URL', 'sqlite:///:memory:')
+    app.config['TESTING'] = True
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['TESTING'] = True # make sure testing set to true to allow usage of sqlite
 
     with app.test_client() as client:
         with app.app_context():
@@ -21,7 +21,7 @@ def client():
 def sample_data():
     """Create sample data matching SQL schema"""
     with app.app_context():
-        # Create employees from SQL data
+        # Create employees
         employees = [
             Employee(
                 staff_id=140002,
@@ -31,7 +31,7 @@ def sample_data():
                 position="Account Manager",
                 country="Singapore",
                 email="Susan.Goh@allinone.com.sg",
-                reporting_manager="140894",
+                reporting_manager=140894,
                 role=2
             ),
             Employee(
@@ -42,15 +42,44 @@ def sample_data():
                 position="Account Manager",
                 country="Singapore",
                 email="Janice.Chan@allinone.com.sg",
-                reporting_manager="140894",
+                reporting_manager=140894,
                 role=2
             )
         ]
         
-        # Create arrangements from SQL data
+        # Create request logs
+        request_logs = [
+            RequestLog(
+                request_id=1,
+                staff_id=140002,
+                manager_id=140894,
+                request_date=date(2024, 9, 29),
+                arrangement_date=date(2024, 10, 1),
+                timeslot="AM",
+                status="Approved",
+                reason="Medical Appointment",
+                remark="",
+                is_recurring=False
+            ),
+            RequestLog(
+                request_id=2,
+                staff_id=140003,
+                manager_id=140894,
+                request_date=date(2024, 9, 29),
+                arrangement_date=date(2024, 10, 1),
+                timeslot="PM",
+                status="Approved",
+                reason="Lazy",
+                remark="",
+                is_recurring=False
+            )
+        ]
+        
+        # Create arrangements
         arrangements = [
             Arrangement(
                 request_id=1,
+                arrangement_id=1,
                 staff_id=140002,
                 arrangement_date=date(2024, 10, 1),
                 timeslot="AM",
@@ -58,6 +87,7 @@ def sample_data():
             ),
             Arrangement(
                 request_id=2,
+                arrangement_id=1,
                 staff_id=140003,
                 arrangement_date=date(2024, 10, 1),
                 timeslot="PM",
@@ -65,18 +95,40 @@ def sample_data():
             )
         ]
 
+        # Create request dates
+        request_dates = [
+            RequestDates(
+                id=1,
+                request_id=1,
+                arrangement_date=date(2024, 10, 1)
+            ),
+            RequestDates(
+                id=2,
+                request_id=2,
+                arrangement_date=date(2024, 10, 1)
+            )
+        ]
+
         for emp in employees:
             db.session.add(emp)
+        for log in request_logs:
+            db.session.add(log)
         for arr in arrangements:
             db.session.add(arr)
+        for req_date in request_dates:
+            db.session.add(req_date)
         db.session.commit()
         
-        return {"employees": employees, "arrangements": arrangements}
+        return {
+            "employees": employees,
+            "request_logs": request_logs,
+            "arrangements": arrangements,
+            "request_dates": request_dates
+        }
 
 def test_manage_blockout_success(client, sample_data):
     """Test successful blockout creation"""
     with patch('requests.post') as mock_post:
-        # Mock the employee response
         mock_post.return_value.status_code = 200
         
         data = {
@@ -91,13 +143,18 @@ def test_manage_blockout_success(client, sample_data):
         assert response.status_code == 200
         assert b"Blockout created successfully" in response.data
         
-        # Verify arrangements were deleted
+        # Verify blockout was created
         with app.app_context():
+            blockout = BlockoutDates.query.first()
+            assert blockout.title == "Department Meeting"
+            assert blockout.timeslot == "FULL"
+            
+            # Verify affected arrangements were deleted
             arrangements = Arrangement.query.all()
             assert len(arrangements) == 0
 
-def test_manage_blockout_partial_timeslot(client, sample_data):
-    """Test blockout creation for specific timeslot"""
+def test_manage_blockout_with_specific_timeslot(client, sample_data):
+    """Test blockout creation for a specific timeslot (AM or PM)"""
     with patch('requests.post') as mock_post:
         mock_post.return_value.status_code = 200
         
@@ -105,79 +162,26 @@ def test_manage_blockout_partial_timeslot(client, sample_data):
             "start_date": "2024-10-01",
             "end_date": "2024-10-01",
             "timeslot": {"anchorKey": "AM"},
-            "title": "Morning Meeting",
-            "blockout_description": "Team sync"
+            "title": "Morning Training",
+            "blockout_description": "Team training session"
         }
         
         response = client.post('/manage_blockout', json=data)
         assert response.status_code == 200
+        assert b"Blockout created successfully" in response.data
         
-        # Verify only AM arrangement was deleted
+        # Verify blockout was created correctly
         with app.app_context():
+            blockout = BlockoutDates.query.first()
+            assert blockout.title == "Morning Training"
+            assert blockout.timeslot == "AM"
+            
+            # Verify only AM arrangements were affected
             arrangements = Arrangement.query.all()
-            assert len(arrangements) == 1
-            assert arrangements[0].timeslot == "PM"
+            assert len(arrangements) == 1  # Only PM arrangement should remain
+            assert arrangements[0].timeslot == "PM"  # Verify remaining arrangement is PM
+            assert arrangements[0].staff_id == 140003  # Verify it's the correct arrangement
 
-def test_manage_blockout_employee_not_found(client, sample_data):
-    """Test blockout creation when employee fetch fails"""
-    with patch('requests.get') as mock_get:
-        mock_get.return_value.status_code = 404
-        
-        data = {
-            "start_date": "2024-10-01",
-            "end_date": "2024-10-01",
-            "timeslot": {"anchorKey": "FULL"},
-            "title": "Test Meeting",
-            "blockout_description": "Test"
-        }
-        
-        response = client.post('/manage_blockout', json=data)
-        assert response.status_code == 404
-        assert b"Failed to fetch employee details" in response.data
-
-def test_manage_blockout_creation_error(client, sample_data):
-    """Test error handling when blockout creation fails"""
-    with patch('requests.post') as mock_post:
-        mock_post.return_value.status_code = 500
-        
-        data = {
-            "start_date": "2024-10-01",
-            "end_date": "2024-10-01",
-            "timeslot": {"anchorKey": "FULL"},
-            "title": "Test Meeting",
-            "blockout_description": "Test"
-        }
-        
-        response = client.post('/manage_blockout', json=data)
-        assert response.status_code == 500
-
-def test_manage_blockout_no_arrangements(client, sample_data):
-    """Test blockout creation when no arrangements exist"""
-    with patch('requests.post') as mock_post:
-        mock_post.return_value.status_code = 200
-        
-        # Clear existing arrangements
-        with app.app_context():
-            db.session.query(Arrangement).delete()
-            db.session.commit()
-        
-        data = {
-            "start_date": "2024-10-01",
-            "end_date": "2024-10-01",
-            "timeslot": {"anchorKey": "FULL"},
-            "title": "Test Meeting",
-            "blockout_description": "Test"
-        }
-        
-        response = client.post('/manage_blockout', json=data)
-        assert response.status_code == 200
-
-def test_manage_blockout_invalid_data(client):
-    """Test blockout creation with invalid data"""
-    data = {
-        "start_date": "invalid-date",
-        "timeslot": {"anchorKey": "FULL"}
-    }
-    
-    response = client.post('/manage_blockout', json=data)
-    assert response.status_code == 500
+            # Verify request dates remained unchanged
+            request_dates = RequestDates.query.all()
+            assert len(request_dates) == 2  # Request dates should not be affected

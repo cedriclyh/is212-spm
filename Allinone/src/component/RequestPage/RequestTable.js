@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import {
   Table,
@@ -17,12 +17,18 @@ import {
   User,
   Pagination,
   Spinner,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from "@nextui-org/react";
 import { PlusIcon } from "../Icons/PlusIcon";
 import { VerticalDotsIcon } from "../Icons/VerticalDotsIcon";
 import { SearchIcon } from "../Icons/SearchIcon";
 import { ChevronDownIcon } from "../Icons/ChevronDownIcon";
-import { columns, statusOptions, pulled_data } from "./RequestData";
+import { columns, statusOptions } from "./RequestData";
 import { capitalize, formatDate, formatTimeslot } from "./RequestPageUtils";
 import profilePic from "../Icons/profile_pic.png"
 
@@ -43,7 +49,43 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
+var modalTitle = "Error Message";
+var modalMsg = "";
+
 export default function RequestTable() {
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+  const { isOpen: isOpenReason, onOpen: onOpenReason, onOpenChange: onOpenChangeReason } = useDisclosure();
+  const [buttonColor, setButtonColor] = useState("danger");
+  const [remarks, setRemarks] = useState("");
+  const [currentRequestId, setCurrentRequestId] = useState(null);
+
+  const fetchRequests = async () => {
+    try {
+      const response = await fetch('http://localhost:5011/employees/140004/requests');
+  
+      if (response.ok) {
+        const data = await response.json();
+        setRequests(data.data);
+      } else if (response.status === 404) {
+        setRequests([]);
+      } else {
+        console.error("An error occurred:", response.statusText);
+        setRequests([]);
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+      setRequests([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(
@@ -56,7 +98,6 @@ export default function RequestTable() {
     direction: "descending",
   });
   const [page, setPage] = React.useState(1);
-  const [requests, setRequests] = React.useState(pulled_data);
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -69,13 +110,13 @@ export default function RequestTable() {
   }, [visibleColumns]);
 
   const filteredItems = React.useMemo(() => {
-    let filteredRequests = [...pulled_data];
+    let filteredRequests = [...requests];
+    // console.log(requests);
 
-    // Search by arrangement_date
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {
-        const formattedDate = formatDate(request.arrangement_date).join(" "); // Format the arrangement date
-        return formattedDate.toLowerCase().includes(filterValue.toLowerCase()); // Search by formatted date
+        const formattedDate = formatDate(request.arrangement_date).join(" ");
+        return formattedDate.toLowerCase().includes(filterValue.toLowerCase());
       });
     }
 
@@ -88,82 +129,97 @@ export default function RequestTable() {
       );
     }
 
-    return filteredRequests;
-  }, [filterValue, statusFilter, hasSearchFilter]);
-
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
-
-  const pageNumber = Number(page);
-  const rowsPerPageNumber = Number(rowsPerPage);
-
-  const items = React.useMemo(() => {
-    const start = (pageNumber - 1) * rowsPerPageNumber;
-    const end = start + rowsPerPageNumber;
-    return filteredItems.slice(start, end);
-  }, [pageNumber, filteredItems, rowsPerPageNumber]);
-
-  const sortedItems = React.useMemo(() => {
-    return [...items].sort((a, b) => {
+    // Sort the filtered items
+    return filteredRequests.sort((a, b) => {
       const first = a[sortDescriptor.column] || "";
       const second = b[sortDescriptor.column] || "";
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [sortDescriptor, items]);
+  }, [requests, filterValue, statusFilter, hasSearchFilter, sortDescriptor]);
 
-  const isWithinTwoWeeks = (arrangementDate) => {
-    const now = new Date();
-    const arrangement = new Date(arrangementDate);
-    const twoWeeksBefore = new Date(arrangement);
-    twoWeeksBefore.setDate(arrangement.getDate() - 14);
-    const twoWeeksAfter = new Date(arrangement);
-    twoWeeksAfter.setDate(arrangement.getDate() + 14);
-  
-    return now >= twoWeeksBefore && now <= twoWeeksAfter;
-  };
-  
-  const cancelRequest_pending = async (requestId) => {
-    if (!window.confirm("Are you sure you want to cancel this request?")) {
-      return; // User withdraw the action
-    }
+  // Calculate pages based on filtered items
+  const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
-    const reason = prompt("Please provide a reason for the cancellation:");
-    if (!reason) {
-      alert("Cancellation reason is required.");
+  // Get paginated items
+  const paginatedItems = React.useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    return filteredItems.slice(start, end);
+  }, [page, rowsPerPage, filteredItems]);
+
+  // const isWithinTwoWeeks = (arrangementDate) => {
+  //   const now = new Date();
+  //   const arrangement = new Date(arrangementDate);
+  //   const twoWeeksBefore = new Date(arrangement);
+  //   twoWeeksBefore.setDate(arrangement.getDate() - 14);
+  //   const twoWeeksAfter = new Date(arrangement);
+  //   twoWeeksAfter.setDate(arrangement.getDate() + 14);
+  
+  //   return now >= twoWeeksBefore && now <= twoWeeksAfter;
+  // };
+  
+
+  const handleConfirmCancel  = useCallback(async (currentRequestId) => {
+    if (!remarks) {
+      modalMsg = "Cancellation reason is required.";
+      modalTitle = "Error Message";
+      setButtonColor("danger");
+      onOpen(); 
       return;
     }
-    try {
-      const response = await fetch(
-        `http://localhost:5010/cancel_request/${requestId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status: "Cancel", reason }),
-        }
-      );
 
-      if (response.ok) {
-        alert("Request successfully cancelled.");
-        // Refresh the request data to reflect the updated status
-        setRequests((prevRequests) =>
-          prevRequests.map((request) =>
-            request.request_id === requestId
-              ? { ...request, status: "Cancelled" }
-              : request
-          )
+    try {
+        const response = await fetch(
+            `http://localhost:5010/cancel_request/${currentRequestId}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ remark: remarks }),
+            }
         );
-      } else {
-        const result = await response.json();
-        alert(result.message || "Failed to cancel request.");
-      }
+
+        if (response.ok) {
+            modalMsg = "Form processed successfully ";
+            modalTitle = "Success!";
+            setButtonColor("success");
+            onOpen();
+            setRequests((prevRequests) =>
+                prevRequests.map((request) =>
+                    request.request_id === currentRequestId
+                        ? { ...request, status: "Cancelled" }
+                        : request
+                )
+            );
+        }else if (!response.ok) {
+          const errorData = await response.json();
+          modalTitle = "Error Message";
+          modalMsg = "Error updating request: " + errorData.message;
+          onOpen();
+        }else {
+            modalMsg = "Failed to cancel request.";
+            modalTitle = "Error Message";
+            setButtonColor("danger");
+            onOpen();
+        }
     } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred while cancelling the request.");
+        console.error("Error:", error);
+        modalMsg = "An error occurred while cancelling the request.";
+        modalTitle = "Error Message";
+        setButtonColor("danger");
+        onOpen();
     }
-  };
+  }, [onOpen, remarks]);
+
+  const cancelRequest_pending = useCallback((requestId) => {
+    setRemarks(""); 
+    setCurrentRequestId(requestId);
+    onOpenReason(); 
+  }, [onOpenReason]);
 
   const navigate = useNavigate();
   const handleEditClick = useCallback((requestId) => {
@@ -173,34 +229,6 @@ export default function RequestTable() {
   const handleViewClick = useCallback((requestId) => {
     navigate(`/requests/${requestId}`);
   }, [navigate]);
-  
-  const cancelRequest_approved = async (requestId, arrangementDate) => {
-    if (!isWithinTwoWeeks(arrangementDate)) {
-      alert("Cancellation can only be made within 2 weeks of the arrangement date.");
-      return;
-    }
-  
-    const reason = prompt("Please provide a reason for the cancellation:");
-    if (!reason) {
-      alert("Cancellation reason is required.");
-      return;
-    }
-  
-    try {
-      const response = await fetch(
-        `http://localhost:5010/cancel_request/${requestId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Cancelled", reason }),
-        }
-      );
-      // Handle response as you did previously
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred while cancelling the request.");
-    }
-  };
 
   const renderCell = React.useCallback((request, columnKey) => {
     const cellValue = request[columnKey];
@@ -273,11 +301,7 @@ export default function RequestTable() {
                     Cancel
                   </DropdownItem>
                 )}
-                {request.status === "Approved" && isWithinTwoWeeks(request.arrangement_date) && (
-                  <DropdownItem onClick={() => cancelRequest_approved(request.request_id, request.arrangement_date)}>
-                    Cancel
-                  </DropdownItem>
-                )}
+
 
               </DropdownMenu>
             </Dropdown>
@@ -297,7 +321,7 @@ export default function RequestTable() {
       default:
         return cellValue;
     }
-  }, [handleEditClick, handleViewClick, cancelRequest_approved]);
+  }, [handleEditClick, handleViewClick, cancelRequest_pending]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {
@@ -459,7 +483,76 @@ export default function RequestTable() {
             Next
           </Button>
         </div>
+
+        {/* basic modal */}
+        <Modal
+          backdrop="opaque"
+          isOpen={isOpen}
+          onOpenChange={(isOpen) => {
+            onOpenChange(isOpen);
+          }}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1" placement="top">
+                  {modalTitle}
+                </ModalHeader>
+                <ModalBody>
+                  <p>{modalMsg}</p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button
+                    color={buttonColor}
+                    variant="light"
+                    onPress={onClose}
+                  >
+                    Close
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
+        {/* input reason modal */}
+        <Modal
+          backdrop="opaque"
+          isOpen={isOpenReason}
+          onOpenChange={onOpenChangeReason}
+        >
+          <ModalContent>
+            {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Input Reason</ModalHeader>
+              <ModalBody>
+                <Input
+                      autoFocus
+                      label="Cancel Reason"
+                      placeholder="Enter your reason"
+                      variant="bordered"
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                    />
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+                <Button color="primary" variant="light" onPress={ () => {
+                  onClose();
+                  handleConfirmCancel(currentRequestId);
+                }}>
+                  Confirm
+                </Button>
+              </ModalFooter>
+            </>
+            )}
+          </ModalContent>
+
+        </Modal>
       </div>
+      
     );
   }, [
     selectedKeys,
@@ -468,6 +561,15 @@ export default function RequestTable() {
     filteredItems.length,
     onNextPage,
     onPreviousPage,
+    isOpen,
+    onOpenChange,
+    buttonColor,
+    isOpenReason,
+    onOpenChangeReason,
+    remarks,
+    setRemarks,
+    handleConfirmCancel,
+    currentRequestId,
   ]);
 
   return (
@@ -500,17 +602,20 @@ export default function RequestTable() {
       </TableHeader>
       <TableBody
         emptyContent={"No Requests found"}
-        items={sortedItems}
+        items={paginatedItems}
         loadingContent={<Spinner label="Loading..." />}
+        isLoading={isLoading}
       >
-        {(item, rowIndex) => (
+        {(item) => (
           <TableRow key={item.request_id}>
             {(columnKey) => (
-              <TableCell>{renderCell(item, columnKey, rowIndex)}</TableCell>
+              <TableCell>{renderCell(item, columnKey)}</TableCell>
             )}
           </TableRow>
         )}
       </TableBody>
     </Table>
+
+
   );
 }

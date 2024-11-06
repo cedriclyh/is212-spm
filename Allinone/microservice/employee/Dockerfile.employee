@@ -1,0 +1,23 @@
+# Use an official Python runtime as a parent image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Copy the requirements file
+COPY requirements.txt ./
+
+# Copies everything in employee folder 
+COPY employee ./
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -r employee.requirements.txt
+
+# Expose the port your app runs on
+EXPOSE 5002
+
+# Define environment variable
+ENV PYTHONUNBUFFERED 1
+
+# Run the application
+CMD ["python", "employee.py"]

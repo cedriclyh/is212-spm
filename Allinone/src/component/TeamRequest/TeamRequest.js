@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableHeader,
@@ -16,12 +17,18 @@ import {
   User,
   Pagination,
   Spinner,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from "@nextui-org/react";
 import {VerticalDotsIcon} from "../Icons/VerticalDotsIcon";
 import {SearchIcon} from "../Icons/SearchIcon";
 import {ChevronDownIcon} from "../Icons/ChevronDownIcon";
-import {columns, statusOptions, pulled_data} from "./TeamRequestData";
-import {capitalize, formatDate} from "../TeamRequest/TeamRequestUtils";
+import {columns, statusOptions} from "./TeamRequestData";
+import {capitalize, formatDate, formatTimeslot} from "../TeamRequest/TeamRequestUtils";
 import profilePic from "../Icons/profile_pic.png"
 
 const statusColorMap = {
@@ -34,7 +41,14 @@ const statusColorMap = {
 
 const INITIAL_VISIBLE_COLUMNS = ["staff", "request_date", "arrangement_date", "timeslot", "status", "actions"];
 
+var modalTitle = "Error Message";
+var modalMsg = "";
+
 export default function TeamRequest() {
+  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+  const [buttonColor, setButtonColor] = useState("danger");
+
+
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(new Set(INITIAL_VISIBLE_COLUMNS));
@@ -48,14 +62,43 @@ export default function TeamRequest() {
 
   const hasSearchFilter = Boolean(filterValue);
 
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === "all") return columns;
 
     return columns.filter((column) => Array.from(visibleColumns).includes(column.uid));
   }, [visibleColumns]);
 
+  const fetchRequests = async () => {
+    try {
+      const response = await fetch('http://localhost:5011/manager/140894/requests');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRequests(data.data);
+        
+      } else if (response.status === 404) {
+        setRequests([]);
+      } else {
+        console.error("An error occurred:", response.statusText);
+        setRequests([]);
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+      setRequests([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }; 
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
   const filteredItems = React.useMemo(() => {
-    let filteredRequests = [...pulled_data];
+    let filteredRequests = [...requests];
   
     // Search by staff name
     if (hasSearchFilter) {
@@ -73,7 +116,7 @@ export default function TeamRequest() {
     }
   
     return filteredRequests;
-  }, [filterValue, statusFilter, hasSearchFilter]);
+  }, [filterValue, statusFilter, hasSearchFilter, requests]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -97,7 +140,60 @@ export default function TeamRequest() {
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = React.useCallback((request, columnKey) => {
+  const navigate = useNavigate();
+  const handleViewClick = useCallback((requestId) => {
+    navigate(`/requests/${requestId}`);
+  }, [navigate]);
+
+  const handleStatusChange = useCallback(async (currentRequestId, currentStatus) => {
+
+    try {
+      const response = await fetch(
+        `http://localhost:5010/manage_request`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            request_id: currentRequestId,
+            status: currentStatus,
+            remarks: ""
+          })
+        }
+      );
+
+      if (response.ok) {
+        modalMsg = "Form processed successfully ";
+        modalTitle = "Success!";
+        setButtonColor("success");
+        onOpen();
+        setRequests((prevRequests) =>
+            prevRequests.map((request) =>
+                request.request_id === currentRequestId
+                    ? { ...request, status: "Cancelled" }
+                    : request
+            )
+        );
+      }
+      else {
+        modalMsg = "Action Failed.";
+        modalTitle = "Error Message";
+        setButtonColor("danger");
+        onOpen();
+    }
+
+    }
+    catch(error){
+      console.error("Error:", error);
+        modalMsg = "An error occurred while approving/rejecting the request.";
+        modalTitle = "Error Message";
+        setButtonColor("danger");
+        onOpen();
+    }
+  }, [onOpen]);
+
+  const renderCell = useCallback((request, columnKey) => {
     const cellValue = request[columnKey];
 
     switch (columnKey) {
@@ -129,15 +225,13 @@ export default function TeamRequest() {
                 </div>
             );
           }
-        case "timeslot":
-          return (
-            <div>
-              <p className="text-bold text-small" >{request.timeslot}</p>
-              {request.timeslot === "AM" && <p className="text-bold text-tiny text-default-400">9AM - 1PM</p>}
-              {request.timeslot === "PM" && <p className="text-bold text-tiny text-default-400">2PM - 6PM</p>}
-              {request.timeslot === "FULL" && <p className="text-bold text-tiny text-default-400">9AM - 6PM</p>}
-            </div>
-          )
+          case "timeslot":
+            return (
+              <div>
+                <p className="text-bold text-small capitalize">{formatTimeslot(request.timeslot)[0]}</p>
+                <p className="text-bold text-tiny capitalize text-default-400">{formatTimeslot(request.timeslot)[1]}</p>
+              </div>
+            )
       case "status":
         return (
           <Chip color={statusColorMap[request.status]} size="sm" variant="flat">
@@ -154,9 +248,11 @@ export default function TeamRequest() {
                 </Button>
               </DropdownTrigger>
               <DropdownMenu>
-                <DropdownItem>View</DropdownItem>
-                {request.status === "Pending" && <DropdownItem>Approve</DropdownItem>}
-                {request.status === "Pending" && <DropdownItem>Reject</DropdownItem>}
+                <DropdownItem onClick={() => handleViewClick(request.request_id)}>View</DropdownItem>
+                {request.status === "Pending" && <DropdownItem
+                  onClick={() => handleStatusChange(request.request_id, "Approved")}>Approve</DropdownItem>}
+                {request.status === "Pending" && <DropdownItem
+                  onClick={() => handleStatusChange(request.request_id, "Reject")}>Reject</DropdownItem>}
                 {request.status === "Approved" && <DropdownItem>Withdraw</DropdownItem>}
               </DropdownMenu>
             </Dropdown>
@@ -176,7 +272,7 @@ export default function TeamRequest() {
       default:
         return cellValue;
     }
-  }, []);
+  }, [handleStatusChange, handleViewClick]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {
@@ -319,9 +415,48 @@ export default function TeamRequest() {
             Next
           </Button>
         </div>
+
+        <Modal
+          backdrop="opaque"
+          isOpen={isOpen}
+          onOpenChange={(isOpen) => {
+            onOpenChange(isOpen);
+          }}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1" placement="top">
+                  {modalTitle}
+                </ModalHeader>
+                <ModalBody>
+                  <p>{modalMsg}</p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button
+                    color={buttonColor}
+                    variant="light"
+                    onPress={onClose}
+                  >
+                    Close
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
       </div>
     );
-  }, [selectedKeys, page, pages, filteredItems.length, onNextPage, onPreviousPage]);
+  }, [selectedKeys, 
+      page, 
+      pages, 
+      filteredItems.length, 
+      onNextPage, 
+      onPreviousPage,
+      buttonColor,
+      isOpen,
+      onOpenChange,
+    ]);
 
   return (
     <Table
@@ -355,6 +490,7 @@ export default function TeamRequest() {
       emptyContent={"No Requests found"} 
       items={sortedItems}
       loadingContent={<Spinner label="Loading..." />}
+      isLoading={isLoading}
       >
         {(item, rowIndex) => (
           <TableRow key={item.request_id}>

@@ -17,8 +17,8 @@ import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
-    or 'sqlite:///:memory:'  # fallback for testing
+    environ.get("dbURL")
+    or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
     # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -110,47 +110,33 @@ class RequestDates(db.Model):
 def create_request():
     try:
         data = request.json
-
-        arrangement_dates = data.get("arrangement_date")
-        if isinstance(arrangement_dates, str):
-            arrangement_dates = [arrangement_dates]
-
         is_recurring = data.get("is_recurring")
 
         new_request = Request(
             staff_id = data["staff_id"],
             manager_id = data["manager_id"],
             request_date = data["request_date"],
-            arrangement_date = arrangement_dates[0],
             timeslot = data["timeslot"],
             reason = data["reason"],
-            status = data["status"],
             remark = data["remark"],
-            recurring_day = data["recurring_day"],
-            start_date = data["start_date"],
-            end_date = data["end_date"],
-            is_recurring=is_recurring
+            is_recurring=is_recurring,
+            arrangement_date=data.get("arrangement_date") if not is_recurring else None,
+            recurring_day=data.get("recurring_day") if is_recurring else None,
+            start_date=data.get("start_date") if is_recurring else None,
+            end_date=data.get("end_date") if is_recurring else None
         )
         # print(new_request)
-
-        # # set nullable fields if they are in the request data
-        # if is_recurring:
-        #     new_request.recurring_day = data.get("recurring_day")
-        #     new_request.start_date = data.get("start_date")
-        #     new_request.end_date = data.get("end_date")
-
         db.session.add(new_request)
         db.session.commit()
 
         # If it's a recurring request, insert the additional dates into RequestDates
-        if is_recurring:
-            for date in arrangement_dates:
+        if is_recurring and "arrangement_dates" in data:
+            for date in data["arrangement_dates"]:
                 request_date_entry = RequestDates(
                     request_id=new_request.request_id,
                     arrangement_date=date
                 )
                 db.session.add(request_date_entry)
-
         db.session.commit()
 
         return jsonify({
@@ -211,7 +197,7 @@ def get_request(request_id):
                         'code': 500
         }), 500
 
-#Retrieve a WFH request by staff
+#Retrieve a WFH request by staff (used in get_request.py)
 @app.route('/get_requests/staff/<int:staff_id>', methods=['GET'])
 def get_requests_by_staff_id(staff_id):
     try:
@@ -237,8 +223,8 @@ def get_requests_by_staff_id(staff_id):
         return jsonify({'message': 'Failed to retrieve requests by staff ID', 
                         'code': 500
         }), 500
-    
-#Retrieve all WFH request by team members of the same team
+
+#Retrieve a WFH request by manager (used in get_request.py)
 @app.route('/get_requests/manager/<int:manager_id>', methods=['GET'])
 def get_requests_by_manager_id(manager_id):
     try:
@@ -251,23 +237,22 @@ def get_requests_by_manager_id(manager_id):
                 request_data["arrangement_dates"] = [str(date.arrangement_date) for date in related_dates]
                 request_with_dates.append(request_data)
             return jsonify({
-                'message': f'Requests from manager {manager_id} found', 
+                'message': f'Requests for manager {manager_id} found', 
                 'data': request_with_dates, 
                 'code': 200
             }), 200
         else:
-            return jsonify({'message': f'No requests from manager {manager_id}', 
+            return jsonify({'message': f'No requests from staff {manager_id}', 
                             'code': 404
             }), 404
     except Exception as e:
-        app.logger.error(f"Failed to retrieve requests by manager ID: {e}")
-        return jsonify({'message': 'Failed to retrieve requests by manager ID', 
+        app.logger.error(f"Failed to retrieve requests by staff ID: {e}")
+        return jsonify({'message': 'Failed to retrieve requests by staff ID', 
                         'code': 500
         }), 500
-
     
 # Update request status
-@app.route('/update_request/<int:request_id>', methods=['PUT'])
+@app.route('/update_request/<int:request_id>', methods=['PUT','PATCH'])
 def update_request(request_id):
     try:
         data = request.json
@@ -285,8 +270,77 @@ def update_request(request_id):
             }), 404
     except Exception as e:
         app.logger.error(f"Failed to update request: {e}")
-        return jsonify({'message': 'Failed to update request', 'code': 500}), 500   
+        return jsonify({'message': 'Failed to update request', 
+                        'code': 500
+        }), 500
+    
+# Edit request
+@app.route('/edit_request/<int:request_id>', methods=['PUT'])
+def edit_request(request_id):
+    try:
+        data = request.json
+        request_to_edit = Request.query.filter_by(request_id=request_id).first()
+        
+        if not request_to_edit:
+            return jsonify({
+                'message': 'Request not found',
+                'code': 404
+            }), 404
 
+
+        # update the fields that can be edited
+        request_to_edit.request_date = data.get('request_date', request_to_edit.request_date)
+        request_to_edit.timeslot = data.get('timeslot', request_to_edit.timeslot)
+        request_to_edit.reason = data.get('reason', request_to_edit.reason)
+        request_to_edit.is_recurring = data.get('is_recurring', request_to_edit.is_recurring)
+
+        if request_to_edit.is_recurring:
+            request_to_edit.recurring_day = data.get('recurring_day', request_to_edit.recurring_day)
+            request_to_edit.start_date = data.get('start_date', request_to_edit.start_date)
+            request_to_edit.end_date = data.get('end_date', request_to_edit.end_date)
+            request_to_edit.arrangement_date = None
+            
+            # handle updating arrangement dates for recurring requests
+            if 'arrangement_dates' in data:
+                # delete existing dates
+                RequestDates.query.filter_by(request_id=request_id).delete()
+                
+                # add new dates
+                for date in data['arrangement_dates']:
+                    new_date = RequestDates(
+                        request_id=request_id,
+                        arrangement_date=date
+                    )
+                    db.session.add(new_date)
+        else:
+            request_to_edit.arrangement_date = data.get('arrangement_date', request_to_edit.arrangement_date)
+            request_to_edit.recurring_day = None
+            request_to_edit.start_date = None
+            request_to_edit.end_date = None
+            RequestDates.query.filter_by(request_id=request_id).delete()
+
+        db.session.commit()
+
+        # get updated request with dates
+        request_data = request_to_edit.json()
+        if request_to_edit.is_recurring:
+            related_dates = db.session.query(RequestDates.arrangement_date).filter_by(request_id=request_id).all()
+            request_data['arrangement_dates'] = [str(date.arrangement_date) for date in related_dates]
+
+        return jsonify({
+            'message': 'Request updated successfully',
+            'data': request_data,
+            'code': 200
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to edit request: {e}")
+        return jsonify({
+            'message': 'Failed to edit request',
+            'error': str(e),
+            'code': 500
+        }), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003, debug=True)
