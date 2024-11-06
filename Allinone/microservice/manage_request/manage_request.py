@@ -290,8 +290,8 @@ def cancel_request(request_id):
     Cancel a pending request with a provided reason.
     """
     try:
-        data = request.json
-        reason = data.get("reason")
+        data = request.get_json() 
+        reason = data.get("remark")
         
         if not reason:
             return jsonify({

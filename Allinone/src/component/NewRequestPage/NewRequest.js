@@ -360,14 +360,36 @@ export default function NewRequest({ initialFormData }) {
           }, 1000);
   
           return () => clearInterval(timer);
-        } else {
-          modalMsg = "Error updatting request";
+        } 
+        else if (!response.ok) {
+          const errorData = await response.json();
+          modalMsg = "Error updating request: " + errorData.message;
+          onOpen(); 
+          setShowCountdown(true);
+          onOpen();
+          let countdownTimer = 3;
+          setCountdown(countdownTimer);
+  
+          const timer = setInterval(() => {
+            countdownTimer--;
+            setCountdown(countdownTimer);
+  
+            if (countdownTimer === 0) {
+              clearInterval(timer);
+              navigate("/requests");
+            }
+          }, 1000);
+  
+          return () => clearInterval(timer);
+        }
+        else {
+          modalMsg = "Error updating request";
           onOpen();
         }
       } catch (error) {
         setLoading(false);
-        console.error("Error:", error);
-        modalMsg = "Error updating request " + error.message;
+        console.log("Error:", error.message);
+        modalMsg = "Error updating request: " + error.message;
         onOpen();
       }
     }
