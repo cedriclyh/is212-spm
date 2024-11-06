@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
     Table,
@@ -225,19 +225,49 @@ export default function ViewRequest() {
                             <TableColumn>ACTIONS</TableColumn>
                         </TableHeader>
                         <TableBody>
-                            {arrangements.map((arrangement, index) => (
+                            {dates.map((date, index) => {
+                                // Find if the date is an arrangement date
+                                const arrangement = arrangements.find(arr => arr.arrangement_date === date);
+
+                                return (
+                                    <TableRow key={index}>
+                                        <TableCell>{date}</TableCell>
+                                        {arrangement ? (
+                                            <TableCell>
+                                                <Chip color="success" size="sm" variant="flat">Approved</Chip>
+                                            </TableCell>
+                                        ) : (
+                                            <TableCell>
+                                                <Chip color="default" size="sm" variant="flat">Cancelled</Chip>
+                                            </TableCell>
+                                        )}
+                                        {arrangement ? (
+                                            <TableCell>
+                                                <Button color="danger" size="sm" variant="flat" 
+                                                    onClick={() => handleWithdrawArrangement(arrangement.arrangement_id)}
+                                                >
+                                                    Withdraw
+                                                </Button>
+                                            </TableCell>
+                                        ) : (
+                                            <TableCell>-</TableCell>
+                                        )}
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                )}
+                {requestData.status !== "Approved" && (
+                    <Table aria-label="Arrangement dates table" isCompact>
+                        <TableHeader>
+                            <TableColumn>ARRANGEMENT DATES (YYYY-MM-DD)</TableColumn>
+                            
+                        </TableHeader>
+                        <TableBody>
+                            {dates.map((arrangement, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{arrangement.arrangement_date}</TableCell>
-                                    <TableCell>
-                                        <Chip color="success" size="sm" variant="flat">Approved</Chip>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button color="danger" size="sm" variant="flat" 
-                                            onClick={() => handleWithdrawArrangement(arrangement.arrangement_id)}
-                                        >
-                                            Withdraw
-                                        </Button>
-                                    </TableCell>
+                                    <TableCell>{arrangement}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

@@ -56,9 +56,10 @@ export default function RequestTable() {
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const {isOpen, onOpen, onOpenChange} = useDisclosure();
-  // const [countdown, setCountdown] = useState(3);
+  const { isOpen: isOpenReason, onOpen: onOpenReason, onOpenChange: onOpenChangeReason } = useDisclosure();
   const [buttonColor, setButtonColor] = useState("danger");
-  // const [showCountdown, setShowCountdown] = useState(false);
+  const [remarks, setRemarks] = useState("");
+  const [currentRequestId, setCurrentRequestId] = useState(null);
 
   const fetchRequests = async () => {
     try {
@@ -110,7 +111,7 @@ export default function RequestTable() {
 
   const filteredItems = React.useMemo(() => {
     let filteredRequests = [...requests];
-    console.log(requests);
+    // console.log(requests);
 
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {
@@ -149,41 +150,36 @@ export default function RequestTable() {
     return filteredItems.slice(start, end);
   }, [page, rowsPerPage, filteredItems]);
 
-  const isWithinTwoWeeks = (arrangementDate) => {
-    const now = new Date();
-    const arrangement = new Date(arrangementDate);
-    const twoWeeksBefore = new Date(arrangement);
-    twoWeeksBefore.setDate(arrangement.getDate() - 14);
-    const twoWeeksAfter = new Date(arrangement);
-    twoWeeksAfter.setDate(arrangement.getDate() + 14);
+  // const isWithinTwoWeeks = (arrangementDate) => {
+  //   const now = new Date();
+  //   const arrangement = new Date(arrangementDate);
+  //   const twoWeeksBefore = new Date(arrangement);
+  //   twoWeeksBefore.setDate(arrangement.getDate() - 14);
+  //   const twoWeeksAfter = new Date(arrangement);
+  //   twoWeeksAfter.setDate(arrangement.getDate() + 14);
   
-    return now >= twoWeeksBefore && now <= twoWeeksAfter;
-  };
+  //   return now >= twoWeeksBefore && now <= twoWeeksAfter;
+  // };
   
 
-  const cancelRequest_pending = async (requestId) => {
-    if (!window.confirm("Are you sure you want to cancel this request?")) {
-        return;
-    }
-
-    const reason = prompt("Please provide a reason for the cancellation:");
-    if (!reason) {
-        modalMsg = "Cancellation reason is required."
-        modalTitle = "Error Message";
-        setButtonColor("danger");
-        onOpen();
-        return;
+  const handleConfirmCancel  = useCallback(async (currentRequestId) => {
+    if (!remarks) {
+      modalMsg = "Cancellation reason is required.";
+      modalTitle = "Error Message";
+      setButtonColor("danger");
+      onOpen(); 
+      return;
     }
 
     try {
         const response = await fetch(
-            `http://localhost:5010/cancel_request/${requestId}`,
+            `http://localhost:5010/cancel_request/${currentRequestId}`,
             {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ reason }),
+                body: JSON.stringify({ remark: remarks }),
             }
         );
 
@@ -194,12 +190,17 @@ export default function RequestTable() {
             onOpen();
             setRequests((prevRequests) =>
                 prevRequests.map((request) =>
-                    request.request_id === requestId
+                    request.request_id === currentRequestId
                         ? { ...request, status: "Cancelled" }
                         : request
                 )
             );
-        } else {
+        }else if (!response.ok) {
+          const errorData = await response.json();
+          modalTitle = "Error Message";
+          modalMsg = "Error updating request: " + errorData.message;
+          onOpen();
+        }else {
             modalMsg = "Failed to cancel request.";
             modalTitle = "Error Message";
             setButtonColor("danger");
@@ -212,7 +213,13 @@ export default function RequestTable() {
         setButtonColor("danger");
         onOpen();
     }
-  };
+  }, [onOpen, remarks]);
+
+  const cancelRequest_pending = useCallback((requestId) => {
+    setRemarks(""); 
+    setCurrentRequestId(requestId);
+    onOpenReason(); 
+  }, [onOpenReason]);
 
   const navigate = useNavigate();
   const handleEditClick = useCallback((requestId) => {
@@ -476,7 +483,8 @@ export default function RequestTable() {
             Next
           </Button>
         </div>
-        <Button onPress={onOpen}>Open Modal</Button>
+
+        {/* basic modal */}
         <Modal
           backdrop="opaque"
           isOpen={isOpen}
@@ -506,6 +514,43 @@ export default function RequestTable() {
             )}
           </ModalContent>
         </Modal>
+
+        {/* input reason modal */}
+        <Modal
+          backdrop="opaque"
+          isOpen={isOpenReason}
+          onOpenChange={onOpenChangeReason}
+        >
+          <ModalContent>
+            {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Input Reason</ModalHeader>
+              <ModalBody>
+                <Input
+                      autoFocus
+                      label="Cancel Reason"
+                      placeholder="Enter your reason"
+                      variant="bordered"
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                    />
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+                <Button color="primary" variant="light" onPress={ () => {
+                  onClose();
+                  handleConfirmCancel(currentRequestId);
+                }}>
+                  Confirm
+                </Button>
+              </ModalFooter>
+            </>
+            )}
+          </ModalContent>
+
+        </Modal>
       </div>
       
     );
@@ -517,9 +562,14 @@ export default function RequestTable() {
     onNextPage,
     onPreviousPage,
     isOpen,
-    onOpen,
     onOpenChange,
     buttonColor,
+    isOpenReason,
+    onOpenChangeReason,
+    remarks,
+    setRemarks,
+    handleConfirmCancel,
+    currentRequestId,
   ]);
 
   return (
