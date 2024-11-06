@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
     Table,
@@ -11,6 +11,13 @@ import {
     Chip,
     User,
     Spinner,
+    Modal,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    useDisclosure,
+    Input,
 } from "@nextui-org/react";
 import profilePic from "../Icons/profile_pic.png";
 import { formatTimeslot } from "../RequestPage/RequestPageUtils";
@@ -23,6 +30,9 @@ const statusColorMap = {
     Withdrawn: "secondary",
 };
 
+var modalTitle = "Error Message";
+var modalMsg = "";
+
 export default function ViewRequest() {
     const { uid } = useParams();
     const [requestData, setRequestData] = useState(null);
@@ -30,21 +40,27 @@ export default function ViewRequest() {
     const [isLoading, setIsLoading] = useState(true);
     const [arrangements, setArrangements] = useState([]);
 
-    const handleWithdrawArrangement = async (arrangementId) => {
-        if (!window.confirm("Are you sure you want to withdraw this arrangement?")) {
+    const {isOpen, onOpen, onOpenChange} = useDisclosure();
+    const { isOpen: isOpenReason, onOpen: onOpenReason, onOpenChange: onOpenChangeReason } = useDisclosure();
+    const [buttonColor, setButtonColor] = useState("danger");
+    const [remarks, setRemarks] = useState("");
+    const [currentRequestId, setCurrentRequestId] = useState(null);
+  
+
+    const handleWithdrawArrangement = useCallback(async (arrangementId) => {
+        if (!remarks) {
+            modalMsg = "Cancellation reason is required.";
+            modalTitle = "Error Message";
+            setButtonColor("danger");
+            onOpen(); 
             return;
-        }
-        
-        const reason = prompt("Please enter a reason for withdrawal:");
-        
-        if (!reason) {
-            alert("Withdrawal reason is required.");
-            return;
-        }
+          }
         
         const arrangement = arrangements.find(a => a.arrangement_id === arrangementId);
         if (!arrangement) {
-            alert("Arrangement not found.");
+            modalTitle = "Error Message";
+            modalMsg = "Arrangement not found.";
+            onOpen()
             return;
         }
 
@@ -53,7 +69,9 @@ export default function ViewRequest() {
         const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
 
         if (Math.abs(arrangementDate - currentDate) > twoWeeksInMs) {
-            alert("You can only withdraw arrangements within two weeks of the arrangement date.");
+            modalTitle = "Error Message";
+            modalMsg = "You can only withdraw arrangements within two weeks of the arrangement date.";
+            onOpen()
             return;
         }
         
@@ -76,15 +94,34 @@ export default function ViewRequest() {
                 });
 
                 if (!statusResponse.ok) {
-                    console.error('Error updating request status:', statusResponse.status);
+                    modalMsg = "Form processed successfully ";
+                    modalTitle = "Error updating request status:" + statusResponse.status;
+                    setButtonColor("success");
+                    onOpen();
                 }
+
+                modalTitle = "Success!";
+                modalMsg = "Withdrawal Sucessful!";
+                setButtonColor("success");
+                onOpen();
+
             } else {
                 console.error('Error deleting arrangement:', response.status);
             }
         } catch (error) {
+            modalMsg = "Error deleting arrangement.";
+            modalTitle = "Error Message";
+            setButtonColor("danger");
+            onOpen();
             console.error('Error deleting arrangement:', error);
         }
-    };
+    }, [onOpen, remarks, arrangements, uid]);
+
+    const withdrawArrangement_approved = useCallback((arrangement_id) => {
+        setRemarks(""); 
+        setCurrentRequestId(arrangement_id);
+        onOpenReason(); 
+      }, [onOpenReason]);
     
     useEffect(() => {
         const fetchRequestData = async () => {
@@ -244,7 +281,7 @@ export default function ViewRequest() {
                                         {arrangement ? (
                                             <TableCell>
                                                 <Button color="danger" size="sm" variant="flat" 
-                                                    onClick={() => handleWithdrawArrangement(arrangement.arrangement_id)}
+                                                    onClick={() => withdrawArrangement_approved(arrangement.arrangement_id)}
                                                 >
                                                     Withdraw
                                                 </Button>
@@ -274,6 +311,74 @@ export default function ViewRequest() {
                     </Table>
                 )}
             </div>
+
+            {/* basic modal */}
+            <Modal
+            backdrop="opaque"
+            isOpen={isOpen}
+            onOpenChange={(isOpen) => {
+                onOpenChange(isOpen);
+            }}
+            >
+            <ModalContent>
+                {(onClose) => (
+                <>
+                    <ModalHeader className="flex flex-col gap-1" placement="top">
+                    {modalTitle}
+                    </ModalHeader>
+                    <ModalBody>
+                    <p>{modalMsg}</p>
+                    </ModalBody>
+                    <ModalFooter>
+                    <Button
+                        color={buttonColor}
+                        variant="light"
+                        onPress={onClose}
+                    >
+                        Close
+                    </Button>
+                    </ModalFooter>
+                </>
+                )}
+            </ModalContent>
+            </Modal>
+
+            {/* input reason modal */}
+            <Modal
+            backdrop="opaque"
+            isOpen={isOpenReason}
+            onOpenChange={onOpenChangeReason}
+            >
+            <ModalContent>
+                {(onClose) => (
+                <>
+                <ModalHeader className="flex flex-col gap-1">Input Reason</ModalHeader>
+                <ModalBody>
+                    <Input
+                        autoFocus
+                        label="Cancel Reason"
+                        placeholder="Enter your reason"
+                        variant="bordered"
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
+                        />
+                </ModalBody>
+                <ModalFooter>
+                    <Button color="danger" variant="light" onPress={onClose}>
+                    Close
+                    </Button>
+                    <Button color="primary" variant="light" onPress={ () => {
+                    onClose();
+                    handleWithdrawArrangement(currentRequestId);
+                    }}>
+                    Confirm
+                    </Button>
+                </ModalFooter>
+                </>
+                )}
+            </ModalContent>
+
+            </Modal>
         </div>
     );
 }
