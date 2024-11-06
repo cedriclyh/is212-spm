@@ -230,7 +230,7 @@ export default function NewRequest({ initialFormData }) {
     }));
     }
       
-  }, [isRecurring, inputDates, SelectedDayOfTheWeek, startDate, endDate, selectedTimeslot, reason]);
+  }, [isRecurring, inputDates, inputRequestID, SelectedDayOfTheWeek, startDate, endDate, selectedTimeslot, reason]);
 
 
   const handleSubmit = async (e) => {
