@@ -1,18 +1,88 @@
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, DatePicker, Button } from "@nextui-org/react";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, DatePicker, Button, Tooltip } from "@nextui-org/react";
 import React, { useState, useEffect } from "react";
+import { createRoot } from 'react-dom/client';  // Import createRoot
+// import { BrowserRouter } from 'react-router-dom'; // Import BrowserRouter
 
 const columns = [
   { key: "date", label: "DATE" },
   { key: "department", label: "DEPARTMENT" },
   { key: "team", label: "TEAM" },
   { key: "manpower", label: "MANPOWER AT OFFICE" },
+  { key: "toggle", label: "" },
 ];
+
+/**
+ * @typedef {Object} ToggleSubRowButtonProps
+ * @property {number} rowId - The ID of the row to toggle the sub-row for.
+ * @property {Object} rowData - The data object for the row to display in the sub-row.
+ */
+
+/**
+ * ToggleSubRowButton component for expanding/collapsing sub-rows.
+ * @param {ToggleSubRowButtonProps} props - The props for the button component.
+ * @returns {JSX.Element} The button with expand/collapse functionality.
+ */
+export const ToggleSubRowButton = ({ rowId, rowData }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleSubRow = () => {
+    console.log("Current rowId:", rowId);
+    const rowToInsertAfter = document.getElementById(`row-${rowId}`);
+    console.log("rowToInsertAfter:", rowToInsertAfter); // Check if the row element exists
+
+
+    if (rowToInsertAfter) {
+      if (isExpanded) {
+        const existingRow = document.getElementById(`subrow-${rowId}`);
+        if (existingRow) {
+          existingRow.remove();
+        }
+      } else {
+        const newRow = document.createElement("tr");
+        newRow.id = `subrow-${rowId}`;
+        const newCell = document.createElement("td");
+        newCell.colSpan = 100;
+        newCell.className = "px-4 py-4";
+
+        const root = createRoot(newCell);
+        root.render(
+          <div>
+          {rowData.entries && rowData.entries.length > 0 ? (
+            rowData.entries.map((entry) => (
+              <div key={entry.key}>
+                <p><strong>Manager ID:</strong> {entry.managerID}</p>
+                <p><strong>Name:</strong> {entry.name}</p>
+              </div>
+            ))
+          ) : (
+            <p>No entries available</p>
+          )}
+        </div>
+        );
+
+        newRow.appendChild(newCell);
+        rowToInsertAfter.insertAdjacentElement("afterend", newRow);
+      }
+
+      setIsExpanded(!isExpanded);
+    }
+  };
+
+  return (
+    <Tooltip content={isExpanded ? "Collapse" : "Expand"}>
+      <Button onClick={toggleSubRow} size="sm" variant="light" isIconOnly>
+        {isExpanded ? "-" : "+"}
+      </Button>
+    </Tooltip>
+  );
+};
 
 // const IDEALROWS = [{key: 1, date:'2024-11-01', department: 'HR', team: 'Manager', entries: [{name: 'John Doe'}, {name: 'Jane Doe'}]}];
 
 export default function Dashboard(inputEvents) {
   // const [state, setState] = useState(0);
   const events = inputEvents.events;
+  console.log(events);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -20,17 +90,20 @@ export default function Dashboard(inputEvents) {
 
   useEffect(() =>{
     const processData = async () => {
-      const dashboardData = events.map(item => {
-        const name = item.title.split(" ").slice(0, -1).join(" ");
-        return {
-          dept: item.dept,
-          teamName: item.teamName,
-          date: item.start.substring(0, 10),
-          name: name,
-          key: item.id,
-          managerID: item.managerID,
-        };
-      });
+      const dashboardData = events
+        .filter(item => item.backgroundColor === "#4caf50")
+        .map(item => {
+          const name = item.title.split(" ").slice(0, -1).join(" ");
+          return {
+            dept: item.dept,
+            teamName: item.teamName,
+            date: item.start.substring(0, 10),
+            name: name,
+            key: item.id,
+            managerID: item.managerID,
+          };
+        }
+      );
     
       const groupedData = dashboardData.reduce((acc, item) => {
         const { date, dept, teamName } = item;
@@ -116,27 +189,6 @@ export default function Dashboard(inputEvents) {
     const filteredRows = selectedDate 
       ? rows.filter((row) => row.date === selectedDate) 
       : [];
-    
-
-  // const handleClick = (index) => {
-  //   setRows((prevRows) => {
-  //     const updatedRows = [...prevRows]; // Clone the rows array
-  //     const updatedRow = { ...updatedRows[index] }; // Clone the specific row object
-  
-  //     if (updatedRow.other) {
-  //       delete updatedRow.other; // Remove the additional information
-  //     } else {
-  //       updatedRow.other = "Hello there";
-  //     }
-  
-  //     updatedRows[index] = updatedRow; // Update the row in the cloned array
-  
-  //     return updatedRows; // Update the state with the new array
-  //   });
-  
-  //   // Optionally update other state if needed, e.g., setState((prev) => prev + 1);
-  //   console.log("Updated row:", rows[index]);
-  // };
 
   return (
     <div className="card-container shadow-lg rounded-lg p-4 bg-white">
@@ -156,12 +208,14 @@ export default function Dashboard(inputEvents) {
 
         <TableBody items={filteredRows}>
           {(item) => (
-            <TableRow key={item.key}>
+            <TableRow key={item.key} id={`row-${item.key}`}>
               <TableCell>{item.date}</TableCell>
               <TableCell>{item.department}</TableCell>
               <TableCell>{item.team}</TableCell>
               <TableCell>{item.manpower}</TableCell>
-              <TableCell>{renderCell(item, columnKey)}</TableCell>
+              <TableCell>
+                <ToggleSubRowButton rowId={item.key} rowData={item}/>
+              </TableCell>
             </TableRow>
           )}
         </TableBody>
@@ -193,58 +247,3 @@ export const getTotalCount = async (managerId) => {
     console.error('Failed to fetch list of staffs under the manager:', error);
   }
 };    
-
-/**
- * @typedef {Object} ToggleSubRowButtonProps
- * @property {number} rowId - The ID of the row.
- */
-
-/**
- * @param {ToggleSubRowButtonProps} props
- * @returns {JSX.Element} The button with expand/collapse functionality.
- */
-
-export const ToggleSubRowButton = ({ rowId }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const toggleSubRow = () => {
-    const rowToInsertAfter = document.getElementById(`row-${rowId}`);
-
-    if (rowToInsertAfter) {
-      if (isExpanded) {
-        const existingRow = document.getElementById(`subrow-${rowId}`);
-        if (existingRow) {
-          existingRow.remove();
-        }
-      } else {
-        const newRow = document.createElement("tr");
-        newRow.id = `subrow-${rowId}`;
-        const newCell = document.createElement("td");
-        newCell.colSpan = 100;
-        newCell.className = "px-4 py-4";
-
-        const root = createRoot(newCell);
-        root.render(
-          <BrowserRouter>
-            <AnyOtherProvider>
-              <YourReactElement />
-            </AnyOtherProvider>
-          </BrowserRouter>
-        );
-
-        newRow.appendChild(newCell);
-        rowToInsertAfter.insertAdjacentElement("afterend", newRow);
-      }
-
-      setIsExpanded(!isExpanded);
-    }
-  };
-
-  return (
-    <Tooltip content={isExpanded ? "Collapse" : "Expand"}>
-      <Button onClick={toggleSubRow} size="sm" variant="light" isIconOnly>
-        {isExpanded ? "-" : "+"}
-      </Button>
-    </Tooltip>
-  );
-};
