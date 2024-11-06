@@ -17,6 +17,7 @@ import {
   User,
   Pagination,
   Spinner,
+  Link,
   Modal,
   ModalContent,
   ModalHeader,
@@ -139,7 +140,6 @@ export default function RequestTable() {
     });
   }, [requests, filterValue, statusFilter, hasSearchFilter, sortDescriptor]);
 
-  // Calculate pages based on filtered items
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
   // Get paginated items
@@ -149,18 +149,6 @@ export default function RequestTable() {
 
     return filteredItems.slice(start, end);
   }, [page, rowsPerPage, filteredItems]);
-
-  // const isWithinTwoWeeks = (arrangementDate) => {
-  //   const now = new Date();
-  //   const arrangement = new Date(arrangementDate);
-  //   const twoWeeksBefore = new Date(arrangement);
-  //   twoWeeksBefore.setDate(arrangement.getDate() - 14);
-  //   const twoWeeksAfter = new Date(arrangement);
-  //   twoWeeksAfter.setDate(arrangement.getDate() + 14);
-  
-  //   return now >= twoWeeksBefore && now <= twoWeeksAfter;
-  // };
-  
 
   const handleConfirmCancel  = useCallback(async (currentRequestId) => {
     if (!remarks) {
@@ -417,8 +405,13 @@ export default function RequestTable() {
                 ))}
               </DropdownMenu>
             </Dropdown>
-            <Button color="primary" endContent={<PlusIcon />}>
-              <a href="/new_request">Add New</a>
+            <Button 
+              color="primary" 
+              endContent={<PlusIcon />}
+              href="/new_request"
+              as={Link}
+              variant="solid">
+              Add New
             </Button>
           </div>
         </div>

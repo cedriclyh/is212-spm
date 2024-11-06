@@ -162,10 +162,6 @@ export default function NewRequest({ initialFormData }) {
     setReason("");
   };
 
-  // useEffect(() => {
-  //     console.log("isRecurring updated:", isRecurring);
-  // }, [isRecurring]);
-
   // Update availability status when dates are extracted
   useEffect(() => {
     if (inputDates.length > 0 && !isRecurring) {
@@ -398,7 +394,6 @@ export default function NewRequest({ initialFormData }) {
 
   return (
     <div>
-      {/* Form Container with Border, Padding, and Rounded Corners */}
       <div
         className="space-y-6 bg-white border border-gray-300 shadow-lg p-6"
         style={{ padding: "10px 20px", borderRadius: "10px" }}
