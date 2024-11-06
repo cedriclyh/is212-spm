@@ -5,6 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { getValidRange, getDirectorTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
+import Dashboard from './Dashboard';
 import HREventFilter from './AdvancedEventFilter';
 
 export default function WFHcalendar() {
