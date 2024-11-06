@@ -1,9 +1,7 @@
 function extractWeekdays(startDateStr, endDateStr, dayOfWeek) {
-  // Log the input values to inspect them
   console.log("Received startDateStr:", startDateStr);
   console.log("Received endDateStr:", endDateStr);
 
-  // Ensure startDateStr and endDateStr are valid date strings in "YYYY-MM-DD" format
   const startDate = (typeof startDateStr === 'string' ? startDateStr 
                    : startDateStr instanceof Date ? startDateStr.toISOString().split("T")[0] 
                    : null);
@@ -12,18 +10,15 @@ function extractWeekdays(startDateStr, endDateStr, dayOfWeek) {
                  : endDateStr instanceof Date ? endDateStr.toISOString().split("T")[0] 
                  : null);
 
-  // Check if either startDate or endDate is invalid after conversion
   if (!startDate || !endDate) {
     console.error("Invalid start or end date.", { startDate, endDate });
     return [];
   }
 
-  // Continue with the date extraction logic if both dates are valid
   const dates = [];
   let current = new Date(startDate);
   const end = new Date(endDate);
   
-  // Iterate from start to end date and add matching weekdays to dates array
   while (current <= end) {
     if (current.toLocaleDateString('en-US', { weekday: 'long' }) === dayOfWeek) {
       dates.push(current.toISOString().split('T')[0]);

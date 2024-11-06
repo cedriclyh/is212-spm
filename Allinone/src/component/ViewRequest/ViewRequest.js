@@ -18,6 +18,7 @@ import {
     ModalFooter,
     useDisclosure,
     Input,
+    Link,
 } from "@nextui-org/react";
 import profilePic from "../Icons/profile_pic.png";
 import { formatTimeslot } from "../RequestPage/RequestPageUtils";
@@ -191,6 +192,9 @@ export default function ViewRequest() {
 
     return (
         <div className="space-y-6 bg-white border border-gray-300 shadow-lg p-6" style={{ padding: "10px 20px", borderRadius: "10px" }}>
+            <p>
+                <Link href="/requests" underline="hover">Back to Request Page</Link>
+            </p>
             <div className="my-2">
                 <h2 className="text-lg font-semibold text-gray-900">Request {uid}</h2>
             </div>
@@ -275,7 +279,7 @@ export default function ViewRequest() {
                                             </TableCell>
                                         ) : (
                                             <TableCell>
-                                                <Chip color="default" size="sm" variant="flat">Cancelled</Chip>
+                                                <Chip color="default" size="sm" variant="flat">-</Chip>
                                             </TableCell>
                                         )}
                                         {arrangement ? (

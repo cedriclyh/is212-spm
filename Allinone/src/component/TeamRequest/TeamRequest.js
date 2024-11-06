@@ -171,7 +171,7 @@ export default function TeamRequest() {
         setRequests((prevRequests) =>
             prevRequests.map((request) =>
                 request.request_id === currentRequestId
-                    ? { ...request, status: "Cancelled" }
+                    ? { ...request, status: currentStatus }
                     : request
             )
         );
@@ -192,6 +192,48 @@ export default function TeamRequest() {
         onOpen();
     }
   }, [onOpen]);
+
+  const handleWithdrawChange = useCallback(async (requestId) => {
+
+    try {
+      const response = await fetch(
+        `http://localhost:5010/revoke_arrangments_by_request/${requestId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          }
+        }
+      );
+
+      if (response.ok) {
+        modalMsg = "Action processed successfully ";
+        modalTitle = "Success!";
+        setButtonColor("success");
+        onOpen();
+        setRequests((prevRequests) =>
+            prevRequests.map((request) =>
+                request.request_id === requestId
+                    ? { ...request, status: "Withdrawn" }
+                    : request
+            )
+        );
+      }
+      else {
+        modalMsg = "Action Failed.";
+        modalTitle = "Error Message";
+        setButtonColor("danger");
+        onOpen();
+    }
+    }
+    catch(error){
+      console.error("Error:", error);
+        modalMsg = "An error occurred while revoking the request.";
+        modalTitle = "Error Message";
+        setButtonColor("danger");
+        onOpen();
+    }
+  }, [onOpen])
 
   const renderCell = useCallback((request, columnKey) => {
     const cellValue = request[columnKey];
@@ -253,7 +295,8 @@ export default function TeamRequest() {
                   onClick={() => handleStatusChange(request.request_id, "Approved")}>Approve</DropdownItem>}
                 {request.status === "Pending" && <DropdownItem
                   onClick={() => handleStatusChange(request.request_id, "Reject")}>Reject</DropdownItem>}
-                {request.status === "Approved" && <DropdownItem>Withdraw</DropdownItem>}
+                {request.status === "Approved" && <DropdownItem
+                 onClick={() => handleWithdrawChange(request.request_id)}>Withdraw</DropdownItem>}
               </DropdownMenu>
             </Dropdown>
           </div>

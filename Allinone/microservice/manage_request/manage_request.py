@@ -368,6 +368,35 @@ def cancel_request(request_id):
             "code": 500
         }), 500
 
+@app.route('/revoke_arrangments_by_request/<int:request_id>', methods=['PUT'])
+def revoke_arrangments_by_request(request_id):
+    try:
+        arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL/{request_id}}")
+        if arrangement_response.status_code != 201:
+            return jsonify({
+                "message": "Failed to fetch delete details",
+                "code": 404
+            }), 404
+        
+        request_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json={"status": "Withdrawn"})
+        if request_response.status_code != 200:
+            return jsonify({
+                "message": "Failed to fetch delete details",
+                "code": 404
+            }), 404
+        
+        return jsonify({
+            "message": "Request successfully withdrawn",
+            "code": 201
+        }), 201
+        
+    except Exception as e:
+        app.logger.error(f"Failed to cancel request: {e}")
+        return jsonify({
+            "message": "Internal server error", 
+            "code": 500
+        }), 500
+    
 @app.route('/withdraw_wfh_arrangement/<int:request_id>/<int:arrangement_id>', methods=['DELETE'])
 def withdraw_wfh_arrangement(request_id, arrangement_id):
     try:
