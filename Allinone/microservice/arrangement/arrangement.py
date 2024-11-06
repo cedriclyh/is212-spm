@@ -309,7 +309,7 @@ def check_date(dates_to_check):
     return jsonify({"message": f"All arrangement dates are eligible to be revoked.", "code": 200}), 200
 
 @app.route('/revoke_arrangements_request/<int:request_id>', methods=['POST'])   
-def revoke_arrangements(request_id):
+def revoke_arrangements_request(request_id):
     
     arrangements = Arrangement.query.filter(
         Arrangement.request_id == request_id
