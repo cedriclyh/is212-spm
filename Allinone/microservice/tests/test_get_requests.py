@@ -1,9 +1,8 @@
 import pytest
-from get_request import app
+from get_request.get_request import app, db
 import json
 from unittest.mock import patch
 import requests
-from get_request import app, db
 from datetime import datetime, date
 
 @pytest.fixture

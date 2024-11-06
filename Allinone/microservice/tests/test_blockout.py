@@ -1,5 +1,5 @@
 import pytest, os
-from blockout import app, db, BlockoutDates
+from blockout.blockout import app, db, BlockoutDates
 from datetime import datetime, date
 import json
 
