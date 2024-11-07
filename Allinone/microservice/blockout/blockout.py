@@ -72,7 +72,7 @@ def blockDate():
             db.session.add(blockout)
             db.session.commit()
             print(f'[create_blockout] Blockout created for {data["title"]} from {start_date} and {end_date}')
-            return jsonify({'message': f'Blockout created for {data["title"]} from {start_date} and {end_date}', 'data': blockout.json(), 'code':200}), 200
+            return jsonify({'message': f'Blockout created for {data["title"]} from {start_date} and {end_date}', 'data': blockout.json(), 'code':201}), 201
 
     except Exception as e:
         app.logger.error(f"Failed to create blockout: {e}")
@@ -88,15 +88,15 @@ def get_blockouts():
 
     except Exception as e:
         app.logger.error(f"Failed to retrieve blockout dates: {e}")
-        return jsonify({'message': 'Failed to retrieve blockout dates', 'code': 500}), 500
+        return jsonify({'message': 'Failed to retrieve blockout dates', 'code': 404}), 404
     
 @app.route('/blockout/get_blockout/date/<string:query_start_date><string:query_end_date>', methods=['GET'])
 def get_blockout_by_date(query_start_date, query_end_date):
     blockout = fetch_blockout_by_date(query_start_date, query_end_date)
     if blockout:
-        return jsonify({'message': 'Blockout found', 'data': blockout.json()})
+        return jsonify({'message': 'Blockout found', 'data': blockout.json(), 'code':200}), 200
     else:
-        return jsonify({'message': 'No blockout date found for given date', 'data': False})
+        return jsonify({'message': 'No blockout date found for given date', 'data': False, 'code':404}), 404
 
 # Helper Function
 def fetch_blockout_by_date(query_start_date, query_end_date):
