@@ -78,19 +78,6 @@ def request_sent():
         api_response = api_instance.send_transac_email(send_smtp_email)
         print("Manager notification email sent successfully. API response:", api_response)
 
-        # Log the notification in the database
-        # try:
-        #     with engine.connect() as connection:
-        #         connection.execute(
-        #             text("""
-        #             INSERT INTO notifications_log (request_id, recipient_email, status)
-        #             VALUES (:request_id, :recipient_email, 'Success')
-        #             """),
-        #             {"request_id": data.get("request_id"), "recipient_email": manager_email}
-        #         )
-        # except SQLAlchemyError as e:
-        #     print(f"Failed to log notification in database: {e}")
-
         return jsonify({"message": "Manager email sent successfully"}), 200
 
     except ApiException as e:
@@ -226,21 +213,6 @@ def notify_revoke_arranagements():
         api_response_manager = api_instance.send_transac_email(send_smtp_email_manager)
         print("Revocation email sent to manager successfully. API response:", api_response_manager)
 
-        # Log the notification in the database
-        # try:
-        #     with engine.connect() as connection:
-        #         connection.execute(
-        #             text("""
-        #             INSERT INTO notifications_log (request_id, recipient_email, status)
-        #             VALUES (:request_id, :recipient_email, :status)
-        #             """),
-        #             {"request_id": request_id, 
-        #              "recipient_email": staff_email, 
-        #              "status": request_status}
-        #         )
-        # except SQLAlchemyError as e:
-        #     print(f"Failed to log notification in database: {e}")
-
         return jsonify({"message": "Revocation emais sent successfully"}), 200
 
     except ApiException as e:
@@ -248,19 +220,6 @@ def notify_revoke_arranagements():
         return jsonify({"error": "Failed to send email"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-# # Endpoint to validate and store emails (optional)
-# @app.route("/api/send-email", methods=["POST"])
-# def handle_email():
-#     """Store an email in the cache and validate it."""
-#     data = request.get_json()
-#     user_email = data.get("userEmail")
-#     if "@" in user_email:
-#         return jsonify({"message": "Email stored"}), 200
-#     else:
-#         return jsonify({"error": "Invalid email"}), 400
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5009, debug=True)
