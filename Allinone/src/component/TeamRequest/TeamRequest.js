@@ -73,7 +73,7 @@ export default function TeamRequest() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch('http://get_request/manager/140894/requests');
+      const response = await fetch('http://get_request:5011/manager/140894/requests');
       
       if (response.ok) {
         const data = await response.json();
@@ -149,7 +149,7 @@ export default function TeamRequest() {
 
     try {
       const response = await fetch(
-        `http://manage_request/manage_request`,
+        `http://manage_request:5010/manage_request`,
         {
           method: "PUT",
           headers: {

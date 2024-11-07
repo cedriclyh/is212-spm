@@ -353,7 +353,7 @@ def edit_request(request_id):
                     "request_id": request_id
                 }
                 
-                requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/request_edited", json=notification_data)
+                requests.post(f"{NOTIFICATION_MICROSERVICE_URL}/request_sent", json=notification_data)
 
         return jsonify({
             "message": "Request updated successfully",
