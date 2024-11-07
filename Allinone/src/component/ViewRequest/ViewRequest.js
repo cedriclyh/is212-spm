@@ -77,7 +77,7 @@ export default function ViewRequest() {
         }
         
         try {
-            const response = await fetch(`http://localhost:5005/withdraw_arrangement/${uid}/${arrangementId}`, {
+            const response = await fetch(`http://arrangement:5005/withdraw_arrangement/${uid}/${arrangementId}`, {
                 method: 'DELETE',
             });
     
@@ -88,7 +88,7 @@ export default function ViewRequest() {
                     status: "Withdrawn",
                 }));
                 // Make a call to update the status in the database
-                const statusResponse = await fetch(`http://localhost:5003/update_request/${uid}`, {
+                const statusResponse = await fetch(`http://requests_log:5003/update_request/${uid}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: "Withdrawn" }),
@@ -127,7 +127,7 @@ export default function ViewRequest() {
     useEffect(() => {
         const fetchRequestData = async () => {
             try {
-                const response = await fetch(`http://localhost:5011/view_request/${uid}`);
+                const response = await fetch(`http://get_request:5011/view_request/${uid}`);
                 if (response.ok) {
                     const data = await response.json();
                     setRequestData(data.data);
@@ -153,7 +153,7 @@ export default function ViewRequest() {
         async function fetchArrangementDates() {
             try {
                 const response = await fetch(
-                    `http://localhost:5005/get_arrangements/request/${uid}`
+                    `http://arrangement:5005/get_arrangements/request/${uid}`
                 );
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
