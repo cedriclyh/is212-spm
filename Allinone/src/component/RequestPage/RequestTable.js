@@ -69,7 +69,6 @@ export default function RequestTable() {
       if (response.ok) {
         const data = await response.json();
         setRequests(data.data);
-        console.log(data.data);
       } else if (response.status === 404) {
         setRequests([]);
       } else {
@@ -113,7 +112,6 @@ export default function RequestTable() {
 
   const filteredItems = React.useMemo(() => {
     let filteredRequests = [...requests];
-    console.log(requests);
 
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {

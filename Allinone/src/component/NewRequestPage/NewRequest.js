@@ -174,7 +174,6 @@ export default function NewRequest({ initialFormData }) {
   // UseEffect to trigger extractWeekdays whenever the startDate, endDate, or SelectedDayOfTheWeek changes
   useEffect(() => {
     if (isRecurring && startDate && endDate && SelectedDayOfTheWeek) {
-      console.log(startDate);
       const dates = extractWeekdays(
         formatDateFromPicker(startDate),
         formatDateFromPicker(endDate),
@@ -228,7 +227,6 @@ export default function NewRequest({ initialFormData }) {
 
 
   const handleSubmit = async (e) => {
-    console.log(formData);
     if (isRecurring) {
       const validDays = [
         "Monday",
@@ -333,7 +331,7 @@ export default function NewRequest({ initialFormData }) {
         setLoading(false);
         if (response.ok) {
           const data = await response.json();
-          modalMsg = "Request Updated Successfully" + data.message;
+          modalMsg = "Request Updated Successfully " + data.message;
           modalTitle = "Success!";
           setButtonColor("success");
           setShowCountdown(true);
@@ -457,7 +455,7 @@ export default function NewRequest({ initialFormData }) {
                       setFormData((prev) => ({ ...prev, timeslot: key }));
                     }}
                   >
-                    <DropdownItem key="Full" description="9AM - 6PM">
+                    <DropdownItem key="FULL" description="9AM - 6PM">
                       Whole Day
                     </DropdownItem>
                     <DropdownItem key="AM" description="9AM - 1PM">
