@@ -75,7 +75,7 @@ const BlockoutPopup = () => {
       currentErrors.push('Title is required.');
     }
     if (!startDate) {
-      currentErrors.push('Start date is required.');
+      currentErrors.push('Date is required.');
     }
     // if (!endDate) {
     //   currentErrors.push('End date is required.');
@@ -189,7 +189,7 @@ const BlockoutPopup = () => {
               />
             </label>
             <label className={hasError('startDate') ? 'error-input' : ''}>
-              Start Date:
+              Date:
               <input
                 type="date"
                 value={startDate}

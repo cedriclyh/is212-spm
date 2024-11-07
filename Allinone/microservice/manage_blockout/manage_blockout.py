@@ -63,24 +63,22 @@ def manage_blockout():
 
         # 2. Delete all existing arrangements within blockout range
         
-        arrangements_to_delete = db.session.query(Arrangement) \
+        delete_arrangements_query = db.session.query(Arrangement) \
             .join(Employee, Employee.staff_id == Arrangement.staff_id) \
             .filter(Employee.reporting_manager == manager_id, 
-                    Arrangement.arrangement_date == start_date,
-                    Arrangement.timeslot.in_([timeslot, "FULL"])
-            ).all()
+                    Arrangement.arrangement_date == start_date)
 
 
         # print("Arrangements to delete query created")
 
-        # arrangements_to_delete = delete_arrangements_query.all()
+        arrangements_to_delete = delete_arrangements_query.all()
         # print("Arrangements to delete", arrangements_to_delete)
 
         if arrangements_to_delete:
-        #     if timeslot == "FULL":
-        #         arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_(["AM", "PM", "FULL"])).all()
-        #     else:
-        #         arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_([timeslot, "FULL"])).all()
+            if timeslot == "FULL":
+                arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_(["AM", "PM", "FULL"])).all()
+            else:
+                arrangements_to_delete = delete_arrangements_query.filter(Arrangement.timeslot.in_([timeslot, "FULL"])).all()
 
             # Extracting the arrangement request_ids
             arrangement_ids = [(arrangement.request_id, arrangement.arrangement_id, arrangement.timeslot) for arrangement in arrangements_to_delete]
