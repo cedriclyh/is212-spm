@@ -1,6 +1,6 @@
 import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; // For date manipulation
 
-const BLOCKOUT_URL = "http://localhost:5014/blockout"
+const BLOCKOUT_URL = "http://blockout:5014/blockout"
 
 export const getValidRange = (today) => {
     const startOfCurrentMonth = startOfMonth(today);
@@ -111,7 +111,7 @@ export const getStaffInformation = (data) => {
 
 export const getApprovedandPendingandCancelledEvents = async (userId) => {
   try{
-    const response = await fetch(`http://localhost:5003/get_requests/staff/${userId}`,{
+    const response = await fetch(`http://requests_log:5003/get_requests/staff/${userId}`,{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
 
 export const getApprovedandPendingEvents = async (userId) => {
   try{
-    const response = await fetch(`http://localhost:5003/get_requests/staff/${userId}`,{
+    const response = await fetch(`http://requests_log:5003/get_requests/staff/${userId}`,{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ export const getApprovedandPendingEvents = async (userId) => {
   
 export const getApprovedEventsOnly = async (userId) => {
   try {
-    const response = await fetch('http://localhost:5005/get_all_arrangements', {
+    const response = await fetch('http://arrangement:5005/get_all_arrangements', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -263,7 +263,7 @@ export const getApprovedEventsOnly = async (userId) => {
 // get a list of all staffs under the same reporting manager
 export const getListofStaffUnderManager = async (userId) => {
   try {
-    const response = await fetch(`http://localhost:5002/users/team/${userId}`, {
+    const response = await fetch(`http://employee:5002/users/team/${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -336,7 +336,7 @@ export const getDirectorTeamEvents = async (userId) => {
 // Retrieve CEO/HR Other Team Events
 export const getHRTeamEvents = async (userId) => {
   try {
-    const response = await fetch('http://localhost:5003/get_all_requests', {
+    const response = await fetch('http://requests_log:5003/get_all_requests', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

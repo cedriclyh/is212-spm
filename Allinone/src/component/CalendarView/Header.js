@@ -25,9 +25,10 @@ export default function CalendarHeader({ view, toggleView, userID }) {
   };
 
   useEffect(() => {
-    const fetchRole = async (userID) => {
+    const fetchRole = async () => {
       const role = await checkRoleNum(userID);
       setRoleNum(role);
+      console.log("Role Number:", role);
       
       // Show BlockoutPopup if role_num is 1 or 3
       if (role === 1 || role === 3) {
