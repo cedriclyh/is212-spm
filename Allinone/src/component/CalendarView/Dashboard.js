@@ -2,7 +2,7 @@ import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, DatePi
 import React, { useState, useEffect } from "react";
 import { createRoot } from 'react-dom/client';  // Import createRoot
 // import { BrowserRouter } from 'react-router-dom'; // Import BrowserRouter
-import { getListofStaffUnderManager } from './CalendarUtils'
+import { getListofStaffUnderManager } from "./CalendarUtils";
 
 const columns = [
   { key: "date", label: "DATE" },
