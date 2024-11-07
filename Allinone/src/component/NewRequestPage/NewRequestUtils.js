@@ -1,7 +1,4 @@
 function extractWeekdays(startDateStr, endDateStr, dayOfWeek) {
-  console.log("Received startDateStr:", startDateStr);
-  console.log("Received endDateStr:", endDateStr);
-
   const startDate = (typeof startDateStr === 'string' ? startDateStr 
                    : startDateStr instanceof Date ? startDateStr.toISOString().split("T")[0] 
                    : null);
