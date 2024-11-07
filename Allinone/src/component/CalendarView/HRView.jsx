@@ -35,14 +35,13 @@ export default function WFHcalendar() {
       }
     };
     fetchEvents();
-  }, []); // Run once on mount
+  }, []); 
 
   useEffect(() => {
     if (showPersonal || showTeam) {
       const departmentFilteredEvents = teamEvents.filter((event) => selectedDepartments.includes(event.teamName))
       console.log('Filtered by department:', selectedDepartments);
   
-      // Combine with personal events if `showPersonal` is true
       const combinedEvents = [
         ...(showPersonal ? personalEvents : []),
         ...(showTeam ? departmentFilteredEvents : []),
@@ -78,7 +77,6 @@ export default function WFHcalendar() {
     if (value.includes('team')) {
       setShowTeam(true);
     } 
-    console.log("Selected values: ", value);  // Add this line for debugging
   };
   
   // Handle department-specific checkbox changes
@@ -90,14 +88,12 @@ export default function WFHcalendar() {
 
       );
     };
-    // console.log('Filtered Events:', filteredEvents);
- 
 
   // Render the calendar
   return (
     <div className="calendar-container">
       {loading ? (
-        <LoadingSpinner /> // Show loading spinner while data is loading
+        <LoadingSpinner /> 
       ) : (
         <>
         <Dashboard events={filteredEvents}/>
@@ -121,7 +117,6 @@ export default function WFHcalendar() {
               }}
               validRange={validRange}
               fontSize={16}
-              // height="100%"
             />
           </div>
         </div>

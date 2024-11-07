@@ -1,7 +1,6 @@
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, DatePicker, Button, Tooltip } from "@nextui-org/react";
 import React, { useState, useEffect } from "react";
-import { createRoot } from 'react-dom/client';  // Import createRoot
-// import { BrowserRouter } from 'react-router-dom'; // Import BrowserRouter
+import { createRoot } from 'react-dom/client';  
 
 const columns = [
   { key: "date", label: "DATE" },
@@ -10,6 +9,56 @@ const columns = [
   { key: "manpower", label: "MANPOWER AT OFFICE" },
   { key: "toggle", label: "" },
 ];
+
+const allDepts = [
+  {
+    dept: 'Consultancy',
+    teams: [
+      { teamName: "Ernst Sim's Team", managerID: '180001' }
+    ]
+  },
+  {
+    dept: 'Sales',
+    teams: [
+      { teamName: "Derrick Tan's Team", managerID: '140001' },
+      { teamName: "Rahim Khalid's Team", managerID: '140894' },
+      { teamName: "Jaclyn Lee's Team", managerID: '140008' },
+      { teamName: "Sophia Toh's Team", managerID: '140103' },
+      { teamName: "Siti Abdullah's Team", managerID: '140874' },
+      { teamName: "Yee Lim's Team", managerID: '140944' }
+    ]
+  },
+  {
+    dept: 'Solutioning',
+    teams: [
+      { teamName: "Eric Loh's Team", managerID: '150008' }
+    ]
+  },
+  {
+    dept: 'Engineering',
+    teams: [
+      { teamName: "Philip Lee's Team", managerID: '151408' }
+    ]
+  },
+  {
+    dept: 'HR',
+    teams: [
+      { teamName: "Sally Loh's Team", managerID: '160008' }
+    ]
+  },
+  {
+    dept: 'Finance',
+    teams: [
+      { teamName: "David Yap's Team", managerID: '170166' },
+      { teamName: "Narong Pillai's Team", managerID: '171014' },
+      { teamName: "Ji Truong's Team", managerID: '171018' },
+      { teamName: "Chandra Kong's Team", managerID: '171029' },
+      { teamName: "Rithy Luong's Team", managerID: '171043' }
+    ]
+  }
+];
+
+
 
 /**
  * @typedef {Object} ToggleSubRowButtonProps
@@ -27,7 +76,6 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
   const [staffList, setStaffList] = useState([]);
 
   useEffect(() => {
-    // Fetch other staff members if there are no entries
       const fetchStaffList = async () => {
         const staffMembers = await getListofStaffs(managerID);
         setStaffList(staffMembers);
@@ -79,9 +127,8 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
                     ))}
                     {staffList.map((staff) => {                    
                       const isInEntries = rowData.entries.some(
-                        (entry) => entry.name === staff.fullName
+                        (entry) => entry.name.includes(staff.fullName)
                       );
-                      // If the staff is not in entries, add them to the table with "Office" as the place
                       if (!isInEntries) {
                         return(
                           <tr key={staff.fullName}>
@@ -91,7 +138,7 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
                           </tr>
                         )
                       }
-                      return null; // Don't render anything for staff already in entries
+                      return null; 
                     })}
                    </>
             ) : (
@@ -131,10 +178,7 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
   );
 };
 
-// const IDEALROWS = [{key: 1, date:'2024-11-01', department: 'HR', team: 'Manager', entries: [{name: 'John Doe'}, {name: 'Jane Doe'}]}];
-
 export default function Dashboard(inputEvents) {
-  // const [state, setState] = useState(0);
   const events = inputEvents.events;
   console.log(events);
   const [rows, setRows] = useState([]);
@@ -182,7 +226,6 @@ export default function Dashboard(inputEvents) {
         return acc;
       }, {});
 
-      // Pre-fetch manpower counts for each unique managerID
       const uniqueManagerIDs = [...new Set(dashboardData.map(item => item.managerID))];
       const totalCounts = {};
 
@@ -206,7 +249,7 @@ export default function Dashboard(inputEvents) {
               const totalCount = totalCounts[entries[0].managerID];
               const manpowerInOffice = `${totalCount - entries.length}/${totalCount}`;
               return {
-                key: `${date}-${dept}-${teamName}}`, // Or generate a unique key if necessary
+                key: `${date}-${dept}-${teamName}}`, 
                 date: convertDateFormat(date),
                 department: dept,
                 team: teamName,
@@ -214,7 +257,7 @@ export default function Dashboard(inputEvents) {
                   key: entry.key,
                   name: entry.name,
                   managerID: entry.managerID,
-                  position: entry.position,  // Add position here
+                  position: entry.position, 
                 })),
                 manpower: manpowerInOffice,
                 managerID: entries[0].managerID,
@@ -224,6 +267,61 @@ export default function Dashboard(inputEvents) {
         })
       )
         setRows(generatedRows.flat());
+        
+        // Get today's date
+        const today = new Date();
+
+        // Calculate the start and end of the range
+        const startDate = new Date(today);
+        startDate.setMonth(today.getMonth() - 2); // 2 months back
+
+        const endDate = new Date(today);
+        endDate.setMonth(today.getMonth() + 3); // 3 months forward
+
+        // Helper function to convert a date to DD-MM-YYYY format
+        function formatDate(date) {
+          const day = String(date.getDate()).padStart(2, '0');
+          const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+          const year = date.getFullYear();
+          return `${day}-${month}-${year}`;
+        }
+
+        // Generate list of all dates between startDate and endDate
+        const allDates = [];
+        let currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+          allDates.push(formatDate(currentDate));
+          currentDate.setDate(currentDate.getDate() + 1); // Move to the next day
+        }
+
+        console.log(allDates);
+
+        allDates.forEach(date => {
+          allDepts.forEach(({ dept, teams }) => {
+            teams.forEach(({ teamName, managerID }) => {
+              const entries = groupedData[date]?.[dept]?.[teamName] || [];
+        
+              // Determine manpower display
+              let manpowerInOffice = "FULL";
+        
+              // Push row data to generatedRows
+              generatedRows.push({
+                key: `${date}-${dept}-${teamName}`,
+                date: date,
+                department: dept,
+                team: teamName,
+                entries: [],
+                manpower: manpowerInOffice,
+                managerID: managerID
+              });
+            });
+          });
+        });
+        
+        
+        // Set rows
+        setRows(generatedRows);
         setLoading(false); 
         // Logging 
         console.log('Dashboard Data:', dashboardData);
@@ -237,21 +335,22 @@ export default function Dashboard(inputEvents) {
 
     // Handle date change
     const handleDateChange = (date) => {
-      setRawDate(date); // Store the raw date
+      setRawDate(date); 
       const formattedDate = `${String(date.day).padStart(2, '0')}-${String(date.month).padStart(2, '0')}-${date.year}`; //convert date to DD-MM-YYYY
       setSelectedDate(formattedDate);
       console.log("Selected Date:", formattedDate);
     };
 
     const clearDateSelection = () => {
-      setSelectedDate(null); // Reset the selected date
-      setRawDate(null); // Reset the raw date
+      setSelectedDate(null); 
+      setRawDate(null); 
     };
 
     // Filter rows based on selected date
     const filteredRows = selectedDate 
       ? rows.filter((row) => row.date === selectedDate) 
       : [];
+    console.log('Filtered rows', filteredRows); 
 
   return (
     <div className="card-container shadow-lg rounded-lg p-4 bg-white" style={{marginBottom: '10px', borderRadius: '25px'}}>
