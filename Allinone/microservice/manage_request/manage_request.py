@@ -372,17 +372,21 @@ def cancel_request(request_id):
 @app.route('/revoke_arrangments_by_request/<int:request_id>', methods=['PUT'])
 def revoke_arrangments_by_request(request_id):
     try:
-        arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL/{request_id}}")
+        # Fix: Correct the URL formatting and remove the Python division operator
+        arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/delete_arrangements/{request_id}")
         if arrangement_response.status_code != 201:
             return jsonify({
-                "message": "Failed to fetch delete details",
+                "message": "Failed to delete arrangements",
                 "code": 404
             }), 404
         
-        request_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json={"status": "Withdrawn"})
+        request_response = requests.put(
+            f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", 
+            json={"status": "Withdrawn"}
+        )
         if request_response.status_code != 200:
             return jsonify({
-                "message": "Failed to fetch delete details",
+                "message": "Failed to update request status",
                 "code": 404
             }), 404
         
@@ -397,7 +401,6 @@ def revoke_arrangments_by_request(request_id):
             "message": "Internal server error", 
             "code": 500
         }), 500
-    
 @app.route('/withdraw_wfh_arrangement/<int:request_id>/<int:arrangement_id>', methods=['DELETE'])
 def withdraw_wfh_arrangement(request_id, arrangement_id):
     try:

@@ -17,7 +17,7 @@ const buildPath = path.join(__dirname, "/Allinone/build");
 app.use(express.static(buildPath));
 
 // Use CORS middleware
-app.use(cors({ origin: 'http://47.129.31.108' }));
+// app.use(cors({ origin: 'http://47.129.31.108' }));
 
 // Catch-all handler to serve the React app for any unknown routes
 app.get("/*", (req, res) => {
