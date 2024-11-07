@@ -43,9 +43,7 @@ const statusColorMap = {
 };
 
 export default function NewRequest({ initialFormData }) {
-  const [inputRequestID, setInputRequestID] = useState(
-    initialFormData?.request_id || null
-  );
+  const inputRequestID = initialFormData?.request_id || null;
   const [inputDates, setInputDates] = useState(
     initialFormData?.arrangement_date ? [initialFormData.arrangement_date] : []
   );
@@ -161,10 +159,6 @@ export default function NewRequest({ initialFormData }) {
     setAvailability({});
     setReason("");
   };
-
-  // useEffect(() => {
-  //     console.log("isRecurring updated:", isRecurring);
-  // }, [isRecurring]);
 
   // Update availability status when dates are extracted
   useEffect(() => {
@@ -398,7 +392,6 @@ export default function NewRequest({ initialFormData }) {
 
   return (
     <div>
-      {/* Form Container with Border, Padding, and Rounded Corners */}
       <div
         className="space-y-6 bg-white border border-gray-300 shadow-lg p-6"
         style={{ padding: "10px 20px", borderRadius: "10px" }}

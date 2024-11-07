@@ -77,7 +77,7 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
 
   useEffect(() => {
       const fetchStaffList = async () => {
-        const staffMembers = await getListofStaffs(managerID);
+        const staffMembers = await getListofStaffUnderManager(managerID);
         setStaffList(staffMembers);
         console.log("Staff list fetched:", staffMembers);
       };
@@ -355,7 +355,7 @@ export default function Dashboard(inputEvents) {
   return (
     <div className="card-container shadow-lg rounded-lg p-4 bg-white" style={{marginBottom: '10px', borderRadius: '25px'}}>
       <div style={{ display: 'flex', alignItems: "center", justifyContent: "space-between"}}>
-        <h1 class="card-title">Dashboard</h1>
+        <h1 className="card-title">Dashboard</h1>
         <div style={{ display: 'flex', alignItems: "right", gap:'1rem'}}>
           <DatePicker label="Select Date" style={{ maxWidth: '284px', width: 'auto' }} value={rawDate} onChange={handleDateChange}/>
           <Button color="warning" onClick={clearDateSelection}>Clear</Button>

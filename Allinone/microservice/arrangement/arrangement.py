@@ -307,7 +307,34 @@ def check_date(dates_to_check):
     
     print("ALl arrangements are eligible to be revoked.")
     return jsonify({"message": f"All arrangement dates are eligible to be revoked.", "code": 200}), 200
- 
+
+@app.route('/revoke_arrangements_request/<int:request_id>', methods=['POST'])   
+def revoke_arrangements_request(request_id):
+    
+    arrangements = Arrangement.query.filter(
+        Arrangement.request_id == request_id
+    ).all()
+    
+    revoke_dates = [arrangement.arrangement_date.strftime('%Y-%m-%d') for arrangement in arrangements]
+    arrangements_to_delete = [(arrangement.request_id, arrangement.arrangement_id) for arrangement in arrangements]
+    revoke_dates_check = [datetime.strptime(revoke_date, '%Y-%m-%d').date() for revoke_date in revoke_dates]
+
+    try: 
+        checked_date_response, status_code = check_date(revoke_dates_check)
+        if status_code != 200:
+            return checked_date_response
+        
+        Arrangement.query.filter(Arrangement.request_id == request_id).delete()
+        db.session.commit()
+
+        return jsonify({
+            'status': 201,
+            'message': 'All arrangments have been deleted.'
+        }), 201
+
+    except Exception as e:
+        app.logger.error(f"Error revoking arrangements: {e}")
+        return jsonify({'message': 'Failed to revoke arrangements', 'code': 500}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005, debug=True)  

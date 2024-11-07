@@ -151,6 +151,7 @@ services:
       - requests_log
       - arrangement
       - notification
+      - manage_request
     networks:
       - my-network
 

@@ -5,7 +5,6 @@ function capitalize(str) {
 function formatDate(dateStr) {
   const date = new Date(dateStr);
 
-  // Get day of the month and determine ordinal suffix
   const day = date.getDate();
   const daySuffix = (day) => {
     if (day > 3 && day < 21) return 'th';
