@@ -339,24 +339,24 @@ def cancel_request(request_id):
             }), 500
         
         # Fetch employee email for notification commented out for testing
-        # employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
+        employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
         
-        # if employee_response.status_code == 200:
-        #     employee_data = employee_response.json().get("data")
-        #     staff_email = employee_data.get("email")
+        if employee_response.status_code == 200:
+            employee_data = employee_response.json().get("data")
+            staff_email = employee_data.get("email")
             
-        #     # Send notification email to staff
-        #     notification_data = {
-        #         "staff_email": staff_email,
-        #         "status": "Cancelled",
-        #         "request_id": request_id,
-        #         "remarks": reason
-        #     }
+            # Send notification email to staff
+            notification_data = {
+                "staff_email": staff_email,
+                "status": "Cancelled",
+                "request_id": request_id,
+                "remarks": reason
+            }
             
-        #     requests.post(
-        #         f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", 
-        #         json=notification_data
-        #     )
+            requests.post(
+                f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", 
+                json=notification_data
+            )
         return jsonify({
             "message": "Request successfully cancelled",
             "code": 200
