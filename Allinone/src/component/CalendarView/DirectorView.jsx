@@ -5,8 +5,9 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { getValidRange, getDirectorTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
-import Dashboard from './Dashboard';
+import Dashboard from './BasicDashboard';
 import HREventFilter from './AdvancedEventFilter';
+import LoadingSpinner from './LoadingSpinner';
 
 export default function WFHcalendar() {
   const [view, setView] = useState('dayGridMonth');
@@ -17,15 +18,21 @@ export default function WFHcalendar() {
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(true);
   const [selectedDepartments, setSelectedDepartments] = useState([]);
+  const [loading, setLoading] = useState(false); // Loading state
   const userID = 140001; // Hardcoded user ID for now
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const personalEvents = await getPersonalEvents(userID); 
-      setPersonalEvents(personalEvents);
-
-      const teamEvents = await getDirectorTeamEvents(userID); 
-      setTeamEvents(teamEvents); 
+      setLoading(true);
+      try{
+        const personalEvents = await getPersonalEvents(userID); 
+        setPersonalEvents(personalEvents);
+  
+        const teamEvents = await getDirectorTeamEvents(userID); 
+        setTeamEvents(teamEvents); 
+      }finally{
+        setLoading(false)
+      }
     };
     fetchEvents();
   }, []); // Run once on mount
@@ -88,31 +95,37 @@ export default function WFHcalendar() {
   // Render the calendar
   return (
     <div className="calendar-container">
-      <Dashboard events={filteredEvents}/>
-      <Header view={view} toggleView={toggleView} userID={userID}/>
-      <div className="calendar-box">
-        <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>
-        <HREventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} 
-          selectedDepartments={selectedDepartments} handleDepartmentChange={handleDepartmentChange} userID={userID}/>
+      {loading ? (
+        <LoadingSpinner /> // Show loading spinner while data is loading
+      ) : (
+        <>
+        <Dashboard events={filteredEvents}/>
+        <Header view={view} toggleView={toggleView} userID={userID}/>
+        <div className="calendar-box">
+          <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>
+          <HREventFilter showPersonal={showPersonal} showTeam={showTeam} handleCheckboxChange={handleCheckboxChange} 
+            selectedDepartments={selectedDepartments} handleDepartmentChange={handleDepartmentChange} userID={userID}/>
+          </div>
+          <div style={{flex:'1', minHeight: '0' }}>
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[dayGridPlugin, timeGridPlugin]}
+              initialView={view}
+              events={filteredEvents}
+              slotEventOverlap = {false}
+              headerToolbar={{
+                left: 'prev,next today',
+                center: 'title',
+                right: ''
+              }}
+              validRange={validRange}
+              fontSize={16}
+              // height="100%"
+            />
+          </div>
         </div>
-        <div style={{flex:'1', minHeight: '0' }}>
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, timeGridPlugin]}
-            initialView={view}
-            events={filteredEvents}
-            slotEventOverlap = {false}
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: ''
-            }}
-            validRange={validRange}
-            fontSize={16}
-            // height="100%"
-          />
-        </div>
-      </div>
+      </>
+    )}
     </div>
   );
 }
