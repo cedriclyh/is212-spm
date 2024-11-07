@@ -9,7 +9,7 @@ export default function CalendarHeader({ view, toggleView, userID }) {
   const [showPopup, setShowPopup] = useState(false);
 
   const checkRoleNum = async (userID) => {
-    const apiUrl = `http://127.0.0.1:5002/user/${userID}`; 
+    const apiUrl = `http://localhost:5002/user/${userID}`; 
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {
@@ -24,7 +24,7 @@ export default function CalendarHeader({ view, toggleView, userID }) {
   };
 
   useEffect(() => {
-    const fetchRole = async (userID) => {
+    const fetchRole = async () => {
       const role = await checkRoleNum(userID);
       setRoleNum(role);
       
@@ -34,7 +34,7 @@ export default function CalendarHeader({ view, toggleView, userID }) {
     };
     
     fetchRole(); 
-  }, []);
+  }, [userID]);
   
 
   return (

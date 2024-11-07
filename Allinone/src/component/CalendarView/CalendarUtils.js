@@ -38,7 +38,7 @@ function getBackgroundColor(status) {
 }
 
 export const getDeptName = async (userId) => {
-  const apiUrl = `http://127.0.0.1:5002/user/${userId}`;
+  const apiUrl = `http://localhost:5002/user/${userId}`;
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {
@@ -54,7 +54,7 @@ export const getDeptName = async (userId) => {
 }
 
 async function getEmployeeInfo(userId) {
-  const apiUrl = `http://127.0.0.1:5002/user/${userId}`;
+  const apiUrl = `http://localhost:5002/user/${userId}`;
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {

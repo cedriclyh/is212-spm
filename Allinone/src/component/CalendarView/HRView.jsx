@@ -3,7 +3,7 @@ import './CalendarView.css'; // Import the CSS file
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getValidRange, getHRTeamEvents, getPersonalEvents } from './CalendarUtils'; 
+import { getValidRange, getHRTeamEvents, getPersonalEvents, getBlockoutDates } from './CalendarUtils'; 
 import Header from './Header';
 import Dashboard from './Dashboard';
 import EventFilter from './AdvancedEventFilter';
