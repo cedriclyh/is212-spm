@@ -42,4 +42,4 @@ io.on("connection", (socket) => {
 });
 
 // Start the server
-server.listen(1000, () => console.log('Listening to port 1000'));
+server.listen(3001, () => console.log('Listening to port 3001'));
