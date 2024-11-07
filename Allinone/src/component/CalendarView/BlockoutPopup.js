@@ -42,7 +42,7 @@ const BlockoutPopup = () => {
     if (!validateInputs()) return; // Validate and exit if errors exist
 
     try {
-      const response = await axios.post('http://localhost:5012/manage_blockout', {
+      const response = await axios.post('http://manage_blockout:5012/manage_blockout', {
         title,
         start_date: startDate,
         end_date: startDate,

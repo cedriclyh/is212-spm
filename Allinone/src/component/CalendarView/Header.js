@@ -27,6 +27,7 @@ export default function CalendarHeader({ view, toggleView, userID }) {
     const fetchRole = async () => {
       const role = await checkRoleNum(userID);
       setRoleNum(role);
+      console.log("Role Number:", role);
       
       if (role === 1 || role === 3) {
         setShowPopup(true);

@@ -339,24 +339,24 @@ def cancel_request(request_id):
             }), 500
         
         # Fetch employee email for notification commented out for testing
-        # employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
+        employee_response = requests.get(f"{EMPLOYEE_MICROSERVICE_URL}/user/{staff_id}")
         
-        # if employee_response.status_code == 200:
-        #     employee_data = employee_response.json().get("data")
-        #     staff_email = employee_data.get("email")
+        if employee_response.status_code == 200:
+            employee_data = employee_response.json().get("data")
+            staff_email = employee_data.get("email")
             
-        #     # Send notification email to staff
-        #     notification_data = {
-        #         "staff_email": staff_email,
-        #         "status": "Cancelled",
-        #         "request_id": request_id,
-        #         "remarks": reason
-        #     }
+            # Send notification email to staff
+            notification_data = {
+                "staff_email": staff_email,
+                "status": "Cancelled",
+                "request_id": request_id,
+                "remarks": reason
+            }
             
-        #     requests.post(
-        #         f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", 
-        #         json=notification_data
-        #     )
+            requests.post(
+                f"{NOTIFICATION_MICROSERVICE_URL}/notify_status_update", 
+                json=notification_data
+            )
         return jsonify({
             "message": "Request successfully cancelled",
             "code": 200
@@ -372,17 +372,21 @@ def cancel_request(request_id):
 @app.route('/revoke_arrangments_by_request/<int:request_id>', methods=['PUT'])
 def revoke_arrangments_by_request(request_id):
     try:
-        arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL/{request_id}}")
+        # Fix: Correct the URL formatting and remove the Python division operator
+        arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/revoke_arrangements_request/{request_id}")
         if arrangement_response.status_code != 201:
             return jsonify({
-                "message": "Failed to fetch delete details",
+                "message": "Failed to delete arrangements",
                 "code": 404
             }), 404
         
-        request_response = requests.put(f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", json={"status": "Withdrawn"})
+        request_response = requests.put(
+            f"{REQUEST_LOG_MICROSERVICE_URL}/update_request/{request_id}", 
+            json={"status": "Withdrawn"}
+        )
         if request_response.status_code != 200:
             return jsonify({
-                "message": "Failed to fetch delete details",
+                "message": "Failed to update request status",
                 "code": 404
             }), 404
         
@@ -397,7 +401,6 @@ def revoke_arrangments_by_request(request_id):
             "message": "Internal server error", 
             "code": 500
         }), 500
-    
 @app.route('/withdraw_wfh_arrangement/<int:request_id>/<int:arrangement_id>', methods=['DELETE'])
 def withdraw_wfh_arrangement(request_id, arrangement_id):
     try:

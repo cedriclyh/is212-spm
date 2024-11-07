@@ -64,11 +64,12 @@ export default function RequestTable() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch('http://localhost:5011/employees/140004/requests');
+      const response = await fetch('http://get_request:5011/employees/140004/requests');
   
       if (response.ok) {
         const data = await response.json();
         setRequests(data.data);
+        console.log(data.data);
       } else if (response.status === 404) {
         setRequests([]);
       } else {
@@ -112,7 +113,7 @@ export default function RequestTable() {
 
   const filteredItems = React.useMemo(() => {
     let filteredRequests = [...requests];
-    // console.log(requests);
+    console.log(requests);
 
     if (hasSearchFilter) {
       filteredRequests = filteredRequests.filter((request) => {
@@ -161,7 +162,7 @@ export default function RequestTable() {
 
     try {
         const response = await fetch(
-            `http://localhost:5010/cancel_request/${currentRequestId}`,
+            `http://manage_request:5010/cancel_request/${currentRequestId}`,
             {
                 method: "PUT",
                 headers: {
