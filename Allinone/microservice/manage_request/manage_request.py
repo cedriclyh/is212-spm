@@ -373,7 +373,7 @@ def cancel_request(request_id):
 def revoke_arrangments_by_request(request_id):
     try:
         # Fix: Correct the URL formatting and remove the Python division operator
-        arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/delete_arrangements/{request_id}")
+        arrangement_response = requests.post(f"{ARRANGEMENT_MICROSERVICE_URL}/revoke_arrangements_request/{request_id}")
         if arrangement_response.status_code != 201:
             return jsonify({
                 "message": "Failed to delete arrangements",
