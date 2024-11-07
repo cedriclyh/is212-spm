@@ -25,7 +25,7 @@ export default function CalendarHeader({ view, toggleView, userID }) {
   };
 
   useEffect(() => {
-    const fetchRole = async () => {
+    const fetchRole = async (userID) => {
       const role = await checkRoleNum(userID);
       setRoleNum(role);
       

@@ -78,7 +78,7 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
 
   useEffect(() => {
       const fetchStaffList = async () => {
-        const staffMembers = await getListofStaffUnderManager(managerID);
+        const staffMembers = await getListofStaffs(managerID);
         setStaffList(staffMembers);
         console.log("Staff list fetched:", staffMembers);
       };
