@@ -129,7 +129,7 @@ def get_all_arrangements():
         }), 200
     except Exception as e:
         app.logger.error(f"Failed to retrieve arrangements: {e}")
-        return jsonify({"message": "Failed to retrieve arrangements", "code": 500}), 500
+        return jsonify({"message": "Failed to retrieve arrangements", "code": 404}), 404
 
 # Fetch a specific arrangement by ID
 @app.route('/get_arrangement/<int:request_id>/<int:arrangement_id>', methods=['GET'])
@@ -171,8 +171,8 @@ def get_arrangements_by_request(request_id):
             return jsonify({
                 'message': f'No arrangements found for request {request_id}',
                 'data': [],
-                'code': 200
-            }), 200
+                'code': 404
+            }), 404
     except Exception as e:
         app.logger.error(f"Failed to retrieve arrangements: {e}")
         return jsonify({
@@ -188,7 +188,7 @@ def get_arrangements_by_staff_id(staff_id):
         if arrangements:
             return jsonify({'message': f'Requests from staff {staff_id} found', 'data': [arrangement.json() for arrangement in arrangements], 'code': 200}), 200
         else:
-            return jsonify({'message': f'No requests from staff {staff_id}', 'data': [], 'code': 200}), 200
+            return jsonify({'message': f'No requests from staff {staff_id}', 'data': [], 'code': 404}), 404
     except Exception as e:
         app.logger.error(f"Failed to retrieve requests by staff ID: {e}")
         return jsonify({'message': 'Failed to retrieve requests by staff ID', 'code': 500}), 500
