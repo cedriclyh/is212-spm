@@ -13,7 +13,7 @@ import {
     getDirectorTeamEvents,
     getHRTeamEvents,
     getBlockoutDates
-} from '../utils/CalendarUtils';
+} from '/component/CalendarView/CalendarUtils';
 import { addMonths, subMonths, startOfMonth, endOfMonth, format } from 'date-fns';
 
 // Mock fetch globally
