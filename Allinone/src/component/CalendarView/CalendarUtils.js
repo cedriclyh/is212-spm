@@ -1,6 +1,6 @@
 import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; 
 
-const BLOCKOUT_URL = "http://blockout:5014/blockout"
+const BLOCKOUT_URL = "http://localhost:5014/blockout"
 
 export const getValidRange = (today) => {
     const startOfCurrentMonth = startOfMonth(today);
@@ -104,7 +104,7 @@ export const getStaffInformation = (data) => {
 
 export const getApprovedandPendingandCancelledEvents = async (userId) => {
   try{
-    const response = await fetch(`http://requests_log:5003/get_requests/staff/${userId}`,{
+    const response = await fetch(`http://localhost:5003/get_requests/staff/${userId}`,{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
 
 export const getApprovedandPendingEvents = async (userId) => {
   try{
-    const response = await fetch(`http://requests_log:5003/get_requests/staff/${userId}`,{
+    const response = await fetch(`http://localhost:5003/get_requests/staff/${userId}`,{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -188,13 +188,13 @@ export const getApprovedandPendingEvents = async (userId) => {
   const flatEvents = personalEvents.flat();
   return flatEvents.filter(event=>event !=null);
   } catch (error) {
-    console.error("Failed to fetch employee's own events:", error);
+    console.warn("Failed to fetch employee's own events:", error);
   }
 };    
   
 export const getApprovedEventsOnly = async (userId) => {
   try {
-    const response = await fetch('http://arrangement:5005/get_all_arrangements', {
+    const response = await fetch('http://localhost:5005/get_all_arrangements', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -242,13 +242,13 @@ export const getApprovedEventsOnly = async (userId) => {
   );
   return staffTeamEvents.filter(event=>event !=null);
   } catch (error) {
-    console.error('Failed to fetch other team events:', error);
+    console.warn('Failed to fetch other team events:', error);
   }
 };
 
 export const getListofStaffUnderManager = async (userId) => {
   try {
-    const response = await fetch(`http://employee:5002/users/team/${userId}`, {
+    const response = await fetch(`http://localhost:5002/users/team/${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -262,9 +262,10 @@ export const getListofStaffUnderManager = async (userId) => {
     const data = await response.json();
     const requests = data.data;
     const ListOfStaffIds = requests.map(req => req.staff_id);
+    console.log("List of Staffs under the manager:", ListOfStaffIds);
     return ListOfStaffIds;
   } catch (error) {
-    console.error('Failed to fetch list of staffs under the manager:', error);
+    console.warn('Failed to fetch list of staffs under the manager:', error);
   }
 };    
 
@@ -281,39 +282,69 @@ export const getStaffTeamEvents = async (userId) => {
 
 export const getManagerTeamEvents = async (userId) => {
   let ListOfStaffIds = await getListofStaffUnderManager(userId);
+  const StaffIdsInRequests = await getAllStaffinRequests();
+
+  const StaffIdsSet = new Set(StaffIdsInRequests);
+  const matchingStaffIds = ListOfStaffIds.filter(staffId => StaffIdsSet.has(staffId));
+  console.log("Matching Staff IDs:", matchingStaffIds);
+
   const allStaffTeamEvents = []; 
 
-  for (const staffId of ListOfStaffIds){
+  for (const staffId of matchingStaffIds){
     try{
       const staffTeamEvents = await getApprovedandPendingEvents(staffId);
       allStaffTeamEvents.push(...staffTeamEvents);
     }catch (error) {
       if (error.response && error.response.status === 404) {
-        console.warn(`Skipping staffId ${staffId} due to 404 error.`);
-        continue;
-      } else {
-        console.error('Failed to fetch staffs events under the manager:', error);
-      }
+        console.warn(`Skipping staffId ${staffId} due to no events found.`);
+      } 
     }
   } 
   return allStaffTeamEvents;
 };    
+
+export const getAllStaffinRequests = async () => {
+  try {
+    const response = await fetch('http://localhost:5003/get_all_requests', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+
+    const data = await response.json();
+    const requests = data.data;
+    const uniqueStaffIds = [...new Set(requests.map(entry => entry.staff_id))];
+    return uniqueStaffIds;
+  }catch (error) {
+    console.error("Failed to get the list of staffs present in requests log:", error);
+  }
+}
 
 export const getDirectorTeamEvents = async (userId) => {
   const ListOfManagerIds = await getListofStaffUnderManager(userId);
   const allDirectorsTeamEvents = []; 
 
   for (const managerId of ListOfManagerIds){
-    let events = await getManagerTeamEvents(managerId);
-    allDirectorsTeamEvents.push(...events);  
+    try {
+      let events = await getManagerTeamEvents(managerId);
+      if (events && events.length > 0) {
+        allDirectorsTeamEvents.push(...events);  
+      }
+    } catch (error) {
+      console.warn(`No events found for manager ID ${managerId}:`, error.message);
+    }
   }
   return allDirectorsTeamEvents;
 };    
 
-// Retrieve CEO/HR Other Team Events
 export const getHRTeamEvents = async (userId) => {
   try {
-    const response = await fetch('http://requests_log:5003/get_all_requests', {
+    const response = await fetch('http://localhost:5003/get_all_requests', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -362,7 +393,6 @@ export const getHRTeamEvents = async (userId) => {
     })
   ); 
   const flatEvents = HRTeamEvents.flat();
-  console.log("Team Events that HR/CEO can view:", HRTeamEvents); 
   return flatEvents.filter(event=>event !=null);
   } catch (error) {
     console.error("Failed to fetch team events that HR/CEO can view::", error);

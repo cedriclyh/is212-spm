@@ -16,7 +16,7 @@ export default function WFHcalendar() {
   const [personalEvents, setPersonalEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
-  const [showTeam, setShowTeam] = useState(true);
+  const [showTeam, setShowTeam] = useState(false);
   const [blockoutEvents, setBlockoutEvents] = useState([]);
   const [loading, setLoading] = useState(false); // Loading state
   const userID = 140894; // Hardcoded for now
@@ -42,8 +42,8 @@ export default function WFHcalendar() {
 
   useEffect(() => {
     const combinedEvents = [
-      ...(personalEvents ? personalEvents : []),
-      ...(teamEvents ? teamEvents : []),
+      ...(showPersonal && personalEvents ? personalEvents : []),
+      ...(showTeam && teamEvents ? teamEvents : []),
       ... blockoutEvents
     ];
     setFilteredEvents(combinedEvents);

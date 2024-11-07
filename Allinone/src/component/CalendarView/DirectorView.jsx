@@ -3,9 +3,9 @@ import './CalendarView.css';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getValidRange, getDirectorTeamEvents, getPersonalEvents, getBlockoutDates } from './CalendarUtils'; 
+import { getValidRange, getDirectorTeamEvents, getPersonalEvents, getBlockoutDates, getDeptName } from './CalendarUtils'; 
 import Header from './Header';
-import Dashboard from './BasicDashboard';
+import Dashboard from './Dashboard';
 import HREventFilter from './AdvancedEventFilter';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -20,6 +20,7 @@ export default function WFHcalendar() {
   const [blockoutEvents, setBlockoutEvents] = useState([]);
   const [selectedDepartments, setSelectedDepartments] = useState([]);
   const [loading, setLoading] = useState(false); 
+  const [deptName, setDeptName] = useState('');
   const userID = 140001; // Hardcoded user ID for now
 
   useEffect(() => {
@@ -53,6 +54,14 @@ export default function WFHcalendar() {
       setFilteredEvents(combinedEvents);
     }
   }, [showPersonal, showTeam, selectedDepartments,personalEvents, teamEvents]);
+
+  useEffect(() => {
+    const fetchDeptName = async () => {
+      const name = await getDeptName(userID);  
+      setDeptName(name || 'Unknown Dept');
+    };
+    fetchDeptName();
+  }, [userID]);
 
   const today = new Date();
   const validRange = getValidRange(today);
@@ -96,7 +105,7 @@ export default function WFHcalendar() {
         <LoadingSpinner /> 
       ) : (
         <>
-        <Dashboard events={filteredEvents}/>
+        <Dashboard events={filteredEvents} role={deptName}/>
         <Header view={view} toggleView={toggleView} userID={userID}/>
         <div className="calendar-box">
           <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>

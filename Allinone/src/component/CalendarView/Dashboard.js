@@ -79,13 +79,11 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
       const fetchStaffList = async () => {
         const staffMembers = await getListofStaffs(managerID);
         setStaffList(staffMembers);
-        console.log("Staff list fetched:", staffMembers);
       };
       fetchStaffList();
   }, [rowData.entries, managerID]);
 
   useEffect(() => {
-    console.log("Updated staff list:", staffList);
   }, [staffList]);
 
   const toggleSubRow = () => {
@@ -178,7 +176,7 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
   );
 };
 
-export default function Dashboard(inputEvents) {
+export default function Dashboard(inputEvents) { 
   const events = inputEvents.events;
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -293,8 +291,6 @@ export default function Dashboard(inputEvents) {
           currentDate.setDate(currentDate.getDate() + 1); // Move to the next day
         }
 
-        console.log(allDates);
-
         allDates.forEach(date => {
           allDepts.forEach(({ dept, teams }) => {
             teams.forEach(({ teamName, managerID }) => {
@@ -379,7 +375,7 @@ export default function Dashboard(inputEvents) {
 
 export const getTotalCount = async (managerId) => {
   try {
-    const response = await fetch(`http://employee:5002/users/team/${managerId}`, {
+    const response = await fetch(`http://localhost:5002/users/team/${managerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -392,7 +388,6 @@ export const getTotalCount = async (managerId) => {
 
     const data = await response.json();
     const requests = data.team_count;
-    console.log("Total Count of Staffs under the Manager:", requests); // Log team events for debugging
     return requests;
   } catch (error) {
     console.error('Failed to fetch list of staffs under the manager:', error);
@@ -418,8 +413,6 @@ export const getListofStaffs  = async (managerId) => {
       fullName: `${item.staff_fname} ${item.staff_lname}`,
       position: item.position
     }));
-
-    console.log("Total Staffs under the Manager:", ListOfStaffs); // Log team events for debugging
     return ListOfStaffs;
   } catch (error) {
     console.error('Failed to fetch list of staffs under the manager:', error);

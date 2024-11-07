@@ -97,7 +97,7 @@ export default function WFHcalendar() {
         <LoadingSpinner /> 
       ) : (
         <>
-        <Dashboard events={filteredEvents}/>
+        <Dashboard events={filteredEvents} role="HR"/>
         <Header view={view} toggleView={toggleView} userID={userID} />
         <div className="calendar-box">
           <div style={{ flex: '0 0 200px', paddingRight: '10px', paddingLeft: '10px' }}>
