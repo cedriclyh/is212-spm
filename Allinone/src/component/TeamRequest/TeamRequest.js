@@ -405,6 +405,14 @@ export default function TeamRequest() {
                 ))}
               </DropdownMenu>
             </Dropdown>
+            <Button 
+              color="primary" 
+              // endContent={<PlusIcon />}
+              href="/new_request"
+              // as={Link}
+              variant="solid">
+              Revoke All Arrangements
+            </Button>
           </div>
         </div>
         <div className="flex justify-between items-center">

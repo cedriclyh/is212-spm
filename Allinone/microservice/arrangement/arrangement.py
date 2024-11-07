@@ -238,16 +238,22 @@ def withdraw_arrangement(request_id, arrangement_id):
 def revoke_arrangements():
     
     data = request.json
-    # manager_id = data.get("manager_id")
-    staff_id = data.get("staff_id")
+    staff_id = data.get("staff_id", False)
+    staff_email = data.get("email", False)
+
+    # check staff
+    if not staff_id and staff_email:
+        staff_id = (
+            db.session.query(Employee.staff_id)
+            .filter(Employee.email == staff_email)
+            .scalar()
+        )
     arrangements = Arrangement.query.filter(
         Arrangement.staff_id==staff_id
     ).all()
-
+        
     revoke_dates = [arrangement.arrangement_date.strftime('%Y-%m-%d') for arrangement in arrangements]
     arrangements_to_delete = [(arrangement.request_id, arrangement.arrangement_id) for arrangement in arrangements]
-
-    print(revoke_dates)
 
     revoke_dates_check = [datetime.strptime(revoke_date, '%Y-%m-%d').date() for revoke_date in revoke_dates]
     
