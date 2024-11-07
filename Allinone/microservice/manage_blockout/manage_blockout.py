@@ -22,12 +22,13 @@ CORS(app)
 
 from arrangement import Arrangement
 from blockout import BlockoutDates
-from employee import Employee
+from employee import Employee 
 
 # URL endpoints for the existing microservices
 EMPLOYEE_MICROSERVICE_URL = os.getenv("EMPLOYEE_MICROSERVICE_URL")
 ARRANGEMENT_MICROSERVICE_URL = os.getenv("ARRANGEMENT_MICROSERVICE_URL")
 BLOCKOUT_MICROSERVICE_URL = os.getenv("BLOCKOUT_MICROSERVICE_URL")
+MANAGE_REQUEST_MICROSERVICE_URL = os.getenv("MANAGE_REQUEST_MICROSERVICE_URL")
 
 print("URL endpoints:")
 print(EMPLOYEE_MICROSERVICE_URL)
@@ -84,15 +85,15 @@ def manage_blockout():
             # Extracting the arrangement request_ids
             arrangement_ids = [(arrangement.request_id, arrangement.arrangement_id, arrangement.timeslot) for arrangement in arrangements_to_delete]
 
-            # 3. Call delete_arrangements endpoint to delete the arrangements
+            # 3. Delete arrangements and update request_status to "Withdraw"   
             for i in range (0, len(arrangement_ids)):
-                delete_response = requests.delete(f"{ARRANGEMENT_MICROSERVICE_URL}/withdraw_arrangement/{arrangement_ids[i][0]}/{arrangement_ids[i][1]}")
+                delete_response = requests.delete(f"{MANAGE_REQUEST_MICROSERVICE_URL}/withdraw_wfh_arrangement/{arrangement_ids[i][0]}/{arrangement_ids[i][1]}")
 
                 if delete_response.status_code != 200:
                     print("Delete response:", delete_response.json())
                     return delete_response.json(), delete_response.status_code
-
-        # 4. Reject all approved/pending requests that coincide with blockout 
+                
+        # 4. Reject pending requests that coincide with blockout 
             
 
         # 5. Create blockout via arrangement.py

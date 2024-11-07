@@ -10,8 +10,8 @@ COPY requirements.txt ./
 # Copy files in manage_blockout
 COPY manage_blockout ./
 
-# Copy dependencies - employee, blockout, requests_log, arrangement, amqp_setup, notification
-COPY ../employee/employee.py ../blockout/blockout.py ../requests_log/requests_log.py ../arrangement/arrangement.py ../amqp_setup.py ../notification/notification.py ./
+# Copy dependencies - employee, blockout, requests_log, arrangement, amqp_setup, notification, manage_request
+COPY ../employee/employee.py ../blockout/blockout.py ../requests_log/requests_log.py ../arrangement/arrangement.py ../amqp_setup.py ../notification/notification.py ../manage_request/manage_request.py ./
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt -r manage_blockout.requirements.txt
