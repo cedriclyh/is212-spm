@@ -1,6 +1,7 @@
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, DatePicker, Button, Tooltip } from "@nextui-org/react";
 import React, { useState, useEffect } from "react";
 import { createRoot } from 'react-dom/client';  
+import { getListofStaffUnderManager } from './CalendarUtils';
 
 const columns = [
   { key: "date", label: "DATE" },
