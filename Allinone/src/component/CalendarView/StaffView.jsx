@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import './CalendarView.css'; // Import the CSS file
+import './CalendarView.css'; 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getBlockoutDates, getValidRange, getStaffTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { getBlockoutDates, getValidRange, getStaffTeamEvents, getPersonalEvents } from './CalendarUtils'; 
 import Header from './Header';
 import BasicEventFilter from './BasicEventFilter';
 import Dashboard from './BasicDashboard';
@@ -30,13 +30,13 @@ export default function WFHcalendar() {
     };
 
     const fetchBlockoutEvents = async () => {
-      const blockouts = await getBlockoutDates(view); // Fetch blockout dates
+      const blockouts = await getBlockoutDates(view); 
       setBlockoutEvents(blockouts || []);
     } 
 
     fetchBlockoutEvents();
     fetchEvents();
-  }, [view]); // Run once on mount
+  }, [view]); 
 
   useEffect(() => {
     const combinedEvents = [
@@ -47,11 +47,9 @@ export default function WFHcalendar() {
     setFilteredEvents(combinedEvents);
 }, [showPersonal, showTeam,personalEvents, teamEvents]);
 
-  // Get the current month
   const today = new Date();
   const validRange = getValidRange(today);
 
-  // Toggle between day and month views
   const toggleView = () => {
     const calendarApi = calendarRef.current.getApi(); 
     if (view === 'dayGridMonth') {
@@ -63,14 +61,12 @@ export default function WFHcalendar() {
     }
   };
 
- // Handler for checkbox change
+
  const handleCheckboxChange = (values) => {
   setShowPersonal(values.includes('personal'));
   setShowTeam(values.includes('dept'));
-};
+  };
 
-
-  // Render the calendar
   return (
     <div className="calendar-container">
       <Dashboard events={filteredEvents}/>
@@ -93,7 +89,6 @@ export default function WFHcalendar() {
             }}
             validRange={validRange}
             fontSize={16}
-            // height="100%"
           />
         </div>
       </div>

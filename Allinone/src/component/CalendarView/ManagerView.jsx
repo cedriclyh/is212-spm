@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import './CalendarView.css'; // Import the CSS file
+import './CalendarView.css'; 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getBlockoutDates, getValidRange, getManagerTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { getBlockoutDates, getValidRange, getManagerTeamEvents, getPersonalEvents } from './CalendarUtils'; 
 import Header from './Header';
 import BasicEventFilter from './BasicEventFilter';
 import Dashboard from './BasicDashboard';
@@ -23,7 +23,7 @@ export default function WFHcalendar() {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      setLoading(true); // Start loading
+      setLoading(true); 
       try {
         const teamEvents = await getManagerTeamEvents(userID); 
         setTeamEvents(teamEvents); 
@@ -31,10 +31,10 @@ export default function WFHcalendar() {
         const personalEvents = await getPersonalEvents(userID); 
         setPersonalEvents(personalEvents);
 
-        const blockouts = await getBlockoutDates(view); // Fetch blockout dates
+        const blockouts = await getBlockoutDates(view);
           setBlockoutEvents(blockouts);
       } finally {
-        setLoading(false); // Stop loading once data is fetched
+        setLoading(false); 
       }
     };
     fetchEvents();
@@ -49,11 +49,9 @@ export default function WFHcalendar() {
     setFilteredEvents(combinedEvents);
 }, [showPersonal, showTeam,personalEvents, teamEvents]);
 
-  // Get the current month
   const today = new Date();
   const validRange = getValidRange(today);
 
-  // Toggle between day and month views
   const toggleView = () => {
     const calendarApi = calendarRef.current.getApi(); 
     if (view === 'dayGridMonth') {
@@ -65,17 +63,15 @@ export default function WFHcalendar() {
     }
   };
 
-  // Handler for checkbox change
   const handleCheckboxChange = (values) => {
     setShowPersonal(values.includes('personal'));
     setShowTeam(values.includes('dept'));
   };
  
-  // Render the calendar
   return (
     <div className="calendar-container">
       {loading ? (
-        <LoadingSpinner /> // Show loading spinner while data is loading
+        <LoadingSpinner /> 
       ) : (
         <>
         <Dashboard events={filteredEvents}/>
@@ -98,7 +94,6 @@ export default function WFHcalendar() {
               }}
               validRange={validRange}
               fontSize={16}
-              // height="100%"
             />
           </div>
         </div>

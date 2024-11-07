@@ -5,11 +5,10 @@ import { getDeptName } from './CalendarUtils';
 
 export default function EventFilter({ showPersonal, showTeam, handleCheckboxChange, userID}) {
   const [deptName, setDeptName] = useState('');
-  // const userID = 140004; // Hardcoded user ID for now
 
   useEffect(() => {
     const fetchDeptName = async () => {
-      const name = await getDeptName(userID);  // Replace 140004 with a dynamic ID if needed
+      const name = await getDeptName(userID);  
       setDeptName(name || 'Unknown Dept');
     };
 

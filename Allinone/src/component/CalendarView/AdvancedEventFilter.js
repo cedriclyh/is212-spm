@@ -6,11 +6,10 @@ import { getDeptName, getDirectorTeamEvents, getHRTeamEvents } from './CalendarU
 export default function EventFilter({ showPersonal, showTeam, handleCheckboxChange, selectedDepartments, handleDepartmentChange, userID }) {
   const [deptName, setDeptName] = useState('');
   const [teamNamesByDept, setTeamNamesByDept] = useState([]);
-  // const userID = 140001; // Hardcoded user ID for now
 
   useEffect(() => {
     const fetchDeptName = async () => {
-      const name = await getDeptName(userID);  // Replace 140004 with a dynamic ID if needed
+      const name = await getDeptName(userID);  
       setDeptName(name || 'Unknown Dept');
     };
     fetchDeptName();
@@ -34,7 +33,7 @@ export default function EventFilter({ showPersonal, showTeam, handleCheckboxChan
       }, {});
       setTeamNamesByDept(groupedByDept);
     };
-    if (deptName) { // Ensure deptName is available before fetching team events
+    if (deptName) { 
       fetchTeamNameAndDept();
     }}, [deptName, userID]); 
     

@@ -3,7 +3,7 @@ import './CalendarView.css'; // Import the CSS file
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getValidRange, getHRTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { getValidRange, getHRTeamEvents, getPersonalEvents } from './CalendarUtils'; 
 import Header from './Header';
 import Dashboard from './Dashboard';
 import EventFilter from './AdvancedEventFilter';
@@ -17,6 +17,7 @@ export default function WFHcalendar() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(true);
+  const [blockoutEvents, setBlockoutEvents] = useState([]);
   const [selectedDepartments, setSelectedDepartments] = useState([]);
   const [loading, setLoading] = useState(false); // Loading state
   const userID = 130002; // Hardcoded user ID for now
@@ -30,6 +31,9 @@ export default function WFHcalendar() {
   
         const personalEvents = await getPersonalEvents(userID); 
         setPersonalEvents(personalEvents);
+
+        const blockouts = await getBlockoutDates(view);
+        setBlockoutEvents(blockouts);
       }finally{
         setLoading(false)
       }
@@ -45,12 +49,12 @@ export default function WFHcalendar() {
       const combinedEvents = [
         ...(showPersonal ? personalEvents : []),
         ...(showTeam ? departmentFilteredEvents : []),
+        ... blockoutEvents
       ];
       setFilteredEvents(combinedEvents);
     }
   }, [showPersonal, showTeam, selectedDepartments,personalEvents, teamEvents]);
 
-  // Get the current month
   const today = new Date();
   const validRange = getValidRange(today);
 
@@ -66,9 +70,7 @@ export default function WFHcalendar() {
     }
   };
 
-  // Handler for checkbox change
   const handleCheckboxChange = (value) => {
-    
     if (value.includes('personal')) {
       setShowPersonal(true);
     }else{
@@ -89,7 +91,6 @@ export default function WFHcalendar() {
       );
     };
 
-  // Render the calendar
   return (
     <div className="calendar-container">
       {loading ? (

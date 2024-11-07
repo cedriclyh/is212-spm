@@ -62,14 +62,14 @@ const allDepts = [
 
 /**
  * @typedef {Object} ToggleSubRowButtonProps
- * @property {number} rowId - The ID of the row to toggle the sub-row for.
- * @property {Object} rowData - The data object for the row to display in the sub-row.
+ * @property {number} rowId 
+ * @property {Object} rowData 
  */
 
 /**
  * ToggleSubRowButton component for expanding/collapsing sub-rows.
- * @param {ToggleSubRowButtonProps} props - The props for the button component.
- * @returns {JSX.Element} The button with expand/collapse functionality.
+ * @param {ToggleSubRowButtonProps} props 
+ * @returns {JSX.Element} 
  */
 export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -180,12 +180,10 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
 
 export default function Dashboard(inputEvents) {
   const events = inputEvents.events;
-  console.log(events);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
   const [rawDate, setRawDate] = useState(null);
-  console.log(events)
 
   useEffect(() =>{
     const processData = async () => {
@@ -319,21 +317,14 @@ export default function Dashboard(inputEvents) {
           });
         });
         
-        
-        // Set rows
         setRows(generatedRows);
         setLoading(false); 
-        // Logging 
-        console.log('Dashboard Data:', dashboardData);
-        console.log('Grouped Data:', groupedData);
-        console.log('Rows:', generatedRows);
       };
       processData();
     }, [events]);
 
     if (loading) return <div>Loading...</div>;  
 
-    // Handle date change
     const handleDateChange = (date) => {
       setRawDate(date); 
       const formattedDate = `${String(date.day).padStart(2, '0')}-${String(date.month).padStart(2, '0')}-${date.year}`; //convert date to DD-MM-YYYY
@@ -346,11 +337,9 @@ export default function Dashboard(inputEvents) {
       setRawDate(null); 
     };
 
-    // Filter rows based on selected date
     const filteredRows = selectedDate 
       ? rows.filter((row) => row.date === selectedDate) 
       : [];
-    console.log('Filtered rows', filteredRows); 
 
   return (
     <div className="card-container shadow-lg rounded-lg p-4 bg-white" style={{marginBottom: '10px', borderRadius: '25px'}}>

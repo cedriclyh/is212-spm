@@ -13,14 +13,14 @@ const columns = [
 
 /**
  * @typedef {Object} ToggleSubRowButtonProps
- * @property {number} rowId - The ID of the row to toggle the sub-row for.
- * @property {Object} rowData - The data object for the row to display in the sub-row.
+ * @property {number} rowId 
+ * @property {Object} rowData 
  */
 
 /**
  * ToggleSubRowButton component for expanding/collapsing sub-rows.
- * @param {ToggleSubRowButtonProps} props - The props for the button component.
- * @returns {JSX.Element} The button with expand/collapse functionality.
+ * @param {ToggleSubRowButtonProps} props 
+ * @returns {JSX.Element} 
  */
 export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -136,7 +136,6 @@ export default function Dashboard(inputEvents) {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
   const [rawDate, setRawDate] = useState(null);
-  console.log(events)
 
   useEffect(() =>{
     const processData = async () => {
@@ -219,10 +218,6 @@ export default function Dashboard(inputEvents) {
       )
         setRows(generatedRows.flat()); 
         setLoading(false); 
-        // Logging 
-        console.log('Dashboard Data:', dashboardData);
-        console.log('Grouped Data:', groupedData);
-        console.log('Rows:', generatedRows);
       };
       processData();
     }, [events]);
@@ -232,7 +227,7 @@ export default function Dashboard(inputEvents) {
     // Handle date change
     const handleDateChange = (date) => {
       setRawDate(date); 
-      const formattedDate = `${String(date.day).padStart(2, '0')}-${String(date.month).padStart(2, '0')}-${date.year}`; //convert date to DD-MM-YYYY
+      const formattedDate = `${String(date.day).padStart(2, '0')}-${String(date.month).padStart(2, '0')}-${date.year}`; 
       setSelectedDate(formattedDate);
       console.log("Selected Date:", formattedDate);
     };
@@ -298,7 +293,6 @@ export const getTotalCount = async (managerId) => {
 
     const data = await response.json();
     const requests = data.team_count;
-    console.log("Total Count of Staffs under the Manager:", requests); // Log team events for debugging
     return requests;
   } catch (error) {
     console.error('Failed to fetch list of staffs under the manager:', error);
@@ -324,8 +318,6 @@ export const getListofStaffs  = async (managerId) => {
       fullName: `${item.staff_fname} ${item.staff_lname}`,
       position: item.position
     }));
-
-    console.log("Total Staffs under the Manager:", ListOfStaffs); // Log team events for debugging
     return ListOfStaffs;
   } catch (error) {
     console.error('Failed to fetch list of staffs under the manager:', error);

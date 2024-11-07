@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import './CalendarView.css'; // Import the CSS file
+import './CalendarView.css'; 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { getValidRange, getDirectorTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
+import { getValidRange, getDirectorTeamEvents, getPersonalEvents } from './CalendarUtils'; 
 import Header from './Header';
 import Dashboard from './BasicDashboard';
 import HREventFilter from './AdvancedEventFilter';
@@ -17,8 +17,9 @@ export default function WFHcalendar() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showPersonal, setShowPersonal] = useState(true);
   const [showTeam, setShowTeam] = useState(true);
+  const [blockoutEvents, setBlockoutEvents] = useState([]);
   const [selectedDepartments, setSelectedDepartments] = useState([]);
-  const [loading, setLoading] = useState(false); // Loading state
+  const [loading, setLoading] = useState(false); 
   const userID = 140001; // Hardcoded user ID for now
 
   useEffect(() => {
@@ -30,33 +31,32 @@ export default function WFHcalendar() {
   
         const teamEvents = await getDirectorTeamEvents(userID); 
         setTeamEvents(teamEvents); 
+
+        const blockouts = await getBlockoutDates(view);
+          setBlockoutEvents(blockouts);
       }finally{
         setLoading(false)
       }
     };
     fetchEvents();
-  }, []); // Run once on mount
+  }, []); 
 
   useEffect(() => {
     if (showPersonal || showTeam) {
       const departmentFilteredEvents = teamEvents.filter((event) => selectedDepartments.includes(event.teamName))
-      console.log('Filtered by department:', selectedDepartments);
-      console.log('Filtered team events:', departmentFilteredEvents);
   
-      // Combine with personal events if `showPersonal` is true
       const combinedEvents = [
         ...(showPersonal && personalEvents ? personalEvents : []),
         ...(showTeam && teamEvents ? departmentFilteredEvents : []),
+        ... blockoutEvents
       ];
       setFilteredEvents(combinedEvents);
     }
   }, [showPersonal, showTeam, selectedDepartments,personalEvents, teamEvents]);
 
-  // Get the current month
   const today = new Date();
   const validRange = getValidRange(today);
 
-  // Toggle between day and month views
   const toggleView = () => {
     const calendarApi = calendarRef.current.getApi(); 
     if (view === 'dayGridMonth') {
@@ -70,7 +70,6 @@ export default function WFHcalendar() {
 
   // Handler for checkbox change
   const handleCheckboxChange = (value) => {
-    
     if (value.includes('personal')) {
       setShowPersonal(true);
     }else{
@@ -79,7 +78,6 @@ export default function WFHcalendar() {
     if (value.includes('team')) {
       setShowTeam(true);
     } 
-    console.log("Selected values: ", value);  // Add this line for debugging
   };
   
   // Handle department-specific checkbox changes
@@ -92,11 +90,10 @@ export default function WFHcalendar() {
       );
     };
 
-  // Render the calendar
   return (
     <div className="calendar-container">
       {loading ? (
-        <LoadingSpinner /> // Show loading spinner while data is loading
+        <LoadingSpinner /> 
       ) : (
         <>
         <Dashboard events={filteredEvents}/>
@@ -120,7 +117,6 @@ export default function WFHcalendar() {
               }}
               validRange={validRange}
               fontSize={16}
-              // height="100%"
             />
           </div>
         </div>

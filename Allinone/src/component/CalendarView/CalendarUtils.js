@@ -1,4 +1,4 @@
-import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; // For date manipulation
+import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; 
 
 const BLOCKOUT_URL = "http://localhost:5014/blockout"
 
@@ -11,9 +11,6 @@ export const getValidRange = (today) => {
     };
 }
 
-// All functions from here are used for fetching events
-
-// Calculate start and end times based on timeslot
 function getTimeRange(timeslot, startDate, endDate) {
   switch (timeslot) {
     case "AM":
@@ -23,11 +20,10 @@ function getTimeRange(timeslot, startDate, endDate) {
     case "FULL":
       return { start: `${startDate}T09:00:00`, end: `${endDate}T18:00:00` };
     default:
-      return { start: startDate, end: endDate };  // Fallback to all-day event if timeslot is unknown
+      return { start: startDate, end: endDate };  
   }
 };
 
-// Get background color based on status
 function getBackgroundColor(status) {
   switch (status) {
     case 'Approved':
@@ -41,7 +37,6 @@ function getBackgroundColor(status) {
   }
 }
 
-//Fetch Department Name
 export const getDeptName = async (userId) => {
   const apiUrl = `http://127.0.0.1:5002/user/${userId}`;
     try {
@@ -58,7 +53,6 @@ export const getDeptName = async (userId) => {
     }
 }
 
-// Retrieve all relevant information of the employee
 async function getEmployeeInfo(userId) {
   const apiUrl = `http://127.0.0.1:5002/user/${userId}`;
     try {
@@ -79,7 +73,6 @@ async function getArrangementName(userId) {
   const {staff_lname} = await getEmployeeInfo(userId)
   const {staff_fname}= await getEmployeeInfo(userId);
 
-  // const fullName = `${staff_fname} ${staff_lname} Team`;
   const arrangementName = `${staff_fname} ${staff_lname} WFH`;
   return arrangementName;
 }
@@ -123,7 +116,6 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
 
     const data = await response.json();
     const requests = data.data;
-    // Map the requests into event categories 
     const personalEvents = await Promise.all(
       requests.map(async (req) => {
         const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
@@ -145,7 +137,6 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
       })
     );
 
-  console.log("Employee's Own Events:", personalEvents); // Log team events for debugging
   return personalEvents.filter(event=>event !=null);
   } catch (error) {
     console.error("Failed to fetch employee's own events:", error);
@@ -166,11 +157,10 @@ export const getApprovedandPendingEvents = async (userId) => {
 
     const data = await response.json();
     const requests = data.data;
-    // Map the requests into event categories 
     const personalEvents = await Promise.all(
       requests.flatMap(async (req) => {
         if (req.status === 'Rejected') {
-          return null; // Skip this request if status is cancelled
+          return null; 
         }
 
         const arrangementDates = req.arrangement_dates; 
@@ -196,7 +186,6 @@ export const getApprovedandPendingEvents = async (userId) => {
     })
   ); 
   const flatEvents = personalEvents.flat();
-  console.log("Employee's Own Events:", personalEvents); // Log team events for debugging
   return flatEvents.filter(event=>event !=null);
   } catch (error) {
     console.error("Failed to fetch employee's own events:", error);
@@ -221,25 +210,24 @@ export const getApprovedEventsOnly = async (userId) => {
     const {manager_id} = await getEmployeeInfo(userId);
     const listofStaffs = await getListofStaffUnderManager(manager_id);
 
-    // Map the requests into event categories 
     const staffTeamEvents = await Promise.all(
     requests.map(async (req) => {
       if (req.staff_id === userId) {
-        return null; // Skip this request if staff_id is the same as the staff in personal events
+        return null; 
       }
       if (!listofStaffs.includes(req.staff_id)) {
-        return null; // Skip this request if manager_id doesn't match
+        return null; 
       }
       if (!req.timeslot || !req.arrangement_date) {
         console.warn("Missing timeslot or arrangement_date in request:", req);
-        return null; // Skip this request if data is missing
+        return null; 
       }
       const { start, end } = getTimeRange(req.timeslot, req.arrangement_date, req.arrangement_date);
       const title = await getArrangementName(req.staff_id) ;
       const teamName = await getTeamName(manager_id)
       const {dept, position} = await getEmployeeInfo(req.staff_id);
       return {
-        id: `${req.staff_id}-${req.arrangement_date}`, // Create a unique ID per date to show all 
+        id: `${req.staff_id}-${req.arrangement_date}`, 
         title,  
         start,
         end,
@@ -252,15 +240,12 @@ export const getApprovedEventsOnly = async (userId) => {
       };
     })
   );
-
-  console.log("Other Team Events:", staffTeamEvents); // Log team events for debugging
   return staffTeamEvents.filter(event=>event !=null);
   } catch (error) {
     console.error('Failed to fetch other team events:', error);
   }
 };
 
-// get a list of all staffs under the same reporting manager
 export const getListofStaffUnderManager = async (userId) => {
   try {
     const response = await fetch(`http://localhost:5002/users/team/${userId}`, {
@@ -277,7 +262,6 @@ export const getListofStaffUnderManager = async (userId) => {
     const data = await response.json();
     const requests = data.data;
     const ListOfStaffIds = requests.map(req => req.staff_id);
-    console.log("List of Staffs under the Manager:", ListOfStaffIds); // Log team events for debugging
     return ListOfStaffIds;
   } catch (error) {
     console.error('Failed to fetch list of staffs under the manager:', error);
@@ -285,19 +269,16 @@ export const getListofStaffUnderManager = async (userId) => {
 };    
 
   
-// Retrieve employee's Personal Events
 export const getPersonalEvents = async (userId) => {
   let events = await getApprovedandPendingEvents(userId);
   return events
 };  
 
-// Retrieve staff's Team Approved Events
 export const getStaffTeamEvents = async (userId) => {
   let events = await getApprovedEventsOnly(userId);
   return events
 };    
 
-// Retrieve (Tier 2) Manager's Approved and Pending Staff Events
 export const getManagerTeamEvents = async (userId) => {
   let ListOfStaffIds = await getListofStaffUnderManager(userId);
   const allStaffTeamEvents = []; 
@@ -311,16 +292,13 @@ export const getManagerTeamEvents = async (userId) => {
         console.warn(`Skipping staffId ${staffId} due to 404 error.`);
         continue;
       } else {
-        // Rethrow other errors
         console.error('Failed to fetch staffs events under the manager:', error);
       }
     }
   } 
-  console.log("Tier 2 Manager's Team Events:", allStaffTeamEvents); // Log team events for debugging
   return allStaffTeamEvents;
 };    
 
-// Retrieve (Tier 1) Manager's Staff Events - Approved and Pending for Tier 2 Manager + Staff under Tier 2 Manager
 export const getDirectorTeamEvents = async (userId) => {
   const ListOfManagerIds = await getListofStaffUnderManager(userId);
   const allDirectorsTeamEvents = []; 
@@ -329,7 +307,6 @@ export const getDirectorTeamEvents = async (userId) => {
     let events = await getManagerTeamEvents(managerId);
     allDirectorsTeamEvents.push(...events);  
   }
-  console.log("Director's Team Events:", allDirectorsTeamEvents); // Log team events for debugging
   return allDirectorsTeamEvents;
 };    
 
@@ -354,10 +331,10 @@ export const getHRTeamEvents = async (userId) => {
     const HRTeamEvents = await Promise.all(
     requests.flatMap(async (req) => {
       if (req.status === 'Rejected') {
-        return null; // Skip this request if status is cancelled
+        return null; 
       }
       if (req.staff_id === userId) {
-        return null; // remove any requests made by the employee himself
+        return null;
       }
 
       const arrangementDates = req.arrangement_dates;
@@ -370,7 +347,7 @@ export const getHRTeamEvents = async (userId) => {
         const {dept, position} = await getEmployeeInfo(req.staff_id);
 
         return {
-          id: `${req.staff_id}-${req.arrangement_date}`, // Create a unique ID per date
+          id: `${req.staff_id}-${req.arrangement_date}`, 
           title,  
           start,
           end,
@@ -385,7 +362,7 @@ export const getHRTeamEvents = async (userId) => {
     })
   ); 
   const flatEvents = HRTeamEvents.flat();
-  console.log("Team Events that HR/CEO can view:", HRTeamEvents); // Log team events for debugging
+  console.log("Team Events that HR/CEO can view:", HRTeamEvents); 
   return flatEvents.filter(event=>event !=null);
   } catch (error) {
     console.error("Failed to fetch team events that HR/CEO can view::", error);
