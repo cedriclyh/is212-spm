@@ -10,55 +10,6 @@ const columns = [
   { key: "toggle", label: "" },
 ];
 
-const allDepts = [
-  {
-    dept: 'Consultancy',
-    teams: [
-      { teamName: "Ernst Sim's Team", managerID: '180001' }
-    ]
-  },
-  {
-    dept: 'Sales',
-    teams: [
-      { teamName: "Derrick Tan's Team", managerID: '140001' },
-      { teamName: "Rahim Khalid's Team", managerID: '140894' },
-      { teamName: "Jaclyn Lee's Team", managerID: '140008' },
-      { teamName: "Sophia Toh's Team", managerID: '140103' },
-      { teamName: "Siti Abdullah's Team", managerID: '140874' },
-      { teamName: "Yee Lim's Team", managerID: '140944' }
-    ]
-  },
-  {
-    dept: 'Solutioning',
-    teams: [
-      { teamName: "Eric Loh's Team", managerID: '150008' }
-    ]
-  },
-  {
-    dept: 'Engineering',
-    teams: [
-      { teamName: "Philip Lee's Team", managerID: '151408' }
-    ]
-  },
-  {
-    dept: 'HR',
-    teams: [
-      { teamName: "Sally Loh's Team", managerID: '160008' }
-    ]
-  },
-  {
-    dept: 'Finance',
-    teams: [
-      { teamName: "David Yap's Team", managerID: '170166' },
-      { teamName: "Narong Pillai's Team", managerID: '171014' },
-      { teamName: "Ji Truong's Team", managerID: '171018' },
-      { teamName: "Chandra Kong's Team", managerID: '171029' },
-      { teamName: "Rithy Luong's Team", managerID: '171043' }
-    ]
-  }
-];
-
-
 
 /**
  * @typedef {Object} ToggleSubRowButtonProps
@@ -266,62 +217,7 @@ export default function Dashboard(inputEvents) {
           });
         })
       )
-        setRows(generatedRows.flat());
-        
-        // Get today's date
-        const today = new Date();
-
-        // Calculate the start and end of the range
-        const startDate = new Date(today);
-        startDate.setMonth(today.getMonth() - 2); // 2 months back
-
-        const endDate = new Date(today);
-        endDate.setMonth(today.getMonth() + 3); // 3 months forward
-
-        // Helper function to convert a date to DD-MM-YYYY format
-        function formatDate(date) {
-          const day = String(date.getDate()).padStart(2, '0');
-          const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-          const year = date.getFullYear();
-          return `${day}-${month}-${year}`;
-        }
-
-        // Generate list of all dates between startDate and endDate
-        const allDates = [];
-        let currentDate = new Date(startDate);
-
-        while (currentDate <= endDate) {
-          allDates.push(formatDate(currentDate));
-          currentDate.setDate(currentDate.getDate() + 1); // Move to the next day
-        }
-
-        console.log(allDates);
-
-        allDates.forEach(date => {
-          allDepts.forEach(({ dept, teams }) => {
-            teams.forEach(({ teamName, managerID }) => {
-              let entries = groupedData[date]?.[dept]?.[teamName] || [];
-        
-              // Determine manpower display
-              let manpowerInOffice = "FULL";
-        
-              // Push row data to generatedRows
-              generatedRows.push({
-                key: `${date}-${dept}-${teamName}`,
-                date: date,
-                department: dept,
-                team: teamName,
-                entries: entries,
-                manpower: manpowerInOffice,
-                managerID: managerID
-              });
-            });
-          });
-        });
-        
-        
-        // Set rows
-        setRows(generatedRows);
+        setRows(generatedRows.flat()); 
         setLoading(false); 
         // Logging 
         console.log('Dashboard Data:', dashboardData);
@@ -350,7 +246,6 @@ export default function Dashboard(inputEvents) {
     const filteredRows = selectedDate 
       ? rows.filter((row) => row.date === selectedDate) 
       : [];
-    console.log('Filtered rows', filteredRows); 
 
   return (
     <div className="card-container shadow-lg rounded-lg p-4 bg-white" style={{marginBottom: '10px', borderRadius: '25px'}}>

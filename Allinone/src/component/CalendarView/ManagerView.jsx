@@ -6,7 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { getValidRange, getManagerTeamEvents, getPersonalEvents } from './CalendarUtils'; // Import utility functions
 import Header from './Header';
 import BasicEventFilter from './BasicEventFilter';
-import Dashboard from './Dashboard';
+import Dashboard from './BasicDashboard';
 import LoadingSpinner from './LoadingSpinner';
 
 export default function WFHcalendar() {
