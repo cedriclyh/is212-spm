@@ -315,7 +315,7 @@ export default function TeamRequest() {
       default:
         return cellValue;
     }
-  }, [handleStatusChange, handleViewClick]);
+  }, [handleStatusChange, handleViewClick, handleWithdrawChange]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {

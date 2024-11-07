@@ -43,9 +43,7 @@ const statusColorMap = {
 };
 
 export default function NewRequest({ initialFormData }) {
-  const [inputRequestID, setInputRequestID] = useState(
-    initialFormData?.request_id || null
-  );
+  const inputRequestID = initialFormData?.request_id || null;
   const [inputDates, setInputDates] = useState(
     initialFormData?.arrangement_date ? [initialFormData.arrangement_date] : []
   );
