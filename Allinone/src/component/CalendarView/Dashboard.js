@@ -2,6 +2,7 @@ import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, DatePi
 import React, { useState, useEffect } from "react";
 import { createRoot } from 'react-dom/client';  // Import createRoot
 // import { BrowserRouter } from 'react-router-dom'; // Import BrowserRouter
+import { getListofStaffUnderManager } from "./CalendarUtils";
 
 const columns = [
   { key: "date", label: "DATE" },
@@ -29,7 +30,7 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
   useEffect(() => {
     // Fetch other staff members if there are no entries
       const fetchStaffList = async () => {
-        const staffMembers = await getListofStaffs(managerID);
+        const staffMembers = await getListofStaffUnderManager(managerID);
         setStaffList(staffMembers);
         console.log("Staff list fetched:", staffMembers);
       };
