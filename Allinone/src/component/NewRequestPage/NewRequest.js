@@ -204,7 +204,7 @@ export default function NewRequest({ initialFormData }) {
         recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
         start_date: isRecurring ? formatDateFromPicker(startDate) : null,
         end_date: isRecurring ? formatDateFromPicker(endDate): null,
-        timeslot: selectedTimeslot,
+        timeslot: selectedTimeslot.toUpperCase(),
         reason: reason,
         is_recurring: isRecurring,
     }));
@@ -216,7 +216,7 @@ export default function NewRequest({ initialFormData }) {
         recurring_day: isRecurring ? SelectedDayOfTheWeek : null,
         start_date: isRecurring ? formatDateFromPicker(startDate) : null,
         end_date: isRecurring ? formatDateFromPicker(endDate): null,
-        timeslot: toUpperCase(selectedTimeslot),
+        timeslot: selectedTimeslot.toUpperCase(),
         reason: reason,
         is_recurring: isRecurring,
         request_id: inputRequestID,
