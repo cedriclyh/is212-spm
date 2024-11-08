@@ -325,7 +325,6 @@ export default function Dashboard(inputEvents) {
       setRawDate(date); 
       const formattedDate = `${String(date.day).padStart(2, '0')}-${String(date.month).padStart(2, '0')}-${date.year}`; //convert date to DD-MM-YYYY
       setSelectedDate(formattedDate);
-      console.log("Selected Date:", formattedDate);
     };
 
     const clearDateSelection = () => {

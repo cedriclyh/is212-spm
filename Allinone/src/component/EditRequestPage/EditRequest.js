@@ -11,11 +11,9 @@ const EditRequestPage = () => {
     const fetchRequestData = async () => {
       try {
         const response = await fetch(`http://54.84.53.208:5003/get_request/${uid}`);
-        console.log(response);
         if (response.ok) {
           const data = await response.json();
           setRequestData(data.data);
-          console.log(data.data)
         } else {
           console.error("Failed to fetch request data");
         }
