@@ -8,8 +8,8 @@ import sys
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 import json
-from amqp_setup import publish_to_queue
-from employee import Employee 
+from ..amqp_setup import publish_to_queue
+from ..employee.employee import Employee 
 from sqlalchemy.orm import aliased
 
 app = Flask(__name__)
