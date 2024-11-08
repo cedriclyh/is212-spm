@@ -1,0 +1,31 @@
+FROM node:16
+
+WORKDIR /app
+
+# Copy config files
+COPY ./Allinone/package*.json ./
+COPY ./Allinone/tailwind.config.js ./
+COPY ./babel.config.js ./
+COPY ./jest.config.js ./
+
+# Install dependencies
+RUN npm install
+RUN npm install @fullcalendar/react 
+RUN npm install @nextui-org/react
+RUN npm install @fullcalendar/daygrid
+RUN npm install @fullcalendar/timegrid
+RUN npm install @mui/material
+RUN npm install @mui/icons-material
+
+# Copy source files
+COPY ./Allinone/src/ ./src/
+COPY ./Allinone/public/ ./public/
+
+# Build the app
+RUN npm run build
+
+EXPOSE 3000
+
+ENV NODE_ENV=production
+
+CMD ["npm", "start"]

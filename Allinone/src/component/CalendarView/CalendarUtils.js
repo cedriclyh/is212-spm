@@ -186,6 +186,7 @@ export const getApprovedandPendingEvents = async (userId) => {
     })
   ); 
   const flatEvents = personalEvents.flat();
+  console.log(flatEvents)
   return flatEvents.filter(event=>event !=null);
   } catch (error) {
     console.warn("Failed to fetch employee's own events:", error);
