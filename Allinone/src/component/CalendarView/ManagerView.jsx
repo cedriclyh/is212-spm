@@ -67,7 +67,7 @@ export default function WFHcalendar() {
     setShowPersonal(values.includes('personal'));
     setShowTeam(values.includes('dept'));
   };
- 
+
   return (
     <div className="calendar-container">
       {loading ? (

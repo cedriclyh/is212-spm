@@ -28,7 +28,7 @@ export default function WFHcalendar() {
       try{
         const teamEvents = await getHRTeamEvents(userID); 
         setTeamEvents(teamEvents); 
-  
+
         const personalEvents = await getPersonalEvents(userID); 
         setPersonalEvents(personalEvents);
 
@@ -45,7 +45,7 @@ export default function WFHcalendar() {
     if (showPersonal || showTeam) {
       const departmentFilteredEvents = teamEvents.filter((event) => selectedDepartments.includes(event.teamName))
       console.log('Filtered by department:', selectedDepartments);
-  
+
       const combinedEvents = [
         ...(showPersonal ? personalEvents : []),
         ...(showTeam ? departmentFilteredEvents : []),
@@ -80,7 +80,7 @@ export default function WFHcalendar() {
       setShowTeam(true);
     } 
   };
-  
+
   // Handle department-specific checkbox changes
   const handleDepartmentChange = (dept) => {
     setSelectedDepartments((prevSelected) =>

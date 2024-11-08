@@ -200,7 +200,7 @@ export default function Dashboard(inputEvents) {
           };
         }
       );
-    
+
       const groupedData = dashboardData.reduce((acc, item) => {
         const { date, dept, teamName } = item;
         if (!acc[date]) {
@@ -212,7 +212,7 @@ export default function Dashboard(inputEvents) {
         if (!acc[date][dept][teamName]) {
           acc[date][dept][teamName] = [];
         }
-    
+
         acc[date][dept][teamName].push({
           key: item.key,
           name: item.name,
@@ -236,7 +236,7 @@ export default function Dashboard(inputEvents) {
         const [year, month, day] = dateString.split('-');
         return `${day}-${month}-${year}`;
       }
-      
+
       const generatedRows = (
         Object.keys(groupedData).flatMap(date => {
           return Object.keys(groupedData[date]).flatMap(dept => {
@@ -263,7 +263,7 @@ export default function Dashboard(inputEvents) {
         })
       )
         setRows(generatedRows.flat());
-        
+
         // Get today's date
         const today = new Date();
 
@@ -295,10 +295,10 @@ export default function Dashboard(inputEvents) {
           allDepts.forEach(({ dept, teams }) => {
             teams.forEach(({ teamName, managerID }) => {
               let entries = groupedData[date]?.[dept]?.[teamName] || [];
-        
+
               // Determine manpower display
               let manpowerInOffice = "FULL";
-        
+
               // Push row data to generatedRows
               generatedRows.push({
                 key: `${date}-${dept}-${teamName}`,
@@ -312,7 +312,7 @@ export default function Dashboard(inputEvents) {
             });
           });
         });
-        
+
         setRows(generatedRows);
         setLoading(false); 
       };
@@ -418,5 +418,3 @@ export const getListofStaffs  = async (managerId) => {
     console.error('Failed to fetch list of staffs under the manager:', error);
   }
 }; 
-
-

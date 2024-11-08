@@ -68,6 +68,9 @@ const BlockoutPopup = () => {
     }
   };
 
+  const today = new Date();
+  today.setHours(0,0,0,0)
+
   const validateInputs = () => {
     const currentErrors = [];
 
@@ -77,12 +80,10 @@ const BlockoutPopup = () => {
     if (!startDate) {
       currentErrors.push('Date is required.');
     }
-    // if (!endDate) {
-    //   currentErrors.push('End date is required.');
-    // }
-    // if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
-    //   currentErrors.push('End date cannot be earlier than start date.');
-    // }
+
+    if (startDate && new Date(startDate) < today) {
+      currentErrors.push("The selected date must be a current or future date.");
+    }
 
     setErrors(currentErrors);
     return currentErrors.length === 0; // Return true if no errors
@@ -102,30 +103,14 @@ const BlockoutPopup = () => {
         break;
       case 'startDate':
         setStartDate(value);
-        if (value && updatedErrors.includes('Start date is required.')) {
-          updatedErrors = updatedErrors.filter(error => error !== 'Start date is required.');
+        if (value && updatedErrors.includes('Date is required.')) {
+          updatedErrors = updatedErrors.filter(error => error !== 'Date is required.');
         }
-        // if (value && endDate && new Date(value) > new Date(endDate)) {
-        //   if (!updatedErrors.includes('End date cannot be earlier than start date.')) {
-        //     updatedErrors.push('End date cannot be earlier than start date.');
-        //   }
-        // } else {
-        //   updatedErrors = updatedErrors.filter(error => error !== 'End date cannot be earlier than start date.');
-        // }
+
+        if (value && new Date(value) >= today && updatedErrors.includes("The selected date must be a current or future date.")) {
+          updatedErrors = updatedErrors.filter(error => error !== "The selected date must be a current or future date.");
+        }
         break;
-      // case 'endDate':
-      //   setEndDate(value);
-      //   if (value && updatedErrors.includes('End date is required.')) {
-      //     updatedErrors = updatedErrors.filter(error => error !== 'End date is required.');
-      //   }
-      //   if (value && startDate && new Date(value) < new Date(startDate)) {
-      //     if (!updatedErrors.includes('End date cannot be earlier than start date.')) {
-      //       updatedErrors.push('End date cannot be earlier than start date.');
-      //     }
-      //   } else {
-      //     updatedErrors = updatedErrors.filter(error => error !== 'End date cannot be earlier than start date.');
-      //   }
-      //   break;
       case 'blockoutDescription':
         setBlockoutDescription(value);
         break;
@@ -139,9 +124,8 @@ const BlockoutPopup = () => {
   // Helper function to check if a field has an error
   const hasError = (field) => {
     if (field === 'title' && errors.includes('Title is required.')) return true;
-    if (field === 'startDate' && errors.includes('Start date is required.')) return true;
-    // if (field === 'endDate' && errors.includes('End date is required.')) return true;
-    // if (startDate && endDate && new Date(startDate) > new Date(endDate) && field === 'endDate') return true;
+    if (field === 'startDate' && errors.includes('Date is required.')) return true;
+    if (startDate && new Date(startDate) < today && field === 'startDate') return true;
     return false;
   };
 
@@ -166,7 +150,7 @@ const BlockoutPopup = () => {
       {isOpen && (
         <div className="popup">
           <div className="popup-content">
-            <h2>Create Blockout</h2>
+            <h2>Blockout</h2>
 
             {/* Render all error messages */}
             {errors.length > 0 && (
@@ -197,15 +181,6 @@ const BlockoutPopup = () => {
                 required
               />
             </label>
-            {/* <label className={hasError('endDate') ? 'error-input' : ''}>
-              End Date:
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => handleInputChange('endDate', e.target.value)}
-                required
-              />
-            </label> */}
             <label>
               Timeslot:
               <Dropdown>

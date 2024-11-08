@@ -73,8 +73,7 @@ export default function TeamRequest() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch('http://get_request:5011/manager/140894/requests');
-      
+      const response = await fetch('http://get_request:5011/manager/140894/requests');      
       if (response.ok) {
         const data = await response.json();
         setRequests(data.data);
@@ -235,6 +234,50 @@ export default function TeamRequest() {
     }
   }, [onOpen])
 
+
+  const handleWithdrawAll = useCallback(async (email) => {
+    if(window.confirm("This action will revoke all approved arrangemnts for this staff. Are you sure?")){
+      try {
+        const response = await fetch(
+          `http://arrangement:5005/revoke_arrangments`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            }
+          }
+        );
+  
+        if (response.ok) {
+          modalMsg = "Action processed successfully ";
+          modalTitle = "Success!";
+          setButtonColor("success");
+          onOpen();
+          setRequests((prevRequests) =>
+              prevRequests.map((request) =>
+                  request.email === email && request.status === "Approved"
+                      ? { ...request, status: "Withdrawn" }
+                      : request
+              )
+          );
+        }
+        else {
+          modalMsg = "Action Failed.";
+          modalTitle = "Error Message";
+          setButtonColor("danger");
+          onOpen();
+      }
+      }
+      catch(error){
+        console.error("Error:", error);
+          modalMsg = "An error occurred while revoking the request.";
+          modalTitle = "Error Message";
+          setButtonColor("danger");
+          onOpen();
+      }
+    }
+  }, [onOpen])
+
   const renderCell = useCallback((request, columnKey) => {
     const cellValue = request[columnKey];
 
@@ -297,6 +340,8 @@ export default function TeamRequest() {
                   onClick={() => handleStatusChange(request.request_id, "Reject")}>Reject</DropdownItem>}
                 {request.status === "Approved" && <DropdownItem
                  onClick={() => handleWithdrawChange(request.request_id)}>Withdraw</DropdownItem>}
+                {request.status === "Approved" && <DropdownItem
+                 onClick={() => handleWithdrawAll(request.email)}>Withdraw All for Staff</DropdownItem>}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -315,7 +360,7 @@ export default function TeamRequest() {
       default:
         return cellValue;
     }
-  }, [handleStatusChange, handleViewClick, handleWithdrawChange]);
+  }, [handleStatusChange, handleViewClick, handleWithdrawChange, handleWithdrawAll]);
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {

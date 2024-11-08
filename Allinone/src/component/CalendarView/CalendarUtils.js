@@ -4,7 +4,7 @@ const BLOCKOUT_URL = "http://blockout:5014/blockout"
 
 export const getValidRange = (today) => {
     const startOfCurrentMonth = startOfMonth(today);
-  
+
     return {
     start: format(subMonths(startOfCurrentMonth, 2), 'yyyy-MM-dd'), // 2 months back from current month
     end: format(addMonths(endOfMonth(today), 3), 'yyyy-MM-dd')    // 3 months forward from current month
@@ -191,7 +191,7 @@ export const getApprovedandPendingEvents = async (userId) => {
     console.warn("Failed to fetch employee's own events:", error);
   }
 };    
-  
+
 export const getApprovedEventsOnly = async (userId) => {
   try {
     const response = await fetch('http://arrangement:5005/get_all_arrangements', {
@@ -269,7 +269,7 @@ export const getListofStaffUnderManager = async (userId) => {
   }
 };    
 
-  
+
 export const getPersonalEvents = async (userId) => {
   let events = await getApprovedandPendingEvents(userId);
   return events
@@ -283,11 +283,9 @@ export const getStaffTeamEvents = async (userId) => {
 export const getManagerTeamEvents = async (userId) => {
   let ListOfStaffIds = await getListofStaffUnderManager(userId);
   const StaffIdsInRequests = await getAllStaffinRequests();
-
   const StaffIdsSet = new Set(StaffIdsInRequests);
   const matchingStaffIds = ListOfStaffIds.filter(staffId => StaffIdsSet.has(staffId));
   console.log("Matching Staff IDs:", matchingStaffIds);
-
   const allStaffTeamEvents = []; 
 
   for (const staffId of matchingStaffIds){
@@ -311,11 +309,9 @@ export const getAllStaffinRequests = async () => {
         'Content-Type': 'application/json',
       },
     });
-
     if (!response.ok) {
       throw new Error('Failed to fetch data');
     }
-
     const data = await response.json();
     const requests = data.data;
     const uniqueStaffIds = [...new Set(requests.map(entry => entry.staff_id))];
@@ -324,7 +320,6 @@ export const getAllStaffinRequests = async () => {
     console.error("Failed to get the list of staffs present in requests log:", error);
   }
 }
-
 export const getDirectorTeamEvents = async (userId) => {
   const ListOfManagerIds = await getListofStaffUnderManager(userId);
   const allDirectorsTeamEvents = []; 
@@ -417,7 +412,7 @@ export const getBlockoutDates = async (currentView) => {
     console.log("API Response (blockout date):", data);
 
     const request = data.data;
-    
+
 
     const blockouts = await Promise.all(
       request.map(async (req) => {
@@ -463,7 +458,7 @@ export const getBlockoutDates = async (currentView) => {
         }
       })
     );  
-    
+
     console.log("Blockouts:", blockouts);
     return blockouts;
   } catch(error) {    
