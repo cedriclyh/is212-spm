@@ -1,0 +1,16 @@
+FROM node:16
+
+WORKDIR /app
+
+# Copy package files from Allinone
+COPY Allinone/package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy App.js from root
+COPY App.js ./
+
+EXPOSE 3001
+
+CMD ["node", "App.js"]
