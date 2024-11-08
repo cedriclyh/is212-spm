@@ -270,7 +270,7 @@ export const getListofStaffUnderManager = async (userId) => {
 
 
 export const getPersonalEvents = async (userId) => {
-  let events = await getApprovedandPendingEvents(userId);
+  let events = await getApprovedandPendingandCancelledEvents(userId);
   return events
 };  
 
