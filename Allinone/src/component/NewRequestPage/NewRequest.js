@@ -59,12 +59,31 @@ export default function NewRequest({ initialFormData }) {
   const [isRecurring, setIsRecurring] = useState(
     initialFormData?.is_recurring || false
   );
-  const [startDate, setStartDate] = useState(
-    initialFormData?.start_date ? parseISO(initialFormData.start_date) : null
-  );
-  const [endDate, setEndDate] = useState(
-    initialFormData?.end_date ? parseISO(initialFormData.end_date) : null
-  );
+  const [startDate, setStartDate] = useState(() => {
+    if (initialFormData?.start_date) {
+      try {
+        const [year, month, day] = initialFormData.start_date.split('-').map(Number);
+        return parseDate(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+      } catch (error) {
+        console.error('Error parsing start date:', error);
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [endDate, setEndDate] = useState(() => {
+    if (initialFormData?.end_date) {
+      try {
+        const [year, month, day] = initialFormData.end_date.split('-').map(Number);
+        return parseDate(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+      } catch (error) {
+        console.error('Error parsing end date:', error);
+        return null;
+      }
+    }
+    return null;
+  });
   const [reason, setReason] = useState(initialFormData?.reason || "");
   const [blockOutDates, setBlockOutDates] = useState([]);
   const [extractedDates, setExtractedDates] = useState([]);
@@ -85,8 +104,28 @@ export default function NewRequest({ initialFormData }) {
         initialFormData.recurring_day || "Choose a Week Day"
       );
       setIsRecurring(initialFormData.is_recurring || false);
-      setStartDate(initialFormData.start_date || null);
-      setEndDate(initialFormData.end_date || null);
+      
+      // Convert and set dates
+      if (initialFormData.start_date) {
+        try {
+          const [year, month, day] = initialFormData.start_date.split('-').map(Number);
+          setStartDate(parseDate(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`));
+        } catch (error) {
+          console.error('Error parsing start date:', error);
+          setStartDate(null);
+        }
+      }
+
+      if (initialFormData.end_date) {
+        try {
+          const [year, month, day] = initialFormData.end_date.split('-').map(Number);
+          setEndDate(parseDate(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`));
+        } catch (error) {
+          console.error('Error parsing end date:', error);
+          setEndDate(null);
+        }
+      }
+      
       setReason(initialFormData.reason || "");
     }
   }, [initialFormData]);
