@@ -4,10 +4,15 @@ IS212_G3T5
 Done By:
 
 Brannon Cho
+
 Cedric Lim
+
 Chan Wai Wen
+
 Chen Wen Han
+
 Khoo Teck Xuan
+
 Yep Zhi Xuan
 
 # Allinone
@@ -26,6 +31,7 @@ Allinone is a scheduler application which will help:
 
 ## Project Links
 Github repo URL: https://github.com/cedriclyh/is212-spm
+
 Website URL: http://54.84.53.208:3000/
 
 ### Prerequisites
