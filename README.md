@@ -3,17 +3,12 @@ IS212_G3T5
 
 Done By:
 
-Brannon Cho
-
-Cedric Lim
-
-Chan Wai Wen
-
-Chen Wen Han
-
-Khoo Teck Xuan
-
-Yep Zhi Xuan
+- Brannon Cho
+- Cedric Lim
+- Chan Wai Wen
+- Chen Wen Han
+- Khoo Teck Xuan
+- Yep Zhi Xuan
 
 # Allinone
 Allinone is a scheduler application which will help: 
@@ -43,7 +38,7 @@ Website URL: http://54.84.53.208:3000/
 1. Clone the repository:
    ```bash
    git clone https://github.com/cedriclyh/is212-spm.git
-   cd is212-spm
+   cd is212-spm/Allinone/microservice
    ``` 
 2. Run the application
     ```bash
