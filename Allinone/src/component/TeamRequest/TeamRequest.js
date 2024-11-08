@@ -240,7 +240,7 @@ export default function TeamRequest() {
     if(window.confirm("This action will revoke all approved arrangemnts for this staff. Are you sure?")){
       try {
         const response = await fetch(
-          `http://arrangement:5005/revoke_arrangments`,
+          `http://54.84.53.208:5005/revoke_arrangments`,
           {
             method: "POST",
             headers: {

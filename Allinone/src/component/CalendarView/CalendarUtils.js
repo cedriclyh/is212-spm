@@ -303,7 +303,7 @@ export const getManagerTeamEvents = async (userId) => {
 
 export const getAllStaffinRequests = async () => {
   try {
-    const response = await fetch('http://requests_log:5003/get_all_requests', {
+    const response = await fetch('http://54.84.53.208:5003/get_all_requests', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
