@@ -31,7 +31,7 @@ import {
   checkAvailability,
   getAllDates,
 } from "./NewRequestUtils";
-import { getLocalTimeZone, today } from "@internationalized/date";
+import { getLocalTimeZone, today, parseDate } from "@internationalized/date";
 import { parseISO } from "date-fns";
 
 var modalTitle = "Error Message";
