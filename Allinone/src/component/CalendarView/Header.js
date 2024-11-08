@@ -9,7 +9,7 @@ export default function CalendarHeader({ view, toggleView, userID }) {
   const [showPopup, setShowPopup] = useState(false);
 
   const checkRoleNum = async (userID) => {
-    const apiUrl = `http:/employee:5002/user/${userID}`; 
+    const apiUrl = `http://54.84.53.208:5002/user/${userID}`; // Replace with ${userID}
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {

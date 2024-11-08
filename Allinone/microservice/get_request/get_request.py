@@ -21,6 +21,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 CORS(app)
+print("Database URL:", app.config['SQLALCHEMY_DATABASE_URI'])
 
 # URL endpoints for the existing microservices
 EMPLOYEE_MICROSERVICE_URL = os.getenv("EMPLOYEE_MICROSERVICE_URL")

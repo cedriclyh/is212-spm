@@ -13,9 +13,8 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = ( 
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
-    or "mysql+mysqlconnector://root@host.docker.internal:3307/spm_db" 
-    # environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
+    # environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/spm_db" 
+    environ.get("dbURL") or "mysql+mysqlconnector://root:root@localhost:3306/spm_db" #this is for mac users
     or 'sqlite:///:memory:'  # fallback for testing
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -455,14 +454,13 @@ def withdraw_wfh_arrangement(request_id, arrangement_id):
             "data": arrangement_data,
             "code": 200
         }), 200
-    
+
     except Exception as e:
         app.logger.error(f"Failed to process arrangement withdrawal: {e}")
         return jsonify({
             "message": "Failed to process arrangement withdrawal",
             "code": 500
         }), 500
-
     
 def update_status(request_id, status, remarks):
     arrangement_update_data = {

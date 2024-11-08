@@ -102,7 +102,7 @@ export default function NewRequest({ initialFormData }) {
     async function fetchBlockOutDates() {
       try {
         const response = await fetch(
-          "http://blockout:5014/blockout/get_blockouts"
+          "http://54.84.53.208:5014/blockout/get_blockouts"
         );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -276,7 +276,7 @@ export default function NewRequest({ initialFormData }) {
     if (inputRequestID === null){
       setLoading(true);
       try {
-        const response = await fetch("http://make_request:5004/make_request", {
+        const response = await fetch("http://54.84.53.208:5004/make_request", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -321,7 +321,7 @@ export default function NewRequest({ initialFormData }) {
     else {
       setLoading(true);
       try {
-        const response = await fetch(`http://make_request:5004/edit_request/${inputRequestID} `, {
+        const response = await fetch(`http://54.84.53.208:5004/edit_request/${inputRequestID} `, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

@@ -64,7 +64,7 @@ export default function RequestTable() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch('http://get_request:5011/employees/140004/requests');
+      const response = await fetch('http://54.84.53.208:5011/employees/140004/requests');
   
       if (response.ok) {
         const data = await response.json();
@@ -160,7 +160,7 @@ export default function RequestTable() {
 
     try {
         const response = await fetch(
-            `http://manage_request:5010/cancel_request/${currentRequestId}`,
+            `http://54.84.53.208:5010/cancel_request/${currentRequestId}`,
             {
                 method: "PUT",
                 headers: {

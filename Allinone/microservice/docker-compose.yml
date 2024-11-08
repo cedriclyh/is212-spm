@@ -196,3 +196,34 @@ services:
       - .env  
     networks:
       - my-network
+
+###############################################
+# # Frontend Services
+###############################################
+# Add at the end of your existing docker-compose.yml
+  frontend:
+    build:
+      context: ../../  # Points to Allinone directory
+      dockerfile: Allinone/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - my-network
+    depends_on:
+      - server
+
+
+  server:
+    build:
+      context: ../../   # Go up two levels to reach App.js
+      dockerfile: Allinone/Dockerfile.server
+    ports:
+      - "3001:3001"
+    networks:
+      - my-network
+    depends_on:
+      - manage_request
+      - get_request
+      - make_request

@@ -10,7 +10,7 @@ const EditRequestPage = () => {
   useEffect(() => {
     const fetchRequestData = async () => {
       try {
-        const response = await fetch(`http://requests_log/get_request/${uid}`);
+        const response = await fetch(`http://54.84.53.208/get_request/${uid}`);
         console.log(response);
         if (response.ok) {
           const data = await response.json();

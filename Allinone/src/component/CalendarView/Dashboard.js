@@ -375,7 +375,7 @@ export default function Dashboard(inputEvents) {
 
 export const getTotalCount = async (managerId) => {
   try {
-    const response = await fetch(`http://employee:5002/users/team/${managerId}`, {
+    const response = await fetch(`http://54.84.53.208:5002/users/team/${managerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -396,7 +396,7 @@ export const getTotalCount = async (managerId) => {
 
 export const getListofStaffs  = async (managerId) => {
   try {
-    const response = await fetch(`http://employee:5002/users/team/${managerId}`, {
+    const response = await fetch(`http://54.84.53.208:5002/users/team/${managerId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 import { addMonths, subMonths, format, startOfMonth, endOfMonth } from 'date-fns'; 
 
-const BLOCKOUT_URL = "http://blockout:5014/blockout"
+const BLOCKOUT_URL = "http://54.84.53.208:5014/blockout"
 
 export const getValidRange = (today) => {
     const startOfCurrentMonth = startOfMonth(today);
@@ -38,7 +38,7 @@ function getBackgroundColor(status) {
 }
 
 export const getDeptName = async (userId) => {
-  const apiUrl = `http://employee:5002/user/${userId}`;
+  const apiUrl = `http://54.84.53.208:5002/user/${userId}`;
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {
@@ -54,7 +54,7 @@ export const getDeptName = async (userId) => {
 }
 
 async function getEmployeeInfo(userId) {
-  const apiUrl = `http://employee:5002/user/${userId}`;
+  const apiUrl = `http://54.84.53.208:5002/user/${userId}`;
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {
@@ -104,7 +104,7 @@ export const getStaffInformation = (data) => {
 
 export const getApprovedandPendingandCancelledEvents = async (userId) => {
   try{
-    const response = await fetch(`http://requests_log:5003/get_requests/staff/${userId}`,{
+    const response = await fetch(`http://54.84.53.208:5003/get_requests/staff/${userId}`,{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ export const getApprovedandPendingandCancelledEvents = async (userId) => {
 
 export const getApprovedandPendingEvents = async (userId) => {
   try{
-    const response = await fetch(`http://requests_log:5003/get_requests/staff/${userId}`,{
+    const response = await fetch(`http://54.84.53.208:5003/get_requests/staff/${userId}`,{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ export const getApprovedandPendingEvents = async (userId) => {
 
 export const getApprovedEventsOnly = async (userId) => {
   try {
-    const response = await fetch('http://arrangement:5005/get_all_arrangements', {
+    const response = await fetch('http://54.84.53.208:5005/get_all_arrangements', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -248,7 +248,7 @@ export const getApprovedEventsOnly = async (userId) => {
 
 export const getListofStaffUnderManager = async (userId) => {
   try {
-    const response = await fetch(`http://employee:5002/users/team/${userId}`, {
+    const response = await fetch(`http://54.84.53.208:5002/users/team/${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -339,7 +339,7 @@ export const getDirectorTeamEvents = async (userId) => {
 
 export const getHRTeamEvents = async (userId) => {
   try {
-    const response = await fetch('http://requests_log:5003/get_all_requests', {
+    const response = await fetch('http://54.84.53.208:5003/get_all_requests', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
