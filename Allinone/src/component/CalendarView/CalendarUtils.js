@@ -262,7 +262,6 @@ export const getListofStaffUnderManager = async (userId) => {
     const data = await response.json();
     const requests = data.data;
     const ListOfStaffIds = requests.map(req => req.staff_id);
-    console.log("List of Staffs under the manager:", ListOfStaffIds);
     return ListOfStaffIds;
   } catch (error) {
     console.warn('Failed to fetch list of staffs under the manager:', error);
@@ -285,7 +284,6 @@ export const getManagerTeamEvents = async (userId) => {
   const StaffIdsInRequests = await getAllStaffinRequests();
   const StaffIdsSet = new Set(StaffIdsInRequests);
   const matchingStaffIds = ListOfStaffIds.filter(staffId => StaffIdsSet.has(staffId));
-  console.log("Matching Staff IDs:", matchingStaffIds);
   const allStaffTeamEvents = []; 
 
   for (const staffId of matchingStaffIds){
@@ -409,16 +407,12 @@ export const getBlockoutDates = async (currentView) => {
     }
 
     const data = await response.json();
-    console.log("API Response (blockout date):", data);
 
     const request = data.data;
 
 
     const blockouts = await Promise.all(
       request.map(async (req) => {
-        console.log("Blockouts: " + req);
-        console.log("Blockout timeslot: " + req.timeslot);
-        // const { start, end, } = getTimeRange(req.timeslot, req.start_date, req.end_date);
 
         const { start_date, end_date, timeslot } = req;
         let start, end, allDay;
@@ -459,7 +453,6 @@ export const getBlockoutDates = async (currentView) => {
       })
     );  
 
-    console.log("Blockouts:", blockouts);
     return blockouts;
   } catch(error) {    
       console.error("Failed to fetch arrangement name:", error);

@@ -44,7 +44,6 @@ export default function WFHcalendar() {
   useEffect(() => {
     if (showPersonal || showTeam) {
       const departmentFilteredEvents = teamEvents.filter((event) => selectedDepartments.includes(event.teamName))
-      console.log('Filtered by department:', selectedDepartments);
 
       const combinedEvents = [
         ...(showPersonal ? personalEvents : []),

@@ -1,5 +1,5 @@
 import pytest, os
-from arrangement.arrangement import app, db, Arrangement
+from microservice.arrangement.arrangement import app, db, Arrangement
 
 @pytest.fixture
 def client():

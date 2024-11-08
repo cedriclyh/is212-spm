@@ -30,14 +30,10 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
       const fetchStaffList = async () => {
         const staffMembers = await getListofStaffs(managerID);
         setStaffList(staffMembers);
-        console.log("Staff list fetched:", staffMembers);
       };
       fetchStaffList();
   }, [rowData.entries, managerID]);
 
-  useEffect(() => {
-    console.log("Updated staff list:", staffList);
-  }, [staffList]);
 
   const toggleSubRow = () => {
     const rowToInsertAfter = document.getElementById(`row-${rowId}`);
@@ -131,7 +127,6 @@ export const ToggleSubRowButton = ({ rowId, rowData, managerID }) => {
 
 export default function Dashboard(inputEvents) {
   const events = inputEvents.events;
-  console.log(events);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -229,7 +224,6 @@ export default function Dashboard(inputEvents) {
       setRawDate(date); 
       const formattedDate = `${String(date.day).padStart(2, '0')}-${String(date.month).padStart(2, '0')}-${date.year}`; 
       setSelectedDate(formattedDate);
-      console.log("Selected Date:", formattedDate);
     };
 
     const clearDateSelection = () => {
